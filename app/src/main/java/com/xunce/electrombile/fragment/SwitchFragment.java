@@ -28,6 +28,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +38,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -373,12 +375,20 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         img_angle3 = (ImageView)v.findViewById(R.id.angle3);
         img_angle4 = (ImageView)v.findViewById(R.id.angle4);
         img_angle5 = (ImageView)v.findViewById(R.id.angle5);
+
+        img_weather.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showWeatherDialog(tv_weatherCondition.getText().toString());
+            }
+        });
     }
 
     private void initEvent() {
         (m_context).receiver.setAlarmHandler(mhandler);
         //从设置切换回主页的时候  会执行这个函数  如果主页中的侧滑菜单是打开的  那么就关闭侧滑菜单
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -1212,5 +1222,38 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 task.execute();
             }
         }
+    }
+
+    private void showWeatherDialog(String weatherStatus){
+        final LayoutInflater inflater = (LayoutInflater) m_context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.dialog_showweather, null);
+        final Dialog dialog = new Dialog(m_context, R.style.Translucent_NoTitle_white);
+
+        Button cancel = (Button) view.findViewById(R.id.btn_cancel);
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        ImageView img_weather = (ImageView)view.findViewById(R.id.img_weather);
+        if(weatherStatus.contains("雨")){
+            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.rain)));
+        }
+        else if(weatherStatus.contains("雪")){
+            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.snow)));
+        }
+        else{
+            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.sunny)));
+        }
+
+        WindowManager m = m_context.getWindowManager();
+        Display d = m.getDefaultDisplay(); // 获取屏幕宽、高用
+        final int dialog_width = (int) (d.getWidth() * 0.75); // 宽度设置为屏幕的0.65
+        //设置布局  有个问题啊  没有做适配
+        dialog.addContentView(view, new LinearLayout.LayoutParams(
+                dialog_width, ViewGroup.LayoutParams.WRAP_CONTENT));
+        dialog.show();
     }
 }
