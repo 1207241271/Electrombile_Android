@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.account.LoginActivity;
@@ -34,6 +36,7 @@ public class GuideActivity extends Activity implements ViewPager.OnPageChangeLis
     private ImageView img_guide2;
     private ImageView img_guide3;
     private ImageView img_guide4;
+    private LinearLayout linearLayout_layout_guide;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +67,7 @@ public class GuideActivity extends Activity implements ViewPager.OnPageChangeLis
         img_guide3.setImageBitmap(BitmapUtils.readBitMap(this,R.drawable.img_guide3));
 
         img_guide4 = (ImageView)view4.findViewById(R.id.img_guide4);
-        img_guide4.setImageBitmap(BitmapUtils.readBitMap(this,R.drawable.img_guide4));
+        img_guide4.setImageBitmap(BitmapUtils.readBitMap(this, R.drawable.img_guide4));
 
         views.add(view1);
         views.add(view2);
@@ -84,6 +87,9 @@ public class GuideActivity extends Activity implements ViewPager.OnPageChangeLis
             }
         });
         viewPager.setOnPageChangeListener(this);
+
+        linearLayout_layout_guide = (LinearLayout)findViewById(R.id.layout_guide);
+        linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#f8bd40"));
     }
 
     public void initDots(){
@@ -106,6 +112,23 @@ public class GuideActivity extends Activity implements ViewPager.OnPageChangeLis
             }else{
                 dots[i].setImageResource(R.drawable.guide_point1);
             }
+        }
+        switch (position){
+            case 0:
+                linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#f8bd40"));
+                break;
+            case 1:
+                linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#6eb9f3"));
+                break;
+            case 2:
+                linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#fe8488"));
+                break;
+            case 3:
+                linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#1dcf96"));
+                break;
+            default:
+                linearLayout_layout_guide.setBackgroundColor(Color.parseColor("#f8bd40"));
+                break;
         }
     }
 

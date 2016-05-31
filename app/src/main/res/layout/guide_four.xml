@@ -29,8 +29,12 @@
         android:layout_marginTop="25dp"
         android:layout_gravity="center_horizontal"/>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
     <Button
-        android:layout_marginTop="25dp"
         android:id="@+id/b_enter"
         android:layout_width="166dp"
         android:layout_height="30dp"
@@ -39,6 +43,10 @@
         android:textSize="20sp"
         android:textColor="#ffffff"
         android:text = "开启安全之旅"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
 
 </LinearLayout>
 

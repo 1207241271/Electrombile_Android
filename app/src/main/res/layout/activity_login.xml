@@ -30,7 +30,7 @@
             android:layout_height="18.67dp"
             android:layout_centerInParent="true"
             android:background="@null"
-            android:hint="输入手机号码"
+            android:hint="输入手机号"
             android:textSize="16sp"
             android:textColorHint = "#66ffffff"
             android:inputType="phone"

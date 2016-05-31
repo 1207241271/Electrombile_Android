@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_guide"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1dcf96"
     android:orientation="vertical">
 
+
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+    </android.support.v4.view.ViewPager>
+
     <LinearLayout
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
@@ -14,38 +24,37 @@
 
         <ImageView
             android:id="@+id/iv_point1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:src="@drawable/guide_point_selected1"/>
 
 
         <ImageView
+            android:layout_marginLeft="10dp"
             android:id="@+id/iv_point2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:src="@drawable/guide_point1" />
 
         <ImageView
+            android:layout_marginLeft="10dp"
             android:id="@+id/iv_point3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:src="@drawable/guide_point1" />
 
         <ImageView
+            android:layout_marginLeft="10dp"
             android:id="@+id/iv_point4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:src="@drawable/guide_point1"
             android:visibility="visible" />
     </LinearLayout>
 
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/viewpager"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </android.support.v4.view.ViewPager>
+        android:layout_height="10dp"/>
 
 
-</RelativeLayout>
+</LinearLayout>
