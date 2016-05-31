@@ -49,20 +49,20 @@
             android:layout_gravity="center_vertical"
             android:orientation="vertical">
             <TextView
+                android:id="@+id/tv_temperature"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="7摄氏度"/>
+                android:textColor="@color/white" />
             <TextView
+                android:id="@+id/tv_weatherStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="多云"/>
+                android:textColor="@color/white"/>
             <TextView
+                android:id="@+id/tv_location"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="洪山区"/>
+                android:textColor="@color/white" />
         </LinearLayout>
     </LinearLayout>
     <View

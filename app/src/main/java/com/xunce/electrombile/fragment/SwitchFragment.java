@@ -379,7 +379,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         img_weather.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                showWeatherDialog(tv_weatherCondition.getText().toString());
+                showWeatherDialog(tv_temperature.getText().toString(),
+                        tv_weatherCondition.getText().toString(),tv_location.getText().toString());
             }
         });
     }
@@ -1224,7 +1225,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
     }
 
-    private void showWeatherDialog(String weatherStatus){
+    private void showWeatherDialog(String temperature,String weatherStatus,String location){
         final LayoutInflater inflater = (LayoutInflater) m_context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.dialog_showweather, null);
         final Dialog dialog = new Dialog(m_context, R.style.Translucent_NoTitle_white);
@@ -1236,6 +1237,13 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 dialog.dismiss();
             }
         });
+
+        TextView tv_temperature = (TextView)view.findViewById(R.id.tv_temperature);
+        TextView tv_weatherStatus = (TextView)view.findViewById(R.id.tv_weatherStatus);
+        TextView tv_location = (TextView)view.findViewById(R.id.tv_location);
+        tv_temperature.setText(temperature);
+        tv_weatherStatus.setText(weatherStatus);
+        tv_location.setText(location);
 
         ImageView img_weather = (ImageView)view.findViewById(R.id.img_weather);
         if(weatherStatus.contains("雨")){
