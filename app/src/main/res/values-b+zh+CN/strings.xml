@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">安全宝</string>
+    <string name="app_name">小安宝</string>
     <string name="action_settings">设置</string>
     <string name="title_activity_login">登陆界面</string>
     <string name="title_activity_register">注册界面</string>
