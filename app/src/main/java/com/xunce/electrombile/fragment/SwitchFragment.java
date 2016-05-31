@@ -843,11 +843,21 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             }
             //设置电池的电量
             refreshBatteryInfo();
+            //设置小安宝的状态
+            setOnlineStatus(true);
         }
         else{
             Message msg = Message.obtain();
             msg.what = 0;
             mhandler.sendMessageDelayed(msg,3000);
+        }
+    }
+
+    public void setOnlineStatus(boolean status){
+        if(status){
+            tv_SimDays.setText("小安宝在线");
+        }else{
+            tv_SimDays.setText("小安宝不在线");
         }
     }
 
@@ -1175,7 +1185,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             else if(intent.getStringExtra("KIND").equals("OTHER")){
                 DeviceChangeHeadImage();
                 setSafedays();
-                m_context.updateTotalItineraryandSim(FragmentActivity.ItineraryandSim);
+                m_context.updateTotalItinerary();
                 m_context.refreshBindList1();
             }
             else if(intent.getStringExtra("KIND").equals("GETINITIALSTATUS")){
@@ -1186,7 +1196,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 m_context.refreshBindList1(FragmentActivity.SWITCHDEVICE,position);
                 DeviceChangeHeadImage();
                 setSafedays();
-                m_context.updateTotalItineraryandSim(FragmentActivity.ItineraryandSim);
+                m_context.updateTotalItinerary();
             }
             else if(intent.getStringExtra("KIND").equals("DELETENONMAINDEVICE")){
                 m_context.refreshBindList1(FragmentActivity.DELETEMONMAINDEVICE,intent.getIntExtra("POSITION",0));
@@ -1194,7 +1204,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             else if(intent.getStringExtra("KIND").equals("DELETEMAINDEVICE")){
                 DeviceChangeHeadImage();
                 setSafedays();
-                m_context.updateTotalItineraryandSim(FragmentActivity.ItineraryandSim);
+                m_context.updateTotalItinerary();
                 m_context.refreshBindList1(FragmentActivity.DELETEMONMAINDEVICE,0);
             }
             else if(intent.getStringExtra("KIND").equals("CHANGEMAINPIC")){

@@ -111,14 +111,10 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     public static final int DELETEMAINDEVICE = 3;
     public static final int DELETEMONMAINDEVICE = 4;
 
-    public static final int ItineraryOnly = 1;
-    public static final int ItineraryandSim = 2;
     public static final String MESSAGE_RECEIVED_ACTION = "com.example.jpushdemo.MESSAGE_RECEIVED_ACTION";
     public static final String KEY_TITLE = "title";
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_EXTRAS = "extras";
-
-
 
     /**
      * The handler. to process exit()
@@ -148,7 +144,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                     MyLog.d("handler", "updateData");
                     //查询电量
                     getBatteryInfo();
-                    updateTotalItineraryandSim(ItineraryOnly);
+                    updateTotalItinerary();
                     break;
             }
         }
@@ -158,8 +154,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         sendMessage(this, mCenter.getBatteryInfo(), setManager.getIMEI());
     }
 
-    //查询总的公里数和sim卡天数
-    public void updateTotalItineraryandSim(final int type){
+    //查询总的公里数
+    public void updateTotalItinerary(){
         AVQuery<AVObject> query = new AVQuery<>("DID");
         query.whereEqualTo("IMEI", setManager.getIMEI());
         query.findInBackground(new FindCallback<AVObject>() {
@@ -172,21 +168,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                             return;
                         }
                         AVObject avObject = list.get(0);
-                        try {
-                            int itinerary = (int) avObject.get("itinerary");
-                            switchFragment.refreshItineraryInfo(itinerary / 1000.0);
-
-                            if(type == 2){
-                                Date createDate = avObject.getCreatedAt();
-                                long timestamp_start = createDate.getTime();
-                                long timestamp = System.currentTimeMillis();
-                                int days = (int)((timestamp-timestamp_start)/3600/24000);
-                                days = 365-days;
-                                switchFragment.refreshSimDays(days);
-                            }
-                        } catch (Exception ee) {
-                            ee.printStackTrace();
-                        }
+                        int itinerary = (int) avObject.get("itinerary");
+                        switchFragment.refreshItineraryInfo(itinerary / 1000.0);
                     }
                 } else {
                     ToastUtils.showShort(FragmentActivity.this, "在DID表中查询该IMEI 查询失败");
@@ -194,8 +177,6 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             }
         });
     }
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -350,8 +331,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                     //获取小安宝的初始状态:电量;自动落锁状态;小安宝的开关状态
                     sendMessage(FragmentActivity.this, mCenter.getInitialStatus(), setManager.getIMEI());
 
-                    //获取总公里数和SIM
-                    updateTotalItineraryandSim(ItineraryandSim);
+                    //获取总公里数
+                    updateTotalItinerary();
 
                     firsttime_Flag = false;
 

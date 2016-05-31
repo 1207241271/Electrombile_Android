@@ -357,26 +357,9 @@ public class MyReceiver extends BroadcastReceiver {
                 mContext.sendBroadcast(intent);//发送广播事件
 
                 ((FragmentActivity) mContext).startThread();
-
-//                //设置小安宝的开关状态
-//                if(settingManager.getAlarmFlag()){
-//                    //这个地方可能会出现问题  有可能switchFramgent的initview函数还没有执行完  这里就需要进行置状态了.
-//                    ((FragmentActivity) mContext).switchFragment.openStateAlarmBtn();
-//                    ((FragmentActivity) mContext).switchFragment.showNotification("安全宝防盗系统已启动");
-//                }
-//                else{
-//                    ((FragmentActivity) mContext).switchFragment.closeStateAlarmBtn();
-//                }
-//
-//                //设置电池的电量
-//                ((FragmentActivity) mContext).switchFragment.refreshBatteryInfo();
-
-                //自动落锁的状态设置
-//                ((FragmentActivity) mContext).settingsFragment.refreshAutolockStatus();
             }
         }
         else{
-//            dealErr(code);
             switch (code) {
                 case ProtocolConstants.ERR_WAITING:
                     ToastUtils.showShort(mContext, "正在设置命令，请稍后...");
@@ -386,6 +369,7 @@ public class MyReceiver extends BroadcastReceiver {
                     ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
                     ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                     ((FragmentActivity) mContext).stopThread();
+                    ((FragmentActivity) mContext).switchFragment.setOnlineStatus(false);
                     break;
                 case ProtocolConstants.ERR_INTERNAL:
                     ToastUtils.showShort(mContext, "服务器内部错误，请稍后再试。");

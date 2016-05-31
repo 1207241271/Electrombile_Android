@@ -279,7 +279,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="12.67sp"
                 android:textColor="#595959"
-                android:text="小安宝流量"/>
+                android:text="小安宝状态"/>
 
             <TextView
                 android:id="@+id/tv_SimDays"
@@ -290,7 +290,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="17.33sp"
                 android:textColor="#009f53"
-                android:text="sim卡流量"/>
+                android:text=""/>
         </RelativeLayout>
 
         <RelativeLayout
