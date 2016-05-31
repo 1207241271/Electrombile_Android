@@ -32,12 +32,13 @@
             android:background="@null"
             android:hint="输入手机号码"
             android:textSize="16sp"
+            android:textColorHint = "#66ffffff"
             android:inputType="phone"
             android:singleLine="true" />
     </RelativeLayout>
 
     <View
-        android:layout_marginTop="13.33dp"
+        android:layout_marginTop="10dp"
         android:layout_gravity="center_horizontal"
         android:layout_width="233.33dp"
         android:layout_height="1dp"
@@ -64,12 +65,13 @@
             android:inputType="textPassword"
             android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             android:hint="输入密码"
+            android:textColorHint = "#66ffffff"
             android:textSize="16sp"
             android:singleLine="true" />
     </RelativeLayout>
 
     <View
-        android:layout_marginTop="13.33dp"
+        android:layout_marginTop="10dp"
         android:layout_gravity="center_horizontal"
         android:layout_width="233.33dp"
         android:layout_height="1dp"
@@ -115,12 +117,20 @@
             android:textSize="14.67sp" />
     </RelativeLayout>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="133.33dp"
         android:layout_gravity="center_horizontal"
         android:text="@string/company_name"
         android:textColor="@color/white"
-        android:textSize="14sp" />
+        android:textSize="16sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="33dp"/>
 </LinearLayout>
