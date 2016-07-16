@@ -95,7 +95,7 @@ public class ForgetPassActivity2 extends Activity {
         }
 
         //正则表达式匹配
-        Pattern p = Pattern.compile("^((13[0-9])|(15[^4,\\D])|(18[0,2,5-9]))\\d{8}$");
+        Pattern p = Pattern.compile("^((13[0-9])|(15[^4,\\D])|(177)|(18[0,2,5-9]))\\d{8}$");
         Matcher m = p.matcher(phone);
         if (!m.matches()) {
             ToastUtils.showShort(context, "手机号码不正确");
