@@ -128,7 +128,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private ImageView img_angle3;
     private ImageView img_angle4;
     private ImageView img_angle5;
-    private TextView tv_SimDays;
+    private TextView tv_status;
 
     public static final int TAKE_PHOTE=1;
     public static final int CROP_PHOTO=2;
@@ -366,7 +366,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             }
         });
 
-        tv_SimDays = (TextView)v.findViewById(R.id.tv_SimDays);
+        tv_status = (TextView)v.findViewById(R.id.tv_status);
 
         tv_battery = (TextView)v.findViewById(R.id.tv_battery);
         tv_distance = (TextView)v.findViewById(R.id.tv_distance);
@@ -866,9 +866,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     public void setOnlineStatus(boolean status){
         if(status){
-            tv_SimDays.setText("小安宝在线");
+            tv_status.setText("小安宝设备正常使用");
         }else{
-            tv_SimDays.setText("小安宝不在线");
+            tv_status.setText("小安宝设备出现异常");
         }
     }
 
@@ -1014,7 +1014,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void refreshSimDays(int days){
-        tv_SimDays.setText("sim卡还有"+String.valueOf(days)+"天到期");
+        tv_status.setText("sim卡还有"+String.valueOf(days)+"天到期");
     }
 
     public void refreshItineraryInfo(double itinerary){

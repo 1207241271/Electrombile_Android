@@ -282,7 +282,7 @@
                 android:text="小安宝状态"/>
 
             <TextView
-                android:id="@+id/tv_SimDays"
+                android:id="@+id/tv_status"
                 android:layout_below="@+id/tv1"
                 android:layout_marginTop="6dp"
                 android:layout_alignLeft="@+id/tv1"
