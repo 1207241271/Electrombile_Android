@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.content.Context;
@@ -96,9 +97,15 @@ public class ExpandableAdapter extends SimpleExpandableListAdapter{
         }
         TextView tv_groupDate = (TextView) convertView.findViewById(R.id.groupDate);
         TextView tv_distance = (TextView) convertView.findViewById(R.id.distance);
+        ImageView img_arrow = (ImageView) convertView.findViewById(R.id.img_arrow);
 
         tv_groupDate.setText(groupData.get(groupPosition).get(DATE));
         tv_distance.setText(groupData.get(groupPosition).get(DISTANCEPERDAY));
+        if(isExpanded){
+            img_arrow.setImageDrawable(context.getResources().getDrawable((R.drawable.arrow_down)));
+        }else{
+            img_arrow.setImageDrawable(context.getResources().getDrawable((R.drawable.arrow_up)));
+        }
 
         return convertView;
     }

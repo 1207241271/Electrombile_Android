@@ -220,6 +220,8 @@ public class TestddActivity extends Activity{
         ConstructListview(1);
 
         expandableListView = (ExpandableListView)findViewById(R.id.expandableListView);
+        expandableListView.setDivider(null);
+        expandableListView.setGroupIndicator(null);
         adapter = new ExpandableAdapter(this,
                 groupData,
                 R.layout.expandgroupview,
