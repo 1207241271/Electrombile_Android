@@ -48,15 +48,15 @@ public class Connections {
 
         //attempt to restore state
         persistence = new Persistence(context);
-//        try {
-//            List<Connection> l = persistence.restoreConnections(context);
-//            MyLog.d("Connections-database-size",l.size()+"");
-//            for (Connection c : l) {
-//                connections.put(c.handle(), c);
-//            }
-//        } catch (PersistenceException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            List<Connection> l = persistence.restoreConnections(context);
+            MyLog.d("Connections-database-size",l.size()+"");
+            for (Connection c : l) {
+                connections.put(c.handle(), c);
+            }
+        } catch (PersistenceException e) {
+            e.printStackTrace();
+        }
 
     }
 

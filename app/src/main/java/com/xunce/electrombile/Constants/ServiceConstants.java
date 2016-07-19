@@ -10,4 +10,5 @@ public class ServiceConstants {
     public static String clientId = "defaultId";
     public static int MQTT_QUALITY_OF_SERVICE = 0;
     public static String handler = "";
+    public static String connection_status = "";
 }

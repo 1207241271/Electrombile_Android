@@ -373,7 +373,7 @@ public class Connection {
     /**
      * Connections status for  a connection
      */
-    enum ConnectionStatus {
+    public enum ConnectionStatus {
 
         /** Client is Connecting **/
         CONNECTING,
@@ -386,7 +386,7 @@ public class Connection {
         /** Client has encountered an Error **/
         ERROR,
         /** Status is unknown **/
-        NONE
+        NONE,
     }
 
 }

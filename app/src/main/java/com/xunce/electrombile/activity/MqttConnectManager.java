@@ -1,14 +1,18 @@
 package com.xunce.electrombile.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import com.avos.avoscloud.LogUtil;
 import com.xunce.electrombile.Constants.ServiceConstants;
+import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
+import com.xunce.electrombile.mqtt.Notify;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -19,6 +23,9 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 //使用单例模式
 /**
@@ -53,49 +60,77 @@ public class MqttConnectManager {
     }
 
     public void initMqtt(){
-        connection = Connection.createConnection(ServiceConstants.clientId,
-                ServiceConstants.MQTT_HOST,
-                ServiceConstants.PORT,
-                mcontext,
-                false);
-        ServiceConstants.handler = connection.handle();
-        Log.d("initMqtt",ServiceConstants.handler);
-        mcp = new MqttConnectOptions();
+        Connections connections = Connections.getInstance(mcontext);
+
+        String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
+        String handle = uri + ServiceConstants.clientId;
+        connection = connections.getConnection(handle);
+        if(connection == null){
+            connection = Connection.createConnection(ServiceConstants.clientId,
+                    ServiceConstants.MQTT_HOST,
+                    ServiceConstants.PORT,
+                    mcontext,
+                    false);
+            ServiceConstants.handler = connection.handle();
+            Log.d("initMqtt",ServiceConstants.handler);
+            mcp = new MqttConnectOptions();
         /*
          * true :那么在客户机建立连接时，将除去客户机的任何旧预订。当客户机断开连接时，会除去客户机在会话期间创建的任何新预订。
          * false:那么客户机创建的任何预订都会被添加至客户机在连接之前就已存在的所有预订。当客户机断开连接时，所有预订仍保持活动状态。
          * 简单来讲，true的话就是每次连接都要重新订阅，false的话就是不用重新订阅
          */
-        mcp.setCleanSession(false);
-        connection.addConnectionOptions(mcp);
+            mcp.setCleanSession(false);
+            connection.addConnectionOptions(mcp);
+            connections.addConnection(connection);
+        }
         mac = connection.getClient();
-
         //设置监听函数
         mac.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable throwable) {
-                if(status.equals(OK)||status.equals(CONNECTING_FAIL)){
-                    MyLog.d("MqttConnectManager", "connectionLost  正在重连");
+//                if(status.equals(OK)||status.equals(CONNECTING_FAIL)){
+//                    MyLog.d("MqttConnectManager", "connectionLost  正在重连");
+//
+//                    if(mac == null){
+//                        return;
+//                    }
+//
+//                    //设置重连
+//                    ToastUtils.showShort(mcontext, "mqtt连接断开,正在重连中");
+//                    if (!mac.isConnected()&&!status.equals(IS_CONNECTING)) {
+//                        MyLog.d("MqttConnectManager", "getMqttConnection开始连接");
+//                        status = IS_CONNECTING;
+//                        getMqttConnection();
+//                    }
+//                    else{
+//                        ToastUtils.showShort(mcontext, "mac为空 或者 连接好的状态");
+//                    }
+//                }
+//                else if(status.equals(IS_CONNECTING)){
+//                    //do nothing
+//                }
+                if (throwable != null) {
+                    Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
+                    c.addAction("Connection Lost");
+                    c.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
 
-                    if(mac == null){
-                        return;
-                    }
+                    //format string to use a notification text
+                    Object[] args = new Object[2];
+                    args[0] = c.getId();
+                    args[1] = c.getHostName();
 
-                    //设置重连
-                    ToastUtils.showShort(mcontext, "mqtt连接断开,正在重连中");
-                    if (!mac.isConnected()&&!status.equals(IS_CONNECTING)) {
-                        MyLog.d("MqttConnectManager", "getMqttConnection开始连接");
-                        status = IS_CONNECTING;
-                        getMqttConnection();
-                    }
-                    else{
-                        ToastUtils.showShort(mcontext, "mac为空 或者 连接好的状态");
-                    }
+                    String message = mcontext.getString(R.string.connection_lost, args);
+
+                    //build intent
+                    Intent intent = new Intent();
+                    intent.setClassName(mcontext, "org.eclipse.paho.android.service.sample.ConnectionDetails");
+                    intent.putExtra("handle", connection.handle());
+
+                    //notify the user
+                    Notify.notifcation(mcontext, message, intent, R.string.notifyTitle_connectionLost);
+
+                    ServiceConstants.connection_status = "connection lost";
                 }
-                else if(status.equals(IS_CONNECTING)){
-                    //do nothing
-                }
-
             }
 
             @Override
@@ -113,11 +148,12 @@ public class MqttConnectManager {
     public void getMqttConnection(){
         try {
             MyLog.d("getMqttConnection", "1");
-            mac.connect(mcp, this, new IMqttActionListener() {
+            mac.connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     onMqttConnectListener.MqttConnectSuccess();
                     MyLog.d("getMqttConnection", "MqttConnectSuccess 连接服务器成功");
+                    ServiceConstants.connection_status = "connected";
                 }
 
                 @Override

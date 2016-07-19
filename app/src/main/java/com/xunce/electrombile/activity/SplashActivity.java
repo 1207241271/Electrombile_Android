@@ -300,7 +300,7 @@ public class SplashActivity extends InstrumentedActivity {
     private void getDeviceId() {
         TelephonyManager TelephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         Random random = new Random(100);
-        ServiceConstants.clientId = TelephonyMgr.getDeviceId() + random.nextInt();
+        ServiceConstants.clientId = TelephonyMgr.getDeviceId();
     }
 
     class updateRunnable implements Runnable {

@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 
 /**
@@ -22,6 +23,7 @@ public class AboutActivity extends Activity{
     Button feadbackBtn;
     TextView tv_appInfo;
     String versionName;
+    TextView tv_mqtt_connecitonstatus;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +40,7 @@ public class AboutActivity extends Activity{
         }
 
 
+        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
         returnBtn = (Button)findViewById(R.id.btn_returnFromFelp);
         returnBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,6 +67,7 @@ public class AboutActivity extends Activity{
         });
         tv_appInfo = (TextView)findViewById(R.id.tv_appInfo);
         tv_appInfo.setText("安全宝 V" + versionName);
+        tv_mqtt_connecitonstatus.setText(ServiceConstants.connection_status);
     }
 
     @Override
