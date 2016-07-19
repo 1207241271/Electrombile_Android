@@ -71,8 +71,6 @@ public class MqttConnectManager {
                     ServiceConstants.PORT,
                     mcontext,
                     false);
-            ServiceConstants.handler = connection.handle();
-            Log.d("initMqtt",ServiceConstants.handler);
             mcp = new MqttConnectOptions();
         /*
          * true :那么在客户机建立连接时，将除去客户机的任何旧预订。当客户机断开连接时，会除去客户机在会话期间创建的任何新预订。
@@ -83,6 +81,7 @@ public class MqttConnectManager {
             connection.addConnectionOptions(mcp);
             connections.addConnection(connection);
         }
+        ServiceConstants.handler = connection.handle();
         mac = connection.getClient();
         //设置监听函数
         mac.setCallback(new MqttCallback() {
@@ -154,12 +153,14 @@ public class MqttConnectManager {
                     onMqttConnectListener.MqttConnectSuccess();
                     MyLog.d("getMqttConnection", "MqttConnectSuccess 连接服务器成功");
                     ServiceConstants.connection_status = "connected";
+                    connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                     onMqttConnectListener.MqttConnectFail();
                     MyLog.d("getMqttConnection", "MqttConnectSuccess 连接服务器失败");
+                    connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
                 }
             });
 //            MyLog.d("getMqttConnection", "2");

@@ -49,6 +49,7 @@ import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager;
+import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
 import com.xunce.electrombile.receiver.MyReceiver;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -59,6 +60,8 @@ import com.xunce.electrombile.view.viewpager.CustomViewPager;
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -115,6 +118,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     public static final String KEY_TITLE = "title";
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_EXTRAS = "extras";
+
+    private ChangeListener changeListener = null;
 
     /**
      * The handler. to process exit()
@@ -251,6 +256,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (mac != null) {
             mac.unregisterResources();
             LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+            Connections.getInstance(this).getConnection(ServiceConstants.handler).removeChangeListener(changeListener);
         }
         if (TracksManager.getTracks() != null) TracksManager.clearTracks();
 
@@ -316,6 +322,10 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         mqttConnectManager.setOnMqttConnectListener(new MqttConnectManager.OnMqttConnectListener() {
             @Override
             public void MqttConnectSuccess() {
+                Connection connection = Connections.getInstance(FragmentActivity.this).getConnection(ServiceConstants.handler);
+                changeListener = new ChangeListener();
+                connection.registerChangeListener(changeListener);
+
                 mac = mqttConnectManager.getMac();
                 //这些是在呈现了页面之后执行的
                 MqttConnectManager.status = MqttConnectManager.OK;
@@ -729,6 +739,24 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                 StringBuilder showMsg = new StringBuilder();
                 showMsg.append(KEY_MESSAGE + " : " + messge + "\n");
             }
+        }
+    }
+
+
+    /**
+     * <code>ChangeListener</code> updates the UI when the {@link Connection}
+     * object it is associated with updates
+     *
+     */
+    private class ChangeListener implements PropertyChangeListener {
+
+        /**
+         * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+         */
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {
+            String status = Connections.getInstance(FragmentActivity.this).getConnection(ServiceConstants.handler).getStatus();
+            switchFragment.refreshMqttstatus(status);
         }
     }
 }

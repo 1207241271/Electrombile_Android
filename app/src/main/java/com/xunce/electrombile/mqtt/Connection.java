@@ -389,4 +389,8 @@ public class Connection {
         NONE,
     }
 
+    public String getStatus(){
+        return status.name();
+    }
+
 }

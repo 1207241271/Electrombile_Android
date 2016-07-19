@@ -129,6 +129,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private ImageView img_angle4;
     private ImageView img_angle5;
     private TextView tv_status;
+    private TextView tv_mqttStatus;
 
     public static final int TAKE_PHOTE=1;
     public static final int CROP_PHOTO=2;
@@ -386,6 +387,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         tv_weatherCondition.getText().toString(),tv_location.getText().toString());
             }
         });
+
+        tv_mqttStatus = (TextView)v.findViewById(R.id.tv_mqttStatus);
     }
 
     private void initEvent() {
@@ -1266,5 +1269,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.addContentView(view, new LinearLayout.LayoutParams(
                 dialog_width, ViewGroup.LayoutParams.WRAP_CONTENT));
         dialog.show();
+    }
+
+
+    public void refreshMqttstatus(String status){
+        tv_mqttStatus.setText(status);
     }
 }
