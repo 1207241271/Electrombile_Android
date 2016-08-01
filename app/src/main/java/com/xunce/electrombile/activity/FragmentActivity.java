@@ -216,6 +216,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             mqttConnectManager.setContext(FragmentActivity.this);
             mqttConnectManager.initMqtt();
             queryIMEIandMqttConnection();
+            MyLog.d("FragmentActivity", "onStart-queryIMEIandMqttConnection");
         }
     }
 

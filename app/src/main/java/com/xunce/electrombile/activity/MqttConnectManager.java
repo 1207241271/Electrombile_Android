@@ -162,19 +162,23 @@ public class MqttConnectManager {
         });
     }
 
-    public void reconnectMqtt(OnMqttConnectListener callback) {
+    public void reconnectMqtt(final OnMqttConnectListener callback) {
         Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
         try {
             c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
+                    Log.d("reconnectMqtt","onSuccess");
                     ServiceConstants.connection_status = "connected";
                     connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
+                    callback.MqttConnectSuccess();
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    Log.d("reconnectMqtt","onFailure");
                     connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
+                    callback.MqttConnectFail();
                 }
             });
         } catch (MqttException e1) {
