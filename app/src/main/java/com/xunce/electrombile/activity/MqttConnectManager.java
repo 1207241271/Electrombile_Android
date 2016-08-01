@@ -44,7 +44,7 @@ public class MqttConnectManager {
     public static final String CONNECTING_FAIL = "CONNECTING_FAIL";
     public static String status = OK;
 
-    private MqttConnectManager(){
+    private MqttConnectManager() {
 
     }
 
@@ -54,18 +54,44 @@ public class MqttConnectManager {
         return INSTANCE;
     }
 
-//    获取到对象之后首先执行这个函数
-    public void setContext(Context context){
+    //    获取到对象之后首先执行这个函数
+    public void setContext(Context context) {
         mcontext = context;
     }
 
-    public void initMqtt(){
+//    private Connection getConnection(){
+//        Connections connections = Connections.getInstance(mcontext);
+//        String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
+//        String handle = uri + ServiceConstants.clientId;
+//        connection = connections.getConnection(handle);
+//        if(connection == null){
+//            connection = Connection.createConnection(ServiceConstants.clientId,
+//                    ServiceConstants.MQTT_HOST,
+//                    ServiceConstants.PORT,
+//                    mcontext,
+//                    false);
+//            mcp = new MqttConnectOptions();
+//        /*
+//         * true :那么在客户机建立连接时，将除去客户机的任何旧预订。当客户机断开连接时，会除去客户机在会话期间创建的任何新预订。
+//         * false:那么客户机创建的任何预订都会被添加至客户机在连接之前就已存在的所有预订。当客户机断开连接时，所有预订仍保持活动状态。
+//         * 简单来讲，true的话就是每次连接都要重新订阅，false的话就是不用重新订阅
+//         */
+//            mcp.setCleanSession(false);
+//            connection.addConnectionOptions(mcp);
+//            connections.addConnection(connection);
+//            return connection;
+//        }else{
+//            return connection;
+//        }
+//    }
+
+    public void initMqtt() {
         Connections connections = Connections.getInstance(mcontext);
 
         String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
         String handle = uri + ServiceConstants.clientId;
         connection = connections.getConnection(handle);
-        if(connection == null){
+        if (connection == null) {
             connection = Connection.createConnection(ServiceConstants.clientId,
                     ServiceConstants.MQTT_HOST,
                     ServiceConstants.PORT,
@@ -87,27 +113,6 @@ public class MqttConnectManager {
         mac.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable throwable) {
-//                if(status.equals(OK)||status.equals(CONNECTING_FAIL)){
-//                    MyLog.d("MqttConnectManager", "connectionLost  正在重连");
-//
-//                    if(mac == null){
-//                        return;
-//                    }
-//
-//                    //设置重连
-//                    ToastUtils.showShort(mcontext, "mqtt连接断开,正在重连中");
-//                    if (!mac.isConnected()&&!status.equals(IS_CONNECTING)) {
-//                        MyLog.d("MqttConnectManager", "getMqttConnection开始连接");
-//                        status = IS_CONNECTING;
-//                        getMqttConnection();
-//                    }
-//                    else{
-//                        ToastUtils.showShort(mcontext, "mac为空 或者 连接好的状态");
-//                    }
-//                }
-//                else if(status.equals(IS_CONNECTING)){
-//                    //do nothing
-//                }
                 if (throwable != null) {
                     Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
                     c.addAction("Connection Lost");
@@ -129,6 +134,19 @@ public class MqttConnectManager {
                     Notify.notifcation(mcontext, message, intent, R.string.notifyTitle_connectionLost);
 
                     ServiceConstants.connection_status = "connection lost";
+                    Log.d("initMqtt","connection lost");
+
+                    reconnectMqtt(new OnMqttConnectListener() {
+                        @Override
+                        public void MqttConnectSuccess() {
+                            Log.d("reconnectMqtt","MqttConnectSuccess");
+                        }
+
+                        @Override
+                        public void MqttConnectFail() {
+                            Log.d("reconnectMqtt","MqttConnectFail");
+                        }
+                    });
                 }
             }
 
@@ -143,6 +161,28 @@ public class MqttConnectManager {
             }
         });
     }
+
+    public void reconnectMqtt(OnMqttConnectListener callback) {
+        Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
+        try {
+            c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    ServiceConstants.connection_status = "connected";
+                    connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
+                }
+            });
+        } catch (MqttException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+
 
     public void getMqttConnection(){
         try {

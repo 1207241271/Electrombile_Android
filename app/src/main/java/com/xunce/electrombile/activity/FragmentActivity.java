@@ -385,8 +385,27 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
         if (mac == null||!mac.isConnected()) {
 //            ToastUtils.showShort(context, "请先连接设备，或等待连接。");
+            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+            mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
+                @Override
+                public void MqttConnectSuccess() {
+                    try {
+                        //向服务器发送命令
+                        mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
+                    } catch (MqttException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void MqttConnectFail() {
+
+                }
+            });
             return;
         }
+
+
         try {
             //向服务器发送命令
             mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
