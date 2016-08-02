@@ -208,14 +208,17 @@ public class Binding {
                                 ToastUtils.showShort(mContext,"设备已经被绑定");
                                 return;
                             }
+                            ToastUtils.showShort(mContext, "您正在绑定主车辆...");
+
                             bindDevice.put("device", avObjects.get(0));
-                            if (list.size() > 0) {
-                                bindDevice.put("isAdmin", false);
-                                ToastUtils.showShort(mContext, "您正在绑定附属车辆...");
-                            } else {
-                                bindDevice.put("isAdmin", true);
-                                ToastUtils.showShort(mContext, "您正在绑定主车辆...");
-                            }
+//                            if (list.size() > 0) {
+//                                bindDevice.put("isAdmin", false);
+//                                ToastUtils.showShort(mContext, "您正在绑定附属车辆...");
+//                            } else {
+//                                bindDevice.put("isAdmin", true);
+//                                ToastUtils.showShort(mContext, "您正在绑定主车辆...");
+//                            }
+                            bindDevice.put("isAdmin", true);
                             bindDevice.put("IMEI", IMEI);
                             bindDevice.saveInBackground(new SaveCallback() {
                                 @Override
