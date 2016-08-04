@@ -89,7 +89,7 @@ public class TestddActivity extends Activity{
     private List<List<Map<String, String>>> childData;
 
     private int trackCount;
-    private ArrayList<Integer> localmilesList;
+//    private ArrayList<Integer> localmilesList;
     private String IMEI;
 
     private Handler mhandler = new Handler(){
@@ -123,8 +123,10 @@ public class TestddActivity extends Activity{
         ArrayList<Integer> milesList = tracksManager.milesMap.get(String.valueOf(GroupPosition));
         long timeStamp = endT.getTime()/1000;
         for(int i = 0; i <childData.get(GroupPosition).size();i++){
+//            dbManage.insert(timeStamp,i,childData.get(GroupPosition).get(i).get(STARTPOINT),
+//                    childData.get(GroupPosition).get(i).get(ENDPOINT),null,milesList.get(i));
             dbManage.insert(timeStamp,i,childData.get(GroupPosition).get(i).get(STARTPOINT),
-                    childData.get(GroupPosition).get(i).get(ENDPOINT),null,milesList.get(i));
+                    childData.get(GroupPosition).get(i).get(ENDPOINT),null,0);
         }
         insertDateTrackSecond();
     }
@@ -288,15 +290,20 @@ public class TestddActivity extends Activity{
         System.gc();
     }
 
-    private void findCloud(){
+    private void findCloud(int skip){
         if(NetworkUtils.checkNetwork(this)){
             return;
         }
 
-        String ItineraryTableName = "Itinerary_"+IMEI;
-        AVQuery<AVObject> query = new AVQuery<AVObject>(ItineraryTableName);
+//        String ItineraryTableName = "Itinerary_"+IMEI;
+        totalSkip += skip;
+        final int finalSkip = totalSkip;
+        AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
+        query.setLimit(1000);
+        query.whereEqualTo("IMEI", IMEI);
         query.whereGreaterThanOrEqualTo("createdAt", startT);
         query.whereLessThan("createdAt", endT);
+        query.setSkip(finalSkip);
 
         watiDialog.setMessage("正在查询数据，请稍后…");
         watiDialog.show();
@@ -324,79 +331,116 @@ public class TestddActivity extends Activity{
                         adapter.notifyDataSetChanged();
                         return;
 
-                    } else {
-                        //创建数据库
-                        if (!startT.equals(todayDate) && (FlagRecentDate)) {
-                            if (dbManage == null) {
-                                dbManage = new DBManage(TestddActivity.this, IMEI);
-                            }
-                            //什么时候需要创建这张表  当为近期的数据的时候
-                            String date = sdf.format(endT);
-                            dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
-                        }
-
-                        final int count = avObjects.size();
-
-                        tracksManager.initTracks(count);
-                        trackCount = 0;
-
-                        if (localmilesList == null) {
-                            localmilesList = new ArrayList<Integer>();
-                        } else {
-                            localmilesList.clear();
-                        }
-
-                        for (final AVObject avObject : avObjects) {
-                            //再查询一次  查询对应的gps
-                            long start_timestamp = avObject.getLong("start");
-                            long end_timestamp = avObject.getLong("end");
-                            if (start_timestamp > 10 && end_timestamp > 10) {
-                                AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
-                                query.setLimit(1000);
-                                query.whereEqualTo("IMEI", IMEI);
-
-                                //单位转换:  由秒转换成毫秒
-//                                Date startDate = new Date(start_timestamp * 1000);
-//                                Date endDate = new Date(end_timestamp * 1000);
-                                query.whereGreaterThanOrEqualTo("time", start_timestamp);
-                                query.whereLessThan("time", end_timestamp);
-                                query.findInBackground(new FindCallback<AVObject>() {
-                                    @Override
-                                    public void done(List<AVObject> list, AVException e) {
-                                        if (e == null) {
-                                            //如果固件分段有问题的话  这个地方的size可能为0或者1
-                                            //这个地方有多次查询  是可能出现轨迹的顺序错乱的
-                                            if (list.size() > 0) {
-                                                tracksManager.setOneTrack(list, trackCount);
-                                                int mile = (int) avObject.get("miles");
-                                                localmilesList.add(mile);
-                                            }
-                                            trackCount++;
-                                            if (trackCount == count) {
-                                                //在这里需要先对tracks进行顺序调整
-                                                tracksManager.orderTracks();
-                                                updateListView();
-                                                tracksManager.setMilesMap(GroupPosition, localmilesList);
-                                            }
-                                        } else {
-                                            dialog.setTitle("查询失败" + e.getMessage());
-                                            dialog.show();
-                                            watiDialog.dismiss();
-                                        }
-                                    }
-                                });
-                            } else {
-                                trackCount++;
-                                if (trackCount == count) {
-                                    //说明当天查到的数据是由测试数据的  这个时候就处理为无数据
-                                    watiDialog.dismiss();
-                                    dialog.setTitle("此时间段内没有数据");
-                                    dialog.show();
-                                }
-                            }
-                        }
                     }
-                } else {
+//                    else {
+                        //创建数据库
+//                        if (!startT.equals(todayDate) && (FlagRecentDate)) {
+//                            if (dbManage == null) {
+//                                dbManage = new DBManage(TestddActivity.this, IMEI);
+//                            }
+//                            //什么时候需要创建这张表  当为近期的数据的时候
+//                            String date = sdf.format(endT);
+//                            dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+//                        }
+//
+//                        final int count = avObjects.size();
+//
+//                        tracksManager.initTracks(count);
+//                        trackCount = 0;
+
+//                        if (localmilesList == null) {
+//                            localmilesList = new ArrayList<Integer>();
+//                        } else {
+//                            localmilesList.clear();
+//                        }
+
+//                        for (final AVObject avObject : avObjects) {
+//                            //再查询一次  查询对应的gps
+//                            long start_timestamp = avObject.getLong("start");
+//                            long end_timestamp = avObject.getLong("end");
+//                            if (start_timestamp > 10 && end_timestamp > 10) {
+//                                AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
+//                                query.setLimit(1000);
+//                                query.whereEqualTo("IMEI", IMEI);
+//
+//                                //单位转换:  由秒转换成毫秒
+////                                Date startDate = new Date(start_timestamp * 1000);
+////                                Date endDate = new Date(end_timestamp * 1000);
+//                                query.whereGreaterThanOrEqualTo("time", start_timestamp);
+//                                query.whereLessThan("time", end_timestamp);
+//                                query.findInBackground(new FindCallback<AVObject>() {
+//                                    @Override
+//                                    public void done(List<AVObject> list, AVException e) {
+//                                        if (e == null) {
+//                                            //如果固件分段有问题的话  这个地方的size可能为0或者1
+//                                            //这个地方有多次查询  是可能出现轨迹的顺序错乱的
+//                                            if (list.size() > 0) {
+//                                                tracksManager.setOneTrack(list, trackCount);
+//                                                int mile = (int) avObject.get("miles");
+//                                                localmilesList.add(mile);
+//                                            }
+//                                            trackCount++;
+//                                            if (trackCount == count) {
+//                                                //在这里需要先对tracks进行顺序调整
+//                                                tracksManager.orderTracks();
+//                                                updateListView();
+//                                                tracksManager.setMilesMap(GroupPosition, localmilesList);
+//                                            }
+//                                        } else {
+//                                            dialog.setTitle("查询失败" + e.getMessage());
+//                                            dialog.show();
+//                                            watiDialog.dismiss();
+//                                        }
+//                                    }
+//                                });
+//                            } else {
+//                                trackCount++;
+//                                if (trackCount == count) {
+//                                    //说明当天查到的数据是由测试数据的  这个时候就处理为无数据
+//                                    watiDialog.dismiss();
+//                                    dialog.setTitle("此时间段内没有数据");
+//                                    dialog.show();
+//                                }
+//                            }
+//                        }
+//                    }
+                    else if(startT.equals(todayDate)&&avObjects.size() == 1){
+                        List<Map<String, String>> listMap = new ArrayList<>();
+                        childData.set(GroupPosition, listMap);
+                        adapter.notifyDataSetChanged();
+                        dialog.setTitle("此时间段内没有数据");
+                        dialog.show();
+                        return;
+                    }
+
+                    //创建数据库
+                    if (!startT.equals(todayDate) && (FlagRecentDate)) {
+                        if (dbManage == null) {
+                            dbManage = new DBManage(TestddActivity.this, IMEI);
+                        }
+                        //什么时候需要创建这张表  当为近期的数据的时候
+                        String date = sdf.format(endT);
+                        dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+                    }
+                    for (AVObject thisObject : avObjects) {
+                        totalAVObjects.add(thisObject);
+                    }
+                    if (avObjects.size() >= 1000) {
+                        //     Log.d(TAG, "data more than 1000");
+                        findCloud(1000);
+                    }
+                    if ((totalAVObjects.size() > 1000) && (avObjects.size() < 1000) ||
+                            (totalSkip == 0) && (avObjects.size() < 1000)) {
+                        tracksManager.setTranks(GroupPosition, totalAVObjects);
+//                        //更新本地数据
+                        TracksBean.getInstance().setTracksData(tracksManager.getTracks());
+
+                        updateListView();
+                        watiDialog.dismiss();
+                    }
+
+                }
+                else {
                     watiDialog.dismiss();
                     //在leancloud上没有对应的里程表
                     if (e.getCode() == 101) {
@@ -471,7 +515,7 @@ public class TestddActivity extends Activity{
         //如果查询的数据是30天之外的  就直接和leancloud交互,不要存取数据库
         if(groupPosition>30){
             FlagRecentDate = false;
-            findCloud();
+            findCloud(0);
             return;
         }
 
@@ -479,7 +523,7 @@ public class TestddActivity extends Activity{
 
         if(startT.equals(todayDate)){
             //直接从leancloud上获取数据
-            findCloud();
+            findCloud(0);
             return;
 
         }
@@ -495,7 +539,7 @@ public class TestddActivity extends Activity{
                 int resultCount = dbManage.query(filter);
                 if(0 == resultCount){
                     //之前没有查过,数据库里没有相关的数据
-                    findCloud();
+                    findCloud(0);
                     return;
                 }
                 else if(1 == resultCount){
@@ -545,7 +589,7 @@ public class TestddActivity extends Activity{
                 }
             }
             else{
-                findCloud();
+                findCloud(0);
             }
         }
     }
@@ -568,8 +612,8 @@ public class TestddActivity extends Activity{
         if(0 == Start_End_TYPE)
         {
             childData.get(GroupPosition).get(TrackPosition).put(STARTPOINT,result);
-            childData.get(GroupPosition).get(TrackPosition).put(MILES,
-                    String.valueOf(localmilesList.get(TrackPosition)));
+//            childData.get(GroupPosition).get(TrackPosition).put(MILES,
+//                    String.valueOf(localmilesList.get(TrackPosition)));
         }
 
         else{

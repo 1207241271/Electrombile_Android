@@ -64,68 +64,69 @@ public class TracksManager implements Serializable{
     }
 
 //    //这个函数看的不是很懂啊
-//    public void setTranks(int groupposition,List<AVObject> objects){
-//        tracks = new ArrayList<>();
-//        Log.i("Track managet-----", "setTranks" + objects.size());
-//        AVObject lastSavedObject = null;
-//        LatLng lastSavedPoint = null;
-//        ArrayList<TrackPoint> dataList = null;
-//
-//        for(AVObject thisObject: objects){
-//            if(dataList == null){
-//                dataList = new ArrayList<>();
-//                tracks.add(dataList);
-//            }
-//            double lat = thisObject.getDouble(KET_LAT);
-//            double lon = thisObject.getDouble(KET_LONG);
-//
-//            //百度地图的LatLng类对输入有限制，如果longitude过大，则会导致结果不正确
-//            //lybvinci 修改 @date 9.28
-//            LatLng oldPoint = new LatLng(lat, lon);
-//            LatLng bdPoint = mCenter.convertPoint(oldPoint);
-//
-//            //如果本次循环数据跟上一个已保存的数据坐标相同，则跳过
-//            double dis = Math.abs(DistanceUtil.getDistance(lastSavedPoint, bdPoint));
-//            Log.i("******", dis + "");
-//            //如果上次的点和这次的点之间的距离小于200m就不记录了  这样合理吗????
-//            if(lastSavedObject != null && dis  <= MAX_DISTANCE){
-//                //Log.i("","distance should less 200M:::" + dis);
-//                continue;
-//            }
-//
-//            //如果下一个数据与上一个已保存的数据时间间隔大于MAX_TIMEINRVAL
-//            if(lastSavedObject != null &&((thisObject.getCreatedAt().getTime() - lastSavedObject.getCreatedAt().getTime()) / 1000 >= MAX_TIMEINRVAL)){
-//                Log.e("stilllllll point", "");
-////                if(dataList.size() > 1) {
-////                    tracks.add(dataList);
-////                }
-//                if(tracks.get(tracks.size() - 1).size() <= 1)
-//                    tracks.remove(tracks.size() - 1);
-//                    dataList = new ArrayList<>();
+    public void setTranks(int groupposition,List<AVObject> objects){
+        tracks = new ArrayList<>();
+        Log.i("Track managet-----", "setTranks" + objects.size());
+        AVObject lastSavedObject = null;
+        LatLng lastSavedPoint = null;
+        ArrayList<TrackPoint> dataList = null;
+
+        for(AVObject thisObject: objects){
+            if(dataList == null){
+                dataList = new ArrayList<>();
+                tracks.add(dataList);
+            }
+            double lat = thisObject.getDouble(KET_LAT);
+            double lon = thisObject.getDouble(KET_LONG);
+            int speed = thisObject.getInt(SPEED);
+
+            //百度地图的LatLng类对输入有限制，如果longitude过大，则会导致结果不正确
+            //lybvinci 修改 @date 9.28
+            LatLng oldPoint = new LatLng(lat, lon);
+            LatLng bdPoint = mCenter.convertPoint(oldPoint);
+
+            //如果本次循环数据跟上一个已保存的数据坐标相同，则跳过
+            double dis = Math.abs(DistanceUtil.getDistance(lastSavedPoint, bdPoint));
+            Log.i("******", dis + "");
+            //如果上次的点和这次的点之间的距离小于200m就不记录了  这样合理吗????
+            if(lastSavedObject != null && dis  <= MAX_DISTANCE){
+                //Log.i("","distance should less 200M:::" + dis);
+                continue;
+            }
+
+            //如果下一个数据与上一个已保存的数据时间间隔大于MAX_TIMEINRVAL
+            if(lastSavedObject != null &&((thisObject.getCreatedAt().getTime() - lastSavedObject.getCreatedAt().getTime()) / 1000 >= MAX_TIMEINRVAL)){
+                Log.e("stilllllll point", "");
+//                if(dataList.size() > 1) {
 //                    tracks.add(dataList);
 //                }
-//
-//            //打印当前点信息
-////            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//            TrackPoint p = new TrackPoint(thisObject.getCreatedAt(), bdPoint);
-//            //不确定这样处理会不会有什么错误   现在关于日期处理的这个部分还没有搞得很清楚
-//            p.time.setHours(p.time.getHours());
+                if(tracks.get(tracks.size() - 1).size() <= 1)
+                    tracks.remove(tracks.size() - 1);
+                    dataList = new ArrayList<>();
+                    tracks.add(dataList);
+                }
+
+            //打印当前点信息
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            TrackPoint p = new TrackPoint(thisObject.getCreatedAt(), bdPoint,speed);
+            //不确定这样处理会不会有什么错误   现在关于日期处理的这个部分还没有搞得很清楚
+            p.time.setHours(p.time.getHours());
 //            if(isOutOfHubei(bdPoint)){
 //                Log.i(TAG, "out range");
 //                continue;
 //            }
-//            dataList.add(p);
-//            lastSavedObject = thisObject;
-//            lastSavedPoint = bdPoint;
-//
-//        }
-//        //当只有一个列表且列表内只有一个数据时，移除
-//        if(tracks.size() == 1 && tracks.get(0).size() <= 1){
-//            tracks.remove(tracks.size() - 1);
-//        }
-//        Log.i(TAG, "tracks1 size:" + tracks.size());
-//        SetMapTrack(groupposition, tracks);
-//    }
+            dataList.add(p);
+            lastSavedObject = thisObject;
+            lastSavedPoint = bdPoint;
+
+        }
+        //当只有一个列表且列表内只有一个数据时，移除
+        if(tracks.size() == 1 && tracks.get(0).size() <= 1){
+            tracks.remove(tracks.size() - 1);
+        }
+        Log.i(TAG, "tracks1 size:" + tracks.size());
+        SetMapTrack(groupposition, tracks);
+    }
 
     public void initTracks(int size){
         tracks = new ArrayList<>(size);

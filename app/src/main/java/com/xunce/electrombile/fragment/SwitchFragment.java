@@ -1273,6 +1273,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
 
     public void refreshMqttstatus(String status){
-        tv_mqttStatus.setText(status);
+        if(tv_mqttStatus!=null){
+            tv_mqttStatus.setText(status);
+        }
+
     }
 }
