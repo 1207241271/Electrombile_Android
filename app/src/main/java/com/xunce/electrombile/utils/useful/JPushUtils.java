@@ -39,18 +39,16 @@ public class JPushUtils {
                 case 0:
                     logs = "Set tag and alias success";
                     Log.i(TAG, logs);
-//                    setTagCallback.setTagSuccess();
                     break;
 
                 case 6002:
                     logs = "Failed to set alias and tags due to timeout. Try again after 60s.";
                     Log.i(TAG, logs);
-//                    if (JPushUtils.isConnected(mContext)) {
-//                        handler.sendMessageDelayed(handler.obtainMessage(MSG_SET_ALIAS, alias), 1000 * 60);
-//                    } else {
-//                        Log.i(TAG, "No network");
-//                    }
-//                    setTagCallback.setTagFail();
+                    if (JPushUtils.isConnected(mContext)) {
+                        handler.sendMessageDelayed(handler.obtainMessage(MSG_SET_ALIAS, alias), 1000 * 60);
+                    } else {
+                        Log.i(TAG, "No network");
+                    }
                     break;
 
                 default:

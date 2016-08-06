@@ -2,6 +2,8 @@ package com.xunce.electrombile.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import com.avos.avoscloud.LogUtil;
@@ -14,6 +16,7 @@ import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
 import com.xunce.electrombile.mqtt.Notify;
 import com.xunce.electrombile.utils.system.ToastUtils;
+import com.xunce.electrombile.utils.useful.NetworkUtils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -26,6 +29,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import cn.jpush.android.api.JPushInterface;
 
 //使用单例模式
 /**
@@ -43,6 +48,26 @@ public class MqttConnectManager {
     public static final String IS_CONNECTING = "IS_CONNECTING";
     public static final String CONNECTING_FAIL = "CONNECTING_FAIL";
     public static String status = OK;
+
+    final Handler handler = new Handler( ) {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                   reconnectMqtt(new OnMqttConnectListener() {
+                       @Override
+                       public void MqttConnectSuccess() {
+
+                       }
+
+                       @Override
+                       public void MqttConnectFail() {
+                           handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
+                       }
+                   });
+                    break;
+            }
+        }
+    };
 
     private MqttConnectManager() {
 
@@ -131,7 +156,7 @@ public class MqttConnectManager {
                     intent.putExtra("handle", connection.handle());
 
                     //notify the user
-                    Notify.notifcation(mcontext, message, intent, R.string.notifyTitle_connectionLost);
+//                    Notify.notifcation(mcontext, message, intent, R.string.notifyTitle_connectionLost);
 
                     ServiceConstants.connection_status = "connection lost";
                     Log.d("initMqtt","connection lost");
@@ -163,26 +188,33 @@ public class MqttConnectManager {
     }
 
     public void reconnectMqtt(final OnMqttConnectListener callback) {
-        Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
-        try {
-            c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.d("reconnectMqtt","onSuccess");
-                    ServiceConstants.connection_status = "connected";
-                    connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
-                    callback.MqttConnectSuccess();
-                }
+        if(NetworkUtils.isNetworkConnected(App.getInstance())){
+            Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
+            try {
+                c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.d("reconnectMqtt","onSuccess");
+                        ServiceConstants.connection_status = "connected";
+                        connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
+                        callback.MqttConnectSuccess();
+                    }
 
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    Log.d("reconnectMqtt","onFailure");
-                    connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
-                    callback.MqttConnectFail();
-                }
-            });
-        } catch (MqttException e1) {
-            e1.printStackTrace();
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.d("reconnectMqtt", "onFailure");
+                        connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
+                        callback.MqttConnectFail();
+                    }
+                });
+            } catch (MqttException e1) {
+                e1.printStackTrace();
+            }
+        }else{
+            //无网络
+            Message msg = Message.obtain();
+            msg.what = 0;
+            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
         }
     }
 
