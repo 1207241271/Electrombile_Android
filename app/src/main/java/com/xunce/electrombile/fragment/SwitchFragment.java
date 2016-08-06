@@ -712,7 +712,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
                     }
                     else{
-                        ToastUtils.showShort(m_context,"mqtt连接失败");
+//                        ToastUtils.showShort(m_context,"mqtt连接失败");
+                        //mqtt连接
+                        (m_context).sendMessage(m_context, mCenter.cmdFenceOn(), setManager.getIMEI());
+
                     }
                 } else {
                     ToastUtils.showShort(m_context, "请先绑定设备");

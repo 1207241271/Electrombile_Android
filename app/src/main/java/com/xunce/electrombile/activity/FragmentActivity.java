@@ -42,6 +42,7 @@ import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.applicatoin.Historys;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.fragment.SwitchFragment;
@@ -59,6 +60,8 @@ import com.xunce.electrombile.view.viewpager.CustomViewPager;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -200,7 +203,9 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
         JPushInterface.init(getApplicationContext());
         registerMessageReceiver();
-        jPushUtils.setJPushAlias("simcom_"+setManager.getIMEI());
+        jPushUtils.setJPushAlias("simcom_" + setManager.getIMEI());
+
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -262,6 +267,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (TracksManager.getTracks() != null) TracksManager.clearTracks();
 
         super.onDestroy();
+        EventBus.getDefault().unregister(this);//反注册EventBus
     }
 
     @Override
@@ -778,5 +784,15 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             String status = Connections.getInstance(FragmentActivity.this).getConnection(ServiceConstants.handler).getStatus();
             switchFragment.refreshMqttstatus(status);
         }
+    }
+
+    @Subscribe
+    public void onFirstEvent(FirstEvent event){
+        String msg = "onEventMainThread收到了消息：" + event.getMsg();
+        refreshBindList1();
+
+//        Log.d("harvic", msg);
+//        tv.setText(msg);
+//        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 }

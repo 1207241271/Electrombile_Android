@@ -15,11 +15,14 @@ import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONArray;
 
 import java.io.File;
@@ -41,6 +44,7 @@ public class CarManageActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_car_manage);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -219,6 +223,18 @@ public class CarManageActivity extends Activity {
 
     private void initEvents(){
         getIMEIlist();
+//        HashMap<String, Object> map;
+//        for(int i = 1;i<IMEIlist.size();i++){
+//            map = new HashMap<String, Object>();
+//            map.put("WhichCar",settingManager.getCarName(IMEIlist.get(i)));
+//            map.put("img",R.drawable.othercar);
+//            Othercarlist.add(map);
+//        }
+//        adapter.notifyDataSetChanged();
+        refreshList();
+    }
+
+    private void refreshList(){
         HashMap<String, Object> map;
         for(int i = 1;i<IMEIlist.size();i++){
             map = new HashMap<String, Object>();
@@ -263,5 +279,21 @@ public class CarManageActivity extends Activity {
 
     public void getIMEIlist(){
         IMEIlist = settingManager.getIMEIlist();
+    }
+
+    @Subscribe
+    public void onFirstEvent(FirstEvent event){
+        String msg = "onEventMainThread收到了消息：" + event.getMsg();
+        refreshList();
+
+//        Log.d("harvic", msg);
+//        tv.setText(msg);
+//        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);//反注册EventBus
     }
 }

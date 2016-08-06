@@ -19,10 +19,12 @@ import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.GetDataCallback;
 import com.avos.avoscloud.SaveCallback;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONArray;
 
 import java.io.ByteArrayInputStream;
@@ -170,7 +172,6 @@ public class LeancloudManager {
             @Override
             public void done(List<AVObject> list, AVException e) {
                 if (e == null) {
-                    LeancloudManager.this.onGetBindListListener.onGetBindListSuccess(list);
                     if (list.size() > 0) {
                         for (int i = 0; i < list.size(); i++) {
                             String IMEI = list.get(i).get("IMEI").toString();
@@ -181,15 +182,16 @@ public class LeancloudManager {
 
 
                         //获取IMEIlist中每一个设备对应的头像
-
                         for (String IMEI : IMEIlist) {
+
+                            settingManager.setCarName(IMEI,IMEI);
                             getHeadImageFromServer(IMEI);
                             getCarcreatedAt(IMEI);
                         }
-
                     } else {
                         settingManager.setIMEIlist(null);
                     }
+                    LeancloudManager.this.onGetBindListListener.onGetBindListSuccess(list);
                 } else {
                     e.printStackTrace();
                     LeancloudManager.this.onGetBindListListener.onGetBindListFail();
@@ -247,6 +249,86 @@ public class LeancloudManager {
 
     //从服务器获取车辆头像(如果头像为空  就不管)   获取车辆昵称
     public void getHeadImageFromServer(final String IMEI){
+        com.orhanobut.logger.Logger.i("getHeadImageFromServer", "start");
+        AVQuery<AVObject> query = new AVQuery<>("DID");
+        query.whereEqualTo("IMEI", IMEI);
+        query.findInBackground(new FindCallback<AVObject>() {
+            @Override
+            public void done(List<AVObject> list, AVException e) {
+                if (e == null) {
+                    com.orhanobut.logger.Logger.i("getHeadImageFromServer", "get result");
+                    if (!list.isEmpty()) {
+                        if (list.size() != 1) {
+                            ToastUtils.showShort(context, "DID表中  该IMEI对应多条记录");
+                        }
+                        AVObject avObject = list.get(0);
+
+                        //获取设备昵称
+                        if(avObject.get("name") == null){
+                            settingManager.setCarName(IMEI,IMEI);
+                        }
+                        else{
+                            settingManager.setCarName(IMEI,avObject.get("name").toString());
+                        }
+                        EventBus.getDefault().post(new FirstEvent("test"));
+
+
+                        //设备头像
+                        if (avObject.get("Image") == null) {
+                            //服务器上的头像数据为空
+//                            String fileName = Environment.getExternalStorageDirectory() + "/"+IMEI+"crop_result.jpg";
+//                            File f = new File(fileName);
+                            File f = new File(App.getInstance().getExternalFilesDir(null), settingManager.getIMEI()+"crop_result.jpg");
+
+                            if(f.exists()){
+                                f.delete();
+                            }
+                            if (settingManager.getIMEI().equals(IMEI)) {
+                                Intent intent = new Intent("com.app.bc.test");
+                                intent.putExtra("KIND","OTHER");
+                                context.sendBroadcast(intent);//发送广播事件
+                            }
+
+                        } else {
+                            //从服务器拉头像  如果是在inputIMEIactivity中调用的  就需要在本地存文件;
+//                             如果是在更改头像里调用的   就不需要存文件  (因为已经存了)
+                            AVFile avFile = avObject.getAVFile("Image");
+                            avFile.getDataInBackground(new GetDataCallback() {
+                                public void done(byte[] data, AVException e) {
+                                    //process data or exception.
+                                    if(data == null){
+                                        return;
+                                    }
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                    String fileName = App.getInstance().getExternalFilesDir(null).getAbsolutePath()+"/" + IMEI + "crop_result.jpg";
+                                    try {
+                                        BitmapUtils.saveBitmapToFile(bitmap, fileName);
+                                    } catch (IOException e1) {
+                                        e1.printStackTrace();
+                                    }
+
+                                    if (settingManager.getIMEI().equals(IMEI)) {
+                                        Intent intent = new Intent("com.app.bc.test");
+                                        intent.putExtra("KIND","OTHER");
+                                        context.sendBroadcast(intent);//发送广播事件
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        //不可能出现这种情况啊
+                        ToastUtils.showShort(context, "DID表中  IMEI对应0条记录");
+                    }
+                } else {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+
+    public void getHeadImageFromServer(final String IMEI,int i){
         com.orhanobut.logger.Logger.i("getHeadImageFromServer", "start");
         AVQuery<AVObject> query = new AVQuery<>("DID");
         query.whereEqualTo("IMEI", IMEI);
