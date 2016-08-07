@@ -838,6 +838,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     public static class NetWorkListen extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            com.orhanobut.logger.Logger.d("NetWorkListen--connection change");
             ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo wifiInfo = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if (wifiInfo != null && wifiInfo.isConnected()) {

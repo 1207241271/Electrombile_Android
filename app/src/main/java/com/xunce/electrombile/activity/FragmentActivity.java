@@ -235,6 +235,20 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (mac != null && mac.isConnected()) {
             //这句话干嘛的
             mac.registerResources(this);
+        }else{
+            if(mac!=null){
+                mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
+                    @Override
+                    public void MqttConnectSuccess() {
+                        Log.d("FragmentAct-onResume","MqttConnectSuccess");
+                    }
+
+                    @Override
+                    public void MqttConnectFail() {
+                        Log.d("FragmentAct-onResume","MqttConnectFail");
+                    }
+                });
+            }
         }
     }
 
@@ -386,41 +400,45 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
      * @param IMEI    要发送的设备号
      */
     public void sendMessage(Context context, final byte[] message, final String IMEI) {
-        if(mqttConnectManager!=null){
-            mac = mqttConnectManager.getMac();
-        }
+        if(NetworkUtils.isNetworkConnected(this)){
+            if(mqttConnectManager!=null){
+                mac = mqttConnectManager.getMac();
+            }
 
-        if (mac == null||!mac.isConnected()) {
-//            ToastUtils.showShort(context, "请先连接设备，或等待连接。");
-            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
-            mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
-                @Override
-                public void MqttConnectSuccess() {
-                    try {
-                        //向服务器发送命令
-                        mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
-                    } catch (MqttException e) {
-                        e.printStackTrace();
+            if (mac == null||!mac.isConnected()) {
+                timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+                mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
+                    @Override
+                    public void MqttConnectSuccess() {
+                        Log.d("sendMessage-reconnect","MqttConnectSuccess");
+                        try {
+                            //向服务器发送命令
+                            mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
+                        } catch (MqttException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
 
-                @Override
-                public void MqttConnectFail() {
+                    @Override
+                    public void MqttConnectFail() {
+                        Log.d("sendMessage-reconnect","MqttConnectFail");
+                    }
+                });
+                return;
+            }
 
-                }
-            });
-            return;
+
+            try {
+                //向服务器发送命令
+                mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
+            } catch (MqttException e) {
+                e.printStackTrace();
+                return;
+            }
+            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+        }else{
+            ToastUtils.showShort(context, "无网络,请检查网络连接");
         }
-
-
-        try {
-            //向服务器发送命令
-            mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
-        } catch (MqttException e) {
-            e.printStackTrace();
-            return;
-        }
-        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
     }
 
     /**

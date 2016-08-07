@@ -10,11 +10,9 @@ import com.avos.avoscloud.LogUtil;
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
-import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
-import com.xunce.electrombile.mqtt.Notify;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
@@ -27,10 +25,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import cn.jpush.android.api.JPushInterface;
 
 //使用单例模式
 /**
@@ -49,25 +43,25 @@ public class MqttConnectManager {
     public static final String CONNECTING_FAIL = "CONNECTING_FAIL";
     public static String status = OK;
 
-    final Handler handler = new Handler( ) {
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case 0:
-                   reconnectMqtt(new OnMqttConnectListener() {
-                       @Override
-                       public void MqttConnectSuccess() {
-
-                       }
-
-                       @Override
-                       public void MqttConnectFail() {
-                           handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
-                       }
-                   });
-                    break;
-            }
-        }
-    };
+//    final Handler handler = new Handler( ) {
+//        public void handleMessage(Message msg) {
+//            switch (msg.what) {
+//                case 0:
+//                   reconnectMqtt(new OnMqttConnectListener() {
+//                       @Override
+//                       public void MqttConnectSuccess() {
+//
+//                       }
+//
+//                       @Override
+//                       public void MqttConnectFail() {
+////                           handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
+//                       }
+//                   });
+//                    break;
+//            }
+//        }
+//    };
 
     private MqttConnectManager() {
 
@@ -114,7 +108,7 @@ public class MqttConnectManager {
         Connections connections = Connections.getInstance(mcontext);
 
         String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
-        String handle = uri + ServiceConstants.clientId;
+        final String handle = uri + ServiceConstants.clientId;
         connection = connections.getConnection(handle);
         if (connection == null) {
             connection = Connection.createConnection(ServiceConstants.clientId,
@@ -138,6 +132,7 @@ public class MqttConnectManager {
         mac.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable throwable) {
+
                 if (throwable != null) {
                     Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
                     c.addAction("Connection Lost");
@@ -164,12 +159,13 @@ public class MqttConnectManager {
                     reconnectMqtt(new OnMqttConnectListener() {
                         @Override
                         public void MqttConnectSuccess() {
-                            Log.d("reconnectMqtt","MqttConnectSuccess");
+                            Log.d("connectlost-reconnect","MqttConnectSuccess");
                         }
 
                         @Override
                         public void MqttConnectFail() {
-                            Log.d("reconnectMqtt","MqttConnectFail");
+                            Log.d("connectlost-reconnect","MqttConnectFail");
+//                            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
                         }
                     });
                 }
@@ -194,7 +190,6 @@ public class MqttConnectManager {
                 c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.d("reconnectMqtt","onSuccess");
                         ServiceConstants.connection_status = "connected";
                         connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
                         callback.MqttConnectSuccess();
@@ -202,7 +197,6 @@ public class MqttConnectManager {
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.d("reconnectMqtt", "onFailure");
                         connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
                         callback.MqttConnectFail();
                     }
@@ -212,9 +206,9 @@ public class MqttConnectManager {
             }
         }else{
             //无网络
-            Message msg = Message.obtain();
-            msg.what = 0;
-            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
+//            Message msg = Message.obtain();
+//            msg.what = 0;
+//            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
         }
     }
 
