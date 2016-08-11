@@ -38,6 +38,7 @@ import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.LogUtil;
 import com.baidu.mapapi.model.LatLng;
+import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
@@ -688,48 +689,74 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     }
 
     //设备切换
-    private void DeviceChange(int position){
+    private void DeviceChange(final int position){
         if(NetworkUtils.checkNetwork(this)){
             ToastUtils.showShort(this, "请检查网络连接,切换无法完成");
             return;
         }
         //第一步 关闭抽屉
         closeDrawable();
-
-        showWaitDialog();
-
         //第二步  逻辑上切换过来
-        String previous_IMEI = setManager.getIMEI();
-        String current_IMEI = IMEIlist.get(position+1);
+        final String previous_IMEI = setManager.getIMEI();
+        final String current_IMEI = IMEIlist.get(position+1);
            //在这里就解订阅原来的设备号,并且订阅新的设备号
         if(mqttConnectManager.returnMqttStatus()){
             //mqtt连接良好
-            mqttConnectManager.unSubscribe(previous_IMEI);
-            setManager.setIMEI(current_IMEI);
-            mqttConnectManager.subscribe(current_IMEI);
+            showWaitDialog();
+            mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+                @Override
+                public void onSuccess() {
+                    mqttConnectManager.subscribe(current_IMEI, new MqttConnectManager.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            jPushUtils.setJPushAlias("simcom_" + current_IMEI, new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    setManager.setIMEI(current_IMEI);
+                                    //查询APP初始状态
+                                    mqttConnectManager.sendMessage(mCenter.getInitialStatus(), current_IMEI);
+                                    switchFragment.refreshBatteryToNULL();
+                                    ToastUtils.showShort(FragmentActivity.this, "切换成功");
 
-            //查询APP初始状态
-            mqttConnectManager.sendMessage(mCenter.getInitialStatus(), current_IMEI);
-            switchFragment.refreshBatteryToNULL();
-            ToastUtils.showShort(this, "切换成功");
+                                    IMEIlist.set(0, setManager.getIMEI());
+                                    IMEIlist.set(position + 1, previous_IMEI);
+                                    setManager.setIMEIlist(IMEIlist);
 
-            IMEIlist.set(0, setManager.getIMEI());
-            IMEIlist.set(position + 1, previous_IMEI);
-            setManager.setIMEIlist(IMEIlist);
+                                    //第三步:UI刷新
+                                    Intent intent = new Intent("com.app.bc.test");
+                                    intent.putExtra("KIND", "SWITCHDEVICE");
+                                    intent.putExtra("POSITION", position);
+                                    sendBroadcast(intent);//发送广播事件
 
-            //第三步:UI刷新
-            Intent intent = new Intent("com.app.bc.test");
-            intent.putExtra("KIND", "SWITCHDEVICE");
-            intent.putExtra("POSITION", position);
-            sendBroadcast(intent);//发送广播事件
+                                    dismissWaitDialog();
+                                }
 
-            //第四步:极光推送  改别名
-            jPushUtils.setJPushAlias("simcom_"+setManager.getIMEI());
+                                @Override
+                                public void onFail() {
+                                    dismissWaitDialog();
+                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败,请退出登录");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFail() {
+                            dismissWaitDialog();
+                            ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
+                        }
+                    });
+                }
+
+                @Override
+                public void onFail() {
+                    dismissWaitDialog();
+                    ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
+                }
+            });
         }
         else{
             ToastUtils.showShort(this,"mqtt连接失败");
         }
-        dismissWaitDialog();
     }
 
     public void openDrawable(){
