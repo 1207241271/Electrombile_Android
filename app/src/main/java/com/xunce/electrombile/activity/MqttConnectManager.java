@@ -398,7 +398,8 @@ public class MqttConnectManager {
                                         ServiceConstants.handler,callback));
             } catch (MqttException e) {
                 e.printStackTrace();
-                LogUtil.log.i(IMEI + EventbusConstants.SUB_FAIL);
+                callback.onFail(new Exception("subscribe出错"));
+//                LogUtil.log.i(IMEI + EventbusConstants.SUB_FAIL);
             }
         }else{
             callback.onFail(new Exception("请先连接设备"));
@@ -449,7 +450,7 @@ public class MqttConnectManager {
                 ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
 //                EventBus.getDefault().post(
 //                        new FirstEvent(IMEI + EventbusConstants.UNSUB_FAIL));
-                LogUtil.log.i(IMEI + EventbusConstants.UNSUB_FAIL);
+//                LogUtil.log.i(IMEI + EventbusConstants.UNSUB_FAIL);
                 callback.onFail(new Exception("unSubscribe出错"));
             }
         }else{

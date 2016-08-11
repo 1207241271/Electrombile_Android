@@ -77,6 +77,8 @@ import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -85,6 +87,8 @@ import com.xunce.electrombile.utils.useful.JSONUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 import com.xunce.electrombile.utils.useful.StringUtils;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,7 +113,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private View rootView;
     private Dialog waitDialog;
     private Button btnAlarmState1;
-    private static int Count = 0;
+//    private static int Count = 0;
     static MKOfflineMap mkOfflineMap;
     private static String localcity;
     private Bitmap bitmap;
@@ -154,20 +158,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 1:
                     refreshBatteryInfo();
                     break;
-                case 2:
-                    cancelWaitTimeOut();
-                    break;
-                case 3:
-                    msgSuccessArrived();
-                    break;
-                case 4:
-                    if (setManager.getAlarmFlag()) {
-                        openStateAlarmBtn();
-                        showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
-                    } else {
-                        closeStateAlarmBtn();
-                    }
-                    break;
             }
         }
     };
@@ -207,9 +197,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
-
-
-
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -247,7 +235,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         super.onResume();
         if (setManager.getAlarmFlag()) {
             openStateAlarmBtn();
-//            showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
         } else {
             closeStateAlarmBtn();
         }
@@ -283,6 +270,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -393,8 +381,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     private void initEvent() {
-        (m_context).receiver.setAlarmHandler(mhandler);
-        //从设置切换回主页的时候  会执行这个函数  如果主页中的侧滑菜单是打开的  那么就关闭侧滑菜单
+
     }
 
 
@@ -551,23 +538,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         }
                     }
 
-//                    private void parseRetData(String originData, WeatherBean data) {
-//                        try {
-//                            data.city = JSONUtils.ParseJSON(originData, "city");
-//                            data.time = JSONUtils.ParseJSON(originData, "time");
-//                            data.weather = JSONUtils.ParseJSON(originData, "weather");
-//                            data.temp = JSONUtils.ParseJSON(originData, "temp");
-//                            data.l_tmp = JSONUtils.ParseJSON(originData, "l_tmp");
-//                            data.h_tmp = JSONUtils.ParseJSON(originData, "h_tmp");
-//                            data.WD = JSONUtils.ParseJSON(originData, "WD");
-//                            data.WS = JSONUtils.ParseJSON(originData, "WS");
-//                            setWeather(data);
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                            ToastUtils.showShort(m_context, "天气查询失败");
-//                        }
-//                    }
-
                     private void setWeather(String cityName,String temperature,String type) {
                         tv_temperature.setText(temperature+"摄氏度");
                         tv_weatherCondition.setText(type);
@@ -677,12 +647,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void alarmStatusChange() {
-        Count++;
-        if(1 == Count)
-        {
-            (m_context).receiver.setAlarmHandler(mhandler);
-        }
-
         if(!setManager.getIMEI().isEmpty()){
             timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
             if(alarmState){
@@ -691,15 +655,15 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     @Override
                     public void onSuccess() {
                         LogUtil.log.i("publish success");
-                        cancelWaitTimeOut();
+                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
 //                        showWaitDialog();
-//                        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
                     }
 
                     @Override
                     public void onFail(Exception e) {
                         LogUtil.log.i("publish fail");
-                        cancelWaitTimeOut();
+//                        cancelWaitTimeOut();
+                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
                         if(e.getMessage().equals("无网络连接")){
                             ToastUtils.showShort(m_context,"无网络连接");
                         }else{
@@ -715,14 +679,13 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     @Override
                     public void onSuccess() {
                         LogUtil.log.i("publish success");
-                        cancelWaitTimeOut();
+                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
 //                        showWaitDialog();
-//                        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
                     }
 
                     @Override
                     public void onFail(Exception e) {
-                        cancelWaitTimeOut();
+                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
                         LogUtil.log.i("publish fail");
                         if (e.getMessage().equals("无网络连接")) {
                             ToastUtils.showShort(m_context, "无网络连接");
@@ -1294,6 +1257,19 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         if(tv_mqttStatus!=null){
             tv_mqttStatus.setText(status);
         }
+    }
 
+    @Subscribe
+    public void onFirstEvent(FirstEvent event){
+        if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
+            msgSuccessArrived();
+        }else if(event.getMsg().equals(EventbusConstants.FromcaseFenceGet)){
+            if (setManager.getAlarmFlag()) {
+                openStateAlarmBtn();
+                showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
+            } else {
+                closeStateAlarmBtn();
+            }
+        }
     }
 }

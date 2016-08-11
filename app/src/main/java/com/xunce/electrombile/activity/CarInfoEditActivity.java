@@ -43,7 +43,6 @@ import com.xunce.electrombile.LeancloudManager;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.applicatoin.App;
-import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
@@ -52,7 +51,6 @@ import com.xunce.electrombile.utils.useful.JPushUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
@@ -264,7 +262,6 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_car_info_edit);
-        EventBus.getDefault().register(this);
 
         Intent intent = getIntent();
         IMEI = intent.getStringExtra("string_key");
@@ -278,7 +275,6 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
     @Override
     public void onDestroy(){
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -520,11 +516,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         }
     }
 
-    @Subscribe
-    public void onFirstEvent(FirstEvent event){
-        String msg = event.getMsg();
-        Log.d("harvic", msg);
-    }
+
 
     //在Binding数据表里删除一条记录
     public void DeleteInBindingList(){

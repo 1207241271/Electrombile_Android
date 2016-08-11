@@ -19,24 +19,15 @@ import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.GetDataCallback;
 import com.avos.avoscloud.SaveCallback;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
 import org.greenrobot.eventbus.EventBus;
-import org.json.JSONArray;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -270,7 +261,7 @@ public class LeancloudManager {
                         else{
                             settingManager.setCarName(IMEI,avObject.get("name").toString());
                         }
-                        EventBus.getDefault().post(new FirstEvent("test"));
+                        EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromgetHeadImageFromServer));
 
 
                         //设备头像

@@ -1,17 +1,10 @@
 package com.xunce.electrombile.mqtt;
 
 import android.content.Context;
-import android.widget.Toast;
-
-import com.avos.avoscloud.LogUtil;
-import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.activity.MqttConnectManager;
-import com.xunce.electrombile.eventbus.EventbusConstants;
-import com.xunce.electrombile.eventbus.FirstEvent;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.greenrobot.eventbus.EventBus;
 
 /**
  * Created by lybvinci on 16/8/11.
@@ -132,13 +125,13 @@ public class ActionListener implements IMqttActionListener {
 //        Notify.toast(context, actionTaken, Toast.LENGTH_SHORT);
 //        EventBus.getDefault().post(
 //                new FirstEvent(IMEI+ EventbusConstants.SUB_SUCCESS));
-        LogUtil.log.i(IMEI+ EventbusConstants.SUB_SUCCESS);
+//        LogUtil.log.i(IMEI+ EventbusConstants.SUB_SUCCESS);
     }
 
     private void unsubscribe(){
 //        EventBus.getDefault().post(
 //                new FirstEvent(IMEI+ EventbusConstants.UNSUB_SUCCESS));
-        LogUtil.log.i(IMEI+ EventbusConstants.UNSUB_SUCCESS);
+//        LogUtil.log.i(IMEI+ EventbusConstants.UNSUB_SUCCESS);
     }
 
     /**
@@ -225,13 +218,13 @@ public class ActionListener implements IMqttActionListener {
 //        Notify.toast(context, action, Toast.LENGTH_SHORT);
 //        EventBus.getDefault().post(
 //                new FirstEvent(IMEI+ EventbusConstants.SUB_FAIL));
-        LogUtil.log.i(IMEI+ EventbusConstants.SUB_FAIL);
+//        LogUtil.log.i(IMEI+ EventbusConstants.SUB_FAIL);
     }
 
     private void unsubscribe(Throwable exception){
 //        EventBus.getDefault().post(
 //                new FirstEvent(IMEI+ EventbusConstants.UNSUB_FAIL));
-        LogUtil.log.i(IMEI+ EventbusConstants.UNSUB_FAIL);
+//        LogUtil.log.i(IMEI+ EventbusConstants.UNSUB_FAIL);
     }
 
     /**

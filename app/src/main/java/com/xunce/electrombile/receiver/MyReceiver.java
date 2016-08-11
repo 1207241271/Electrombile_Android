@@ -15,6 +15,8 @@ import com.xunce.electrombile.Constants.ActivityConstants;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
@@ -29,6 +31,8 @@ import com.xunce.electrombile.protocol.ProtocolFactoryInterface;
 import com.xunce.electrombile.protocol._433Factory;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -38,7 +42,6 @@ import java.util.Date;
 public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = "MyReceiver";
     private Context mContext;
-    Handler alarmHandler;
     private Handler timeHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -173,18 +176,11 @@ public class MyReceiver extends BroadcastReceiver {
         switch (cmd) {
             //如果是设置围栏的命令
             case ProtocolConstants.CMD_FENCE_ON:
-                Message msg = Message.obtain();
-                msg.what = 2;
-                alarmHandler.sendMessage(msg);
                 caseFence(code, true, "防盗开启成功");
                 break;
 
             //如果是设置关闭围栏的命令
             case ProtocolConstants.CMD_FENCE_OFF:
-//                //新加代码
-                Message msg1 = Message.obtain();
-                msg1.what = 2;
-                alarmHandler.sendMessage(msg1);
                 caseFence(code, false, "防盗关闭成功");
                 break;
 
@@ -438,10 +434,8 @@ public class MyReceiver extends BroadcastReceiver {
             } else if (ProtocolConstants.OFF == state) {
                 ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
             }
+            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromcaseFenceGet));
 
-            Message msg = Message.obtain();
-            msg.what = 4;
-            alarmHandler.sendMessage(msg);
             ToastUtils.showShort(mContext, "查询小安宝开关状态成功");
         } else {
             dealErr(code);
@@ -451,10 +445,7 @@ public class MyReceiver extends BroadcastReceiver {
     private void caseFence(int code, boolean successAlarmFlag, String success) {
         if (ProtocolConstants.ERR_SUCCESS == code) {
             ((FragmentActivity) mContext).setManager.setAlarmFlag(successAlarmFlag);
-
-            Message msg = Message.obtain();
-            msg.what = 3;
-            alarmHandler.sendMessage(msg);
+            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromcaseFence));
 
             ToastUtils.showShort(mContext, success);
         } else {
@@ -512,10 +503,5 @@ public class MyReceiver extends BroadcastReceiver {
                 }
             }
         }
-    }
-
-    public void setAlarmHandler(Handler AlarmHandler){
-        alarmHandler = AlarmHandler;
-
     }
 }

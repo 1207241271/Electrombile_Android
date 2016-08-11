@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
@@ -283,12 +284,10 @@ public class CarManageActivity extends Activity {
 
     @Subscribe
     public void onFirstEvent(FirstEvent event){
-        String msg = "onEventMainThread收到了消息：" + event.getMsg();
-        refreshList();
-
-//        Log.d("harvic", msg);
-//        tv.setText(msg);
-//        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+//        String msg = "onEventMainThread收到了消息：" + event.getMsg();
+        if(event.getMsg().equals(EventbusConstants.FromgetHeadImageFromServer)){
+            refreshList();
+        }
     }
 
     @Override
