@@ -47,12 +47,14 @@ import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 
+import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CaptureActivity;
 import com.xunce.electrombile.activity.FindCarActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.TestddActivity;
 import com.xunce.electrombile.manager.TracksManager.TrackPoint;
+import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
 import java.text.SimpleDateFormat;
@@ -331,9 +333,11 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 if (checkBind()) return;
 
                 if (mBaiduMap != null) {
-                    m_context.showWaitDialog();
-//                    m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
-                    updateLocation();
+//                    m_context.showWaitDialog();
+//                    updateLocation();
+                    tv_CarPosition.setText("车辆位置:");
+                    getCarPosition();
+
                 }
             }
         });
@@ -605,6 +609,8 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 
         dialog_tv_carName.setText("车辆名称:" + setManager.getCarName(setManager.getIMEI()));
 
+//        getCarPosition();
+
         if ((m_context).mac != null ){
             (m_context).sendMessage(m_context, mCenter.cmdWhere(), setManager.getIMEI());
         }
@@ -630,6 +636,27 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         findCarGuide2_dialog.show();
     }
 
+    private void getCarPosition(){
+        m_context.showWaitDialog();
+        m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 5 / 2);
+        MqttConnectManager.sendMessage(mCenter.cmdWhere(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+            @Override
+            public void onSuccess() {
+                LogUtil.log.i("publish success");
+            }
+
+            @Override
+            public void onFail(Exception e) {
+                m_context.cancelWaitTimeOut();
+                LogUtil.log.i("publish fail");
+                if (e.getMessage().equals("无网络连接")) {
+                    ToastUtils.showShort(m_context, "无网络连接");
+                } else {
+                    ToastUtils.showShort(m_context, "下发指令失败");
+                }
+            }
+        });
+    }
 
     //把电动车的位置放在地图中间
     private void MarkerLocationCenter(LatLng point){
@@ -681,6 +708,8 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
     }
+
+
 
     /**
      * 检查是否已经绑定设备

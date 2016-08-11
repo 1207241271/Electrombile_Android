@@ -126,25 +126,16 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     public static final String KEY_EXTRAS = "extras";
 
     private ChangeListener changeListener = null;
-
-    /**
-     * The handler. to process exit()
-     */
-//    private Handler exitHandler = new Handler() {
-//        public void handleMessage(android.os.Message msg) {
-//            isExit = false;
-//        }
-//    };
     private Dialog waitDialog;
     public Handler timeHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == 999) {
-                settingsFragment.temp = 0;
-                return;
-            }
+//            if (msg.what == 999) {
+//                settingsFragment.temp = 0;
+//                return;
+//            }
             dismissWaitDialog();
-            ToastUtils.showShort(FragmentActivity.this, "FragmentActivity指令下发失败，请检查网络和设备工作是否正常。");
+//            ToastUtils.showShort(FragmentActivity.this, "FragmentActivity指令下发失败，请检查网络和设备工作是否正常。");
         }
     };
 

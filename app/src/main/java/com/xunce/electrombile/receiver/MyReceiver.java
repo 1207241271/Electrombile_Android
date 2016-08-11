@@ -47,7 +47,7 @@ public class MyReceiver extends BroadcastReceiver {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             ToastUtils.showShort(mContext, "设备超时！");
-            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromMyReceiverTimeHandler));
+            ((FragmentActivity)mContext).cancelWaitTimeOut();
         }
     };
     private String callbackStatus;
@@ -246,6 +246,7 @@ public class MyReceiver extends BroadcastReceiver {
         switch (code) {
             case ProtocolConstants.ERR_SUCCESS:
                 Logger.i("接收","code为0");
+                ((FragmentActivity)mContext).cancelWaitTimeOut();
                 cmdGPSgetresult(protocol,code);
                 return;
 
