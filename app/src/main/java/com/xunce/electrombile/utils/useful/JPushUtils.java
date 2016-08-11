@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
 
@@ -29,6 +30,7 @@ public class JPushUtils {
     private static final int MSG_SET_TAGS = 1002;
     private Context mContext;
     private SetTagCallback setTagCallback;
+    private Callback callback;
 
     private final TagAliasCallback mAliasCallback = new TagAliasCallback() {
 
@@ -37,27 +39,33 @@ public class JPushUtils {
             String logs ;
             switch (code) {
                 case 0:
+                    if(callback!=null){
+                        callback.onSuccess();
+                    }
                     logs = "Set tag and alias success";
                     Log.i(TAG, logs);
                     break;
 
                 case 6002:
-                    logs = "Failed to set alias and tags due to timeout. Try again after 60s.";
-                    Log.i(TAG, logs);
-                    if (JPushUtils.isConnected(mContext)) {
-                        handler.sendMessageDelayed(handler.obtainMessage(MSG_SET_ALIAS, alias), 1000 * 60);
-                    } else {
-                        Log.i(TAG, "No network");
+                    if(callback!=null){
+                        callback.onFail();
                     }
+//                    logs = "Failed to set alias and tags due to timeout. Try again after 60s.";
+                    logs = "Failed to set alias and tags due to timeout.";
+                    Log.i(TAG, logs);
+//                    if (JPushUtils.isConnected(mContext)) {
+//                        handler.sendMessageDelayed(handler.obtainMessage(MSG_SET_ALIAS, alias), 1000 * 60);
+//                    } else {
+//                        Log.i(TAG, "No network");
+//                    }
                     break;
 
                 default:
                     logs = "Failed with errorCode = " + code;
-                    setTagCallback.setTagFail();
+
                     Log.e(TAG, logs);
             }
-
-            JPushUtils.showToast(logs, mContext);
+//            JPushUtils.showToast(logs, mContext);
         }
 
     };
@@ -110,6 +118,23 @@ public class JPushUtils {
         }).start();
     }
 
+    public void setJPushAlias(String alias,Callback callback){
+        this.callback = callback;
+        if (TextUtils.isEmpty(alias)) {
+            Toast.makeText(mContext, "alias为空", Toast.LENGTH_SHORT).show();
+            callback.onFail();
+            return;
+        }
+        if (!JPushUtils.isValidTagAndAlias(alias)) {
+            Toast.makeText(mContext,"alias格式错误", Toast.LENGTH_SHORT).show();
+            callback.onFail();
+            return;
+        }
+
+        handler.sendMessage(handler.obtainMessage(MSG_SET_ALIAS, alias));
+        //调用JPush API设置Alias
+    }
+
     public void setJPushAlias(String alias){
         if (TextUtils.isEmpty(alias)) {
             Toast.makeText(mContext, "alias为空", Toast.LENGTH_SHORT).show();
@@ -124,20 +149,7 @@ public class JPushUtils {
         //调用JPush API设置Alias
     }
 
-    public void setJPushAlias(String alias,SetTagCallback msetTagCallback){
-        setTagCallback = msetTagCallback;
-        if (TextUtils.isEmpty(alias)) {
-            Toast.makeText(mContext, "alias为空", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (!JPushUtils.isValidTagAndAlias(alias)) {
-            Toast.makeText(mContext,"alias格式错误", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
-        handler.sendMessage(handler.obtainMessage(MSG_SET_ALIAS, alias));
-        //调用JPush API设置Alias
-    }
 
     public interface SetTagCallback{
         void setTagSuccess();

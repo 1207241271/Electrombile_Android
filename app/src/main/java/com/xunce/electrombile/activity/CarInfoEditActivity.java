@@ -29,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
@@ -36,15 +37,22 @@ import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.DeleteCallback;
 import com.avos.avoscloud.FindCallback;
+import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.LeancloudManager;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.account.LoginActivity;
+import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.JPushUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -255,15 +263,21 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_car_info_edit);
+        EventBus.getDefault().register(this);
 
         Intent intent = getIntent();
         IMEI = intent.getStringExtra("string_key");
         NextCarIMEI = intent.getStringExtra("NextCarIMEI");
         othercarListPosition = intent.getIntExtra("list_position",0);
 
-        Log.d("test", "test");
         LastCar = false;
         initView();
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -446,28 +460,78 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         mqttConnectManager = MqttConnectManager.getInstance();
         if(mqttConnectManager.returnMqttStatus()){
             //mqtt连接良好
-            mqttConnectManager.unSubscribe(setManager.getIMEI());
-            setManager.setIMEI(IMEI);
-            mqttConnectManager.subscribe(IMEI);
-            mCenter = CmdCenter.getInstance();
-            mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
-            //更新IMEIlist
-            String IMEI_previous = IMEIlist.get(0);
-            IMEIlist.set(0,IMEI);
-            IMEIlist.set(othercarListPosition+1,IMEI_previous);
-            setManager.setIMEIlist(IMEIlist);
+            mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+                @Override
+                public void onSuccess() {
+                    mqttConnectManager.subscribe(IMEI, new MqttConnectManager.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            setManager.setIMEI(IMEI);
+                            mCenter = CmdCenter.getInstance();
+                            mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
+                            //更新IMEIlist
+                            String IMEI_previous = IMEIlist.get(0);
+                            IMEIlist.set(0, IMEI);
+                            IMEIlist.set(othercarListPosition + 1, IMEI_previous);
+                            setManager.setIMEIlist(IMEIlist);
+                            ToastUtils.showShort(CarInfoEditActivity.this,"切换设备成功");
 
-            Intent intent = new Intent();
-            intent.putExtra("string_key", "设备切换");
-            intent.putExtra("boolean_key", Flag_Maincar);
-            setResult(RESULT_OK, intent);
-            CarInfoEditActivity.this.finish();
+                            Intent intent = new Intent();
+                            intent.putExtra("string_key", "设备切换");
+                            intent.putExtra("boolean_key", Flag_Maincar);
+                            setResult(RESULT_OK, intent);
+                            CarInfoEditActivity.this.finish();
+                            jPushUtils.setJPushAlias("simcom_" + IMEI);
 
-            jPushUtils.setJPushAlias("simcom_"+setManager.getIMEI());
+//                                    jPushUtils.setJPushAlias("simcom_" + IMEI, new Callback() {
+//                                @Override
+//                                public void onSuccess() {
+//                                    setManager.setIMEI(IMEI);
+//                                    mCenter = CmdCenter.getInstance();
+//                                    mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
+//                                    //更新IMEIlist
+//                                    String IMEI_previous = IMEIlist.get(0);
+//                                    IMEIlist.set(0, IMEI);
+//                                    IMEIlist.set(othercarListPosition + 1, IMEI_previous);
+//                                    setManager.setIMEIlist(IMEIlist);
+//                                    ToastUtils.showShort(CarInfoEditActivity.this,"切换设备成功");
+//
+//                                    Intent intent = new Intent();
+//                                    intent.putExtra("string_key", "设备切换");
+//                                    intent.putExtra("boolean_key", Flag_Maincar);
+//                                    setResult(RESULT_OK, intent);
+//                                    CarInfoEditActivity.this.finish();
+//                                }
+//
+//                                @Override
+//                                public void onFail() {
+//                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败");
+//                                }
+//                            });
+                        }
+
+                        @Override
+                        public void onFail() {
+                            ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
+                        }
+                    });
+                }
+
+                @Override
+                public void onFail() {
+                    ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
+                }
+            });
         }
         else{
             ToastUtils.showShort(CarInfoEditActivity.this,"mqtt连接失败");
         }
+    }
+
+    @Subscribe
+    public void onFirstEvent(FirstEvent event){
+        String msg = event.getMsg();
+        Log.d("harvic", msg);
     }
 
     //在Binding数据表里删除一条记录
@@ -482,7 +546,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
             public void done(List<AVObject> list, AVException e) {
                 if (e == null) {
                     //list的size一定是1
-                    if (list.size() == 1) {
+                    if (list.size()>0) {
                         AVObject avObject = list.get(0);
                         avObject.deleteInBackground(new DeleteCallback() {
                             @Override
@@ -498,7 +562,8 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                                 }
                             }
                         });
-                    } else {
+                    }
+                    if(list.size()>1){
                         ToastUtils.showShort(CarInfoEditActivity.this, "list的size一定是1  哪里出错了?");
                     }
                 }

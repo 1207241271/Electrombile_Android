@@ -139,7 +139,7 @@ public class MyReceiver extends BroadcastReceiver {
     }
 
     private void onNotifyArrived(Protocol protocol){
-        MyLog.d("onNotifyArrived","start");
+        MyLog.d("onNotifyArrived", "start");
         int notify = protocol.getNotify();
         switch (notify){
             //上报的自动落锁状态
@@ -490,10 +490,9 @@ public class MyReceiver extends BroadcastReceiver {
         trackPoint = new TracksManager.TrackPoint(curDate, ((FragmentActivity) mContext).mCenter.convertPoint(new LatLng(Flat, Flong)));
         LogUtil.log.i("保存数据1");
         ((FragmentActivity) mContext).setManager.setInitLocation(Flat + "", Flong + "");
-        if (trackPoint != null) {
-            timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
-            ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
-        }
+        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
+        LogUtil.log.i("onGPSArrived-locateMobile");
+        ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
     }
 
     private void cmdGPSgetresult(Protocol protocol,int code){

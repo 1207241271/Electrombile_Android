@@ -36,6 +36,7 @@ import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.FindCallback;
+import com.avos.avoscloud.LogUtil;
 import com.baidu.mapapi.model.LatLng;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.Constants.ServiceConstants;
@@ -235,19 +236,35 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (mac != null && mac.isConnected()) {
             //这句话干嘛的
             mac.registerResources(this);
+
+            Connection c = Connections.getInstance(this).getConnection(ServiceConstants.handler);
+            if(c.getStatus().equals("none")){
+                LogUtil.log.i("mac.isConnected()&&status-none");
+                Connections.getInstance(this).removeConnection(c);
+                mqttConnectManager.initMqtt();
+                queryIMEIandMqttConnection();
+            }
         }else{
             if(mac!=null){
-                mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
-                    @Override
-                    public void MqttConnectSuccess() {
-                        Log.d("FragmentAct-onResume","MqttConnectSuccess");
-                    }
+                Connection c = Connections.getInstance(this).getConnection(ServiceConstants.handler);
+                if(c.getStatus().equals("none")){
+                    LogUtil.log.i("mac.disConnected&&status-none");
+                    Connections.getInstance(this).removeConnection(c);
+                    mqttConnectManager.initMqtt();
+                    queryIMEIandMqttConnection();
+                }else if(c.getStatus().equals("DISCONNECTED")){
+                    mqttConnectManager.reconnectMqtt(new MqttConnectManager.OnMqttConnectListener() {
+                        @Override
+                        public void MqttConnectSuccess() {
+                            Log.d("FragmentAct-onResume","MqttConnectSuccess");
+                        }
 
-                    @Override
-                    public void MqttConnectFail() {
-                        Log.d("FragmentAct-onResume","MqttConnectFail");
-                    }
-                });
+                        @Override
+                        public void MqttConnectFail() {
+                            Log.d("FragmentAct-onResume","MqttConnectFail");
+                        }
+                    });
+                }
             }
         }
     }

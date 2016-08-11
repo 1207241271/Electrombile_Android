@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -646,7 +647,11 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
      * 将地图中心移到某点
      */
     public void locateMobile(TrackPoint track) {
-        if (mBaiduMap == null) return;
+        if (mBaiduMap == null){
+            Log.d("locateMobile","mBaiduMap == null");
+            return;
+        }
+        Log.d("locateMobile","mBaiduMap != null");
         mBaiduMap.hideInfoWindow();
         markerMobile.setPosition(track.point);
         MarkerLocationCenter(track.point);

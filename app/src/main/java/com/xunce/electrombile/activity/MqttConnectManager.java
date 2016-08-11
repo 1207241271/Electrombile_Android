@@ -10,7 +10,10 @@ import com.avos.avoscloud.LogUtil;
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.log.MyLog;
+import com.xunce.electrombile.mqtt.ActionListener;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -24,6 +27,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.greenrobot.eventbus.EventBus;
 
 
 //使用单例模式
@@ -193,12 +197,14 @@ public class MqttConnectManager {
                         ServiceConstants.connection_status = "connected";
                         connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
                         callback.MqttConnectSuccess();
+                        ToastUtils.showShort(App.getInstance(),"debug:reconnectMqtt服务器连接成功");
                     }
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                         connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
                         callback.MqttConnectFail();
+                        ToastUtils.showShort(App.getInstance(), "debug:reconnectMqtt服务器连接失败");
                     }
                 });
             } catch (MqttException e1) {
@@ -330,6 +336,45 @@ public class MqttConnectManager {
         }
     }
 
+
+    public void subscribe(String IMEI,Callback callback){
+        //订阅命令字
+        String topic1 = "dev2app/" + IMEI + "/cmd";
+        //订阅GPS数据
+        String topic2 = "dev2app/" + IMEI + "/gps";
+        //订阅上报的信号强度
+        String topic3 = "dev2app/" + IMEI + "/433";
+        //订阅报警
+        String topic4 = "dev2app/" + IMEI + "/alarm";
+
+        String topic5 = "dev2app/" + IMEI + "/notify";
+
+        String[] topic = {topic1, topic2,topic3, topic4, topic5};
+        int[] qos = {ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE};
+
+        Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+        if(c.getClient()!=null&&c.getClient().isConnected()){
+            try {
+                Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler).getClient()
+                        .subscribe(topic, qos, null,
+                                new ActionListener(IMEI, App.getInstance(),
+                                        ActionListener.Action.SUBSCRIBE,ServiceConstants.handler,callback,topic));
+            } catch (MqttException e) {
+                e.printStackTrace();
+//                EventBus.getDefault().post(
+//                        new FirstEvent(IMEI + EventbusConstants.SUB_FAIL));
+                LogUtil.log.i(IMEI + EventbusConstants.SUB_FAIL);
+            }
+        }else{
+            callback.onFail();
+        }
+
+    }
+
     public boolean unSubscribe(String IMEI) {
         //订阅命令字
         String topic1 = "dev2app/" + IMEI + "/cmd";
@@ -349,6 +394,37 @@ public class MqttConnectManager {
             ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
             return false;
         }
+    }
+
+
+    public void unSubscribe(String IMEI,Callback callback) {
+        //订阅命令字
+        String topic1 = "dev2app/" + IMEI + "/cmd";
+        String topic2 = "dev2app/" + IMEI + "/gps";
+        //订阅上报的信号强度
+        String topic3 = "dev2app/" + IMEI + "/433";
+
+        String topic4 = "dev2app/" + IMEI + "/alarm";
+
+        String topic5 = "dev2app/" + IMEI + "/notify";
+        String[] topic = {topic1, topic2,topic3, topic4, topic5};
+
+        Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+        if(c.getClient()!=null&&c.getClient().isConnected()){
+            try {
+                mac.unsubscribe(topic,null,new ActionListener(IMEI, App.getInstance(), ActionListener.Action.UNSUBSCRIBE, ServiceConstants.handler, callback,topic));
+            } catch (MqttException e) {
+                e.printStackTrace();
+                ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
+//                EventBus.getDefault().post(
+//                        new FirstEvent(IMEI + EventbusConstants.UNSUB_FAIL));
+                LogUtil.log.i(IMEI + EventbusConstants.UNSUB_FAIL);
+                callback.onFail();
+            }
+        }else{
+            callback.onFail();
+        }
+
     }
 
     public boolean unSubscribeGPS(String IMEI) {
@@ -378,5 +454,11 @@ public class MqttConnectManager {
             e.printStackTrace();
             ToastUtils.showShort(App.getInstance(), "订阅失败!请稍后重启再试！");
         }
+    }
+
+    public interface Callback{
+        public void onSuccess();
+        public void onFail();
+
     }
 }
