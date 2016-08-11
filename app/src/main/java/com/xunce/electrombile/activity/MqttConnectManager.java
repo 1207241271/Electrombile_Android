@@ -7,6 +7,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.avos.avoscloud.LogUtil;
+import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
@@ -297,16 +298,45 @@ public class MqttConnectManager {
         return mac;
     }
 
-    public void sendMessage(final byte[] message, final String IMEI) {
-        if (mac == null||!mac.isConnected()) {
-            ToastUtils.showShort(App.getInstance(), "请先连接设备，或等待连接。");
-            return;
+    public static void sendMessage(final byte[] message, final String IMEI,Callback callback) {
+        if(NetworkUtils.isNetworkConnected(App.getInstance())){
+            Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+            if (c.getClient() == null||!c.getClient().isConnected()) {
+                callback.onFail(new Exception("请先连接设备"));
+//                ToastUtils.showShort(App.getInstance(), "请先连接设");
+                return;
+            }
+            try {
+                //向服务器发送命令
+                c.getClient().publish("app2dev/" + IMEI + "/cmd", message,
+                        ServiceConstants.MQTT_QUALITY_OF_SERVICE, false, null,
+                        new ActionListener(IMEI, App.getInstance(), ActionListener.Action.PUBLISH,
+                                ServiceConstants.handler, callback));
+            } catch (MqttException e) {
+                e.printStackTrace();
+                callback.onFail(e);
+            }
+        }else{
+            callback.onFail(new Exception("无网络连接"));
         }
-        try {
-            //向服务器发送命令
-            mac.publish("app2dev/" + IMEI + "/cmd", message, ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
-        } catch (MqttException e) {
-            e.printStackTrace();
+    }
+
+    public void sendMessage(final byte[] message, final String IMEI) {
+        if(NetworkUtils.isNetworkConnected(App.getInstance())){
+            Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+            if (c.getClient() == null||!c.getClient().isConnected()) {
+                ToastUtils.showShort(App.getInstance(), "请先连接设备，或等待连接。");
+                return;
+            }
+            try {
+                //向服务器发送命令
+                mac.publish("app2dev/" + IMEI + "/cmd", message,
+                        ServiceConstants.MQTT_QUALITY_OF_SERVICE, false);
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }else{
+//            callback.onFail();
         }
     }
 
@@ -324,7 +354,9 @@ public class MqttConnectManager {
 
         String[] topic = {topic1, topic3, topic4, topic5};
         int[] qos = {ServiceConstants.MQTT_QUALITY_OF_SERVICE,
-                ServiceConstants.MQTT_QUALITY_OF_SERVICE, ServiceConstants.MQTT_QUALITY_OF_SERVICE,ServiceConstants.MQTT_QUALITY_OF_SERVICE};
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE};
         try {
             mac.subscribe(topic, qos);
             LogUtil.log.i("Connection established to " + ServiceConstants.MQTT_HOST + " on topic " + topic1);
@@ -362,17 +394,15 @@ public class MqttConnectManager {
                 Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler).getClient()
                         .subscribe(topic, qos, null,
                                 new ActionListener(IMEI, App.getInstance(),
-                                        ActionListener.Action.SUBSCRIBE,ServiceConstants.handler,callback,topic));
+                                        ActionListener.Action.SUBSCRIBE,
+                                        ServiceConstants.handler,callback));
             } catch (MqttException e) {
                 e.printStackTrace();
-//                EventBus.getDefault().post(
-//                        new FirstEvent(IMEI + EventbusConstants.SUB_FAIL));
                 LogUtil.log.i(IMEI + EventbusConstants.SUB_FAIL);
             }
         }else{
-            callback.onFail();
+            callback.onFail(new Exception("请先连接设备"));
         }
-
     }
 
     public boolean unSubscribe(String IMEI) {
@@ -412,17 +442,18 @@ public class MqttConnectManager {
         Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
         if(c.getClient()!=null&&c.getClient().isConnected()){
             try {
-                mac.unsubscribe(topic,null,new ActionListener(IMEI, App.getInstance(), ActionListener.Action.UNSUBSCRIBE, ServiceConstants.handler, callback,topic));
+                mac.unsubscribe(topic,null,new ActionListener(IMEI, App.getInstance(),
+                        ActionListener.Action.UNSUBSCRIBE, ServiceConstants.handler, callback));
             } catch (MqttException e) {
                 e.printStackTrace();
                 ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
 //                EventBus.getDefault().post(
 //                        new FirstEvent(IMEI + EventbusConstants.UNSUB_FAIL));
                 LogUtil.log.i(IMEI + EventbusConstants.UNSUB_FAIL);
-                callback.onFail();
+                callback.onFail(new Exception("unSubscribe出错"));
             }
         }else{
-            callback.onFail();
+            callback.onFail(new Exception("无网络连接"));
         }
 
     }
@@ -458,7 +489,7 @@ public class MqttConnectManager {
 
     public interface Callback{
         public void onSuccess();
-        public void onFail();
+        public void onFail(Exception e);
 
     }
 }

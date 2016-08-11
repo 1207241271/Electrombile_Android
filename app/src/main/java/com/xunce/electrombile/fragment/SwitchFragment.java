@@ -74,6 +74,7 @@ import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CropActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
+import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
 import com.xunce.electrombile.utils.device.VibratorUtil;
@@ -682,47 +683,58 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             (m_context).receiver.setAlarmHandler(mhandler);
         }
 
-        if (alarmState) {
-            if (!setManager.getIMEI().isEmpty()) {
-                if (NetworkUtils.isNetworkConnected(m_context)) {
-                    //关闭报警
-                    //等状态设置成功之后再改变按钮的显示状态，并且再更改标志位等的保存。
-                    cancelNotification();
-                    (m_context).sendMessage(m_context, mCenter.cmdFenceOff(), setManager.getIMEI());
-                    showWaitDialog();
-                    timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
-                } else {
-                    ToastUtils.showShort(m_context, "网络连接失败");
-                }
-            } else {
-                ToastUtils.showShort(m_context, "请等待设备绑定");
-            }
-        } else {
-            if (NetworkUtils.isNetworkConnected(m_context)) {
-                //打开报警
-                if (!setManager.getIMEI().isEmpty()) {
-                    //等状态设置成功之后再改变按钮的显示状态，并且再更改标志位等的保存。
-                    cancelNotification();
-                    VibratorUtil.Vibrate(m_context, 700);
-                    //发送命令之前判断一下   mqtt连接是否正常
-                    if ((m_context).mac != null && (m_context).mac.isConnected())
-                    {
-                        (m_context).sendMessage(m_context, mCenter.cmdFenceOn(), setManager.getIMEI());
-                        showWaitDialog();
-                        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+        if(!setManager.getIMEI().isEmpty()){
+            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+            if(alarmState){
+                cancelNotification();
+                MqttConnectManager.sendMessage(mCenter.cmdFenceOff(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        LogUtil.log.i("publish success");
+                        cancelWaitTimeOut();
+//                        showWaitDialog();
+//                        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
                     }
-                    else{
-//                        ToastUtils.showShort(m_context,"mqtt连接失败");
-                        //mqtt连接
-                        (m_context).sendMessage(m_context, mCenter.cmdFenceOn(), setManager.getIMEI());
 
+                    @Override
+                    public void onFail(Exception e) {
+                        LogUtil.log.i("publish fail");
+                        cancelWaitTimeOut();
+                        if(e.getMessage().equals("无网络连接")){
+                            ToastUtils.showShort(m_context,"无网络连接");
+                        }else{
+                            ToastUtils.showShort(m_context,"下发指令失败");
+                        }
                     }
-                } else {
-                    ToastUtils.showShort(m_context, "请先绑定设备");
-                }
-            } else {
-                ToastUtils.showShort(m_context, "网络连接失败");
+                });
+            }else{
+                //等状态设置成功之后再改变按钮的显示状态，并且再更改标志位等的保存。
+                VibratorUtil.Vibrate(m_context, 700);
+                cancelNotification();
+                MqttConnectManager.sendMessage(mCenter.cmdFenceOn(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        LogUtil.log.i("publish success");
+                        cancelWaitTimeOut();
+//                        showWaitDialog();
+//                        timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+                        cancelWaitTimeOut();
+                        LogUtil.log.i("publish fail");
+                        if (e.getMessage().equals("无网络连接")) {
+                            ToastUtils.showShort(m_context, "无网络连接");
+                        } else {
+                            ToastUtils.showShort(m_context, "下发指令失败");
+                        }
+                    }
+                });
             }
+
+        }else{
+            ToastUtils.showShort(m_context, "请等待设备绑定");
         }
     }
 
@@ -757,6 +769,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void cancelWaitTimeOut() {
         if (waitDialog != null) {
             dismissWaitDialog();
+            timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
+        }else{
             timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
         }
     }

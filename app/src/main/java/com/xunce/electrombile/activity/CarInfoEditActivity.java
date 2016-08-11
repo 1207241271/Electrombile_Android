@@ -37,6 +37,7 @@ import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.DeleteCallback;
 import com.avos.avoscloud.FindCallback;
+import com.avos.avoscloud.LogUtil;
 import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.LeancloudManager;
 import com.xunce.electrombile.R;
@@ -464,12 +465,15 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
             mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
                 @Override
                 public void onSuccess() {
+                    LogUtil.log.i("unSubscribe-onSuccess");
                     mqttConnectManager.subscribe(IMEI, new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
+                            LogUtil.log.i("subscribe-onSuccess");
                             jPushUtils.setJPushAlias("simcom_" + IMEI, new Callback() {
                                 @Override
                                 public void onSuccess() {
+                                    LogUtil.log.i("jPushUtils-setJPushAlias-onSuccess");
                                     setManager.setIMEI(IMEI);
                                     mCenter = CmdCenter.getInstance();
                                     mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
@@ -497,7 +501,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                         }
 
                         @Override
-                        public void onFail() {
+                        public void onFail(Exception e) {
                             progressDialog.dismiss();
                             ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
                         }
@@ -505,7 +509,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                 }
 
                 @Override
-                public void onFail() {
+                public void onFail(Exception e) {
                     progressDialog.dismiss();
                     ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
                 }

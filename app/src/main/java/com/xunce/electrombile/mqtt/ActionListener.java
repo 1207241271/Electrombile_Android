@@ -42,7 +42,7 @@ public class ActionListener implements IMqttActionListener {
      **/
     private Action action;
     /** The arguments passed to be used for formatting strings**/
-    private String[] additionalArgs;
+//    private String[] additionalArgs;
     /** Handle of the {@link Connection} this action was being executed on **/
     private String clientHandle;
     /** {@link Context} for performing various operations **/
@@ -66,12 +66,12 @@ public class ActionListener implements IMqttActionListener {
      *            Used for as arguments for string formating
      */
     public ActionListener(String IMEI,Context context, Action action,
-                          String clientHandle, MqttConnectManager.Callback callback,String... additionalArgs) {
+                          String clientHandle, MqttConnectManager.Callback callback) {
         this.IMEI = IMEI;
         this.context = context;
         this.action = action;
         this.clientHandle = clientHandle;
-        this.additionalArgs = additionalArgs;
+//        this.additionalArgs = additionalArgs;
         this.callback = callback;
     }
 
@@ -116,6 +116,7 @@ public class ActionListener implements IMqttActionListener {
 //                (Object[]) additionalArgs);
 //        c.addAction(actionTaken);
 //        Notify.toast(context, actionTaken, Toast.LENGTH_SHORT);
+        callback.onSuccess();
     }
 
     /**
@@ -176,7 +177,7 @@ public class ActionListener implements IMqttActionListener {
      */
     @Override
     public void onFailure(IMqttToken token, Throwable exception) {
-        callback.onFail();
+        callback.onFail(new Exception("fail"));
         switch (action) {
             case CONNECT :
                 connect(exception);
@@ -208,6 +209,7 @@ public class ActionListener implements IMqttActionListener {
 //                (Object[]) additionalArgs);
 //        c.addAction(action);
 //        Notify.toast(context, action, Toast.LENGTH_SHORT);
+//        callback.onFail();
 
     }
 

@@ -706,12 +706,15 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
                 @Override
                 public void onSuccess() {
+                    LogUtil.log.i("unSubscribe-onSuccess");
                     mqttConnectManager.subscribe(current_IMEI, new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
+                            LogUtil.log.i("subscribe-onSuccess");
                             jPushUtils.setJPushAlias("simcom_" + current_IMEI, new Callback() {
                                 @Override
                                 public void onSuccess() {
+                                    LogUtil.log.i("jPushUtils-setJPushAlias-onSuccess");
                                     setManager.setIMEI(current_IMEI);
                                     //查询APP初始状态
                                     mqttConnectManager.sendMessage(mCenter.getInitialStatus(), current_IMEI);
@@ -740,7 +743,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                         }
 
                         @Override
-                        public void onFail() {
+                        public void onFail(Exception e) {
                             dismissWaitDialog();
                             ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
                         }
@@ -748,7 +751,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                 }
 
                 @Override
-                public void onFail() {
+                public void onFail(Exception e) {
                     dismissWaitDialog();
                     ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
                 }
