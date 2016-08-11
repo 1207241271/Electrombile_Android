@@ -210,13 +210,13 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
 
-    public void InitCarLocation(){
+    public void InitCarLocation(boolean dialog){
         if (NetworkUtils.checkNetwork(m_context)) return;
         //检查是否绑定
         if (checkBind()) return;
 
         if (mBaiduMap != null) {
-            updateLocation();
+            updateLocation(dialog);
             com.orhanobut.logger.Logger.i("InitCarLocation", "发送cmd_location");
         }
     }
@@ -333,10 +333,8 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 if (checkBind()) return;
 
                 if (mBaiduMap != null) {
-//                    m_context.showWaitDialog();
-//                    updateLocation();
                     tv_CarPosition.setText("车辆位置:");
-                    getCarPosition();
+                    getCarPosition(true);
 
                 }
             }
@@ -406,7 +404,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         ll_historyAndlocate.setVisibility(View.INVISIBLE);
 
         tv_FindModeCarName.setText("车辆名称:" + setManager.getCarName(setManager.getIMEI()));
-        InitCarLocation();
+        InitCarLocation(false);
         BitmapDescriptor bitmap = BitmapDescriptorFactory
                 .fromResource(R.drawable.marker_person);
         //构建MarkerOption，用于在地图上添加Marker
@@ -609,11 +607,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 
         dialog_tv_carName.setText("车辆名称:" + setManager.getCarName(setManager.getIMEI()));
 
-//        getCarPosition();
-
-        if ((m_context).mac != null ){
-            (m_context).sendMessage(m_context, mCenter.cmdWhere(), setManager.getIMEI());
-        }
+        getCarPosition(false);
 
         btn_LostCarnextstep.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -636,9 +630,12 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         findCarGuide2_dialog.show();
     }
 
-    private void getCarPosition(){
-        m_context.showWaitDialog();
-        m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 5 / 2);
+    private void getCarPosition(final boolean dialog){
+        if(dialog){
+            m_context.showWaitDialog();
+            m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 5 / 2);
+        }
+
         MqttConnectManager.sendMessage(mCenter.cmdWhere(), setManager.getIMEI(), new MqttConnectManager.Callback() {
             @Override
             public void onSuccess() {
@@ -649,10 +646,12 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             public void onFail(Exception e) {
                 m_context.cancelWaitTimeOut();
                 LogUtil.log.i("publish fail");
-                if (e.getMessage().equals("无网络连接")) {
-                    ToastUtils.showShort(m_context, "无网络连接");
-                } else {
-                    ToastUtils.showShort(m_context, "下发指令失败");
+                if(dialog){
+                    if (e.getMessage().equals("无网络连接")) {
+                        ToastUtils.showShort(m_context, "无网络连接");
+                    } else {
+                        ToastUtils.showShort(m_context, "下发指令失败");
+                    }
                 }
             }
         });
@@ -701,15 +700,10 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     /**
      * 获取最新的位置
      */
-    public void updateLocation() {
+    public void updateLocation(boolean dialog) {
         tv_CarPosition.setText("车辆位置:");
-        if (m_context.mac != null ){
-            (m_context).sendMessage(m_context, mCenter.cmdWhere(), setManager.getIMEI());
-        }
-
+        getCarPosition(dialog);
     }
-
-
 
     /**
      * 检查是否已经绑定设备
@@ -802,7 +796,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             else if(intent.getStringExtra("KIND").equals("OTHER")){
                 HideInfowindow();
                 setCarname();
-                InitCarLocation();
+                InitCarLocation(false);
 
                 //如果是找车界面  需要切换到locateCar界面
                 if(status.equals(status_FindCar)){
@@ -813,7 +807,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             else if(intent.getStringExtra("KIND").equals("SWITCHDEVICE")){
                 HideInfowindow();
                 setCarname();
-                InitCarLocation();
+                InitCarLocation(false);
 
                 //如果是找车界面  需要切换到locateCar界面
                 if(status.equals(status_FindCar)){
@@ -825,7 +819,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             else if(intent.getStringExtra("KIND").equals("DELETEMAINDEVICE")){
                 HideInfowindow();
                 setCarname();
-                InitCarLocation();
+                InitCarLocation(false);
 
                 //如果是找车界面  需要切换到locateCar界面
                 if(status.equals(status_FindCar)){
