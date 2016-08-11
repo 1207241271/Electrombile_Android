@@ -144,7 +144,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         @Override
         public void handleMessage(Message msg) {
             dismissWaitDialog();
-            ToastUtils.showShort(m_context, "指令下发失败，请检查网络和设备工作是否正常。");
+//            ToastUtils.showShort(m_context, "指令下发失败，请检查网络和设备工作是否正常。");
         }
     };
 
@@ -648,22 +648,20 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     public void alarmStatusChange() {
         if(!setManager.getIMEI().isEmpty()){
-            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE);
+            showWaitDialog();
+            timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE*5/2);
             if(alarmState){
                 cancelNotification();
                 MqttConnectManager.sendMessage(mCenter.cmdFenceOff(), setManager.getIMEI(), new MqttConnectManager.Callback() {
                     @Override
                     public void onSuccess() {
                         LogUtil.log.i("publish success");
-                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
-//                        showWaitDialog();
                     }
 
                     @Override
                     public void onFail(Exception e) {
+                        cancelWaitTimeOut();
                         LogUtil.log.i("publish fail");
-//                        cancelWaitTimeOut();
-                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
                         if(e.getMessage().equals("无网络连接")){
                             ToastUtils.showShort(m_context,"无网络连接");
                         }else{
@@ -679,13 +677,12 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     @Override
                     public void onSuccess() {
                         LogUtil.log.i("publish success");
-                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
 //                        showWaitDialog();
                     }
 
                     @Override
                     public void onFail(Exception e) {
-                        timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
+                        cancelWaitTimeOut();
                         LogUtil.log.i("publish fail");
                         if (e.getMessage().equals("无网络连接")) {
                             ToastUtils.showShort(m_context, "无网络连接");
@@ -1262,6 +1259,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Subscribe
     public void onFirstEvent(FirstEvent event){
         if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
+            cancelWaitTimeOut();
             msgSuccessArrived();
         }else if(event.getMsg().equals(EventbusConstants.FromcaseFenceGet)){
             if (setManager.getAlarmFlag()) {
@@ -1270,6 +1268,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             } else {
                 closeStateAlarmBtn();
             }
+        }else if(event.getMsg().equals(EventbusConstants.FromMyReceiverTimeHandler)){
+            //设备超时
+            cancelWaitTimeOut();
         }
     }
 }

@@ -47,6 +47,7 @@ public class MyReceiver extends BroadcastReceiver {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             ToastUtils.showShort(mContext, "设备超时！");
+            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromMyReceiverTimeHandler));
         }
     };
     private String callbackStatus;
@@ -129,7 +130,7 @@ public class MyReceiver extends BroadcastReceiver {
                 }
 
             } else if (callbackAction.equals(ActivityConstants.onConnectionLost)) {
-                ToastUtils.showShort(mContext, "服务器连接已断开");
+//                ToastUtils.showShort(mContext, "服务器连接已断开");
                 Logger.wtf("服务器连接已断开");
             }
         }

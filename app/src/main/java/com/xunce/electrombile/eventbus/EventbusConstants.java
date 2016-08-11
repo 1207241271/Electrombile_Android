@@ -7,6 +7,7 @@ public class EventbusConstants {
     public static final String FromcaseFence = "FromcaseFence";
     public static final String FromgetHeadImageFromServer = "FromgetHeadImageFromServer";
     public static final String FromcaseFenceGet = "FromcaseFenceGet";
+    public static final String FromMyReceiverTimeHandler = "FromMyReceiverTimeHandler";
 
 
 
