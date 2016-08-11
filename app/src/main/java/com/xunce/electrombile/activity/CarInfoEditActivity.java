@@ -459,6 +459,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         //在这里就解订阅原来的设备号,并且订阅新的设备号,然后查询小安宝的初始状态
         mqttConnectManager = MqttConnectManager.getInstance();
         if(mqttConnectManager.returnMqttStatus()){
+            progressDialog.show();
             //mqtt连接良好
             mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
                 @Override
@@ -466,52 +467,38 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                     mqttConnectManager.subscribe(IMEI, new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
-                            setManager.setIMEI(IMEI);
-                            mCenter = CmdCenter.getInstance();
-                            mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
-                            //更新IMEIlist
-                            String IMEI_previous = IMEIlist.get(0);
-                            IMEIlist.set(0, IMEI);
-                            IMEIlist.set(othercarListPosition + 1, IMEI_previous);
-                            setManager.setIMEIlist(IMEIlist);
-                            ToastUtils.showShort(CarInfoEditActivity.this,"切换设备成功");
+                            jPushUtils.setJPushAlias("simcom_" + IMEI, new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    setManager.setIMEI(IMEI);
+                                    mCenter = CmdCenter.getInstance();
+                                    mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
+                                    //更新IMEIlist
+                                    String IMEI_previous = IMEIlist.get(0);
+                                    IMEIlist.set(0, IMEI);
+                                    IMEIlist.set(othercarListPosition + 1, IMEI_previous);
+                                    setManager.setIMEIlist(IMEIlist);
+                                    ToastUtils.showShort(CarInfoEditActivity.this, "切换设备成功");
+                                    progressDialog.dismiss();
 
-                            Intent intent = new Intent();
-                            intent.putExtra("string_key", "设备切换");
-                            intent.putExtra("boolean_key", Flag_Maincar);
-                            setResult(RESULT_OK, intent);
-                            CarInfoEditActivity.this.finish();
-                            jPushUtils.setJPushAlias("simcom_" + IMEI);
+                                    Intent intent = new Intent();
+                                    intent.putExtra("string_key", "设备切换");
+                                    intent.putExtra("boolean_key", Flag_Maincar);
+                                    setResult(RESULT_OK, intent);
+                                    CarInfoEditActivity.this.finish();
+                                }
 
-//                                    jPushUtils.setJPushAlias("simcom_" + IMEI, new Callback() {
-//                                @Override
-//                                public void onSuccess() {
-//                                    setManager.setIMEI(IMEI);
-//                                    mCenter = CmdCenter.getInstance();
-//                                    mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
-//                                    //更新IMEIlist
-//                                    String IMEI_previous = IMEIlist.get(0);
-//                                    IMEIlist.set(0, IMEI);
-//                                    IMEIlist.set(othercarListPosition + 1, IMEI_previous);
-//                                    setManager.setIMEIlist(IMEIlist);
-//                                    ToastUtils.showShort(CarInfoEditActivity.this,"切换设备成功");
-//
-//                                    Intent intent = new Intent();
-//                                    intent.putExtra("string_key", "设备切换");
-//                                    intent.putExtra("boolean_key", Flag_Maincar);
-//                                    setResult(RESULT_OK, intent);
-//                                    CarInfoEditActivity.this.finish();
-//                                }
-//
-//                                @Override
-//                                public void onFail() {
-//                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败");
-//                                }
-//                            });
+                                @Override
+                                public void onFail() {
+                                    progressDialog.dismiss();
+                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败,请退出登录");
+                                }
+                            });
                         }
 
                         @Override
                         public void onFail() {
+                            progressDialog.dismiss();
                             ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
                         }
                     });
@@ -519,6 +506,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
 
                 @Override
                 public void onFail() {
+                    progressDialog.dismiss();
                     ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
                 }
             });
