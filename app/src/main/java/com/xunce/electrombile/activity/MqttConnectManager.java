@@ -213,9 +213,7 @@ public class MqttConnectManager {
             }
         }else{
             //无网络
-//            Message msg = Message.obtain();
-//            msg.what = 0;
-//            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
+            callback.MqttConnectFail();
         }
     }
 
@@ -303,7 +301,6 @@ public class MqttConnectManager {
             Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
             if (c.getClient() == null||!c.getClient().isConnected()) {
                 callback.onFail(new Exception("请先连接设备"));
-//                ToastUtils.showShort(App.getInstance(), "请先连接设");
                 return;
             }
             try {
@@ -325,7 +322,7 @@ public class MqttConnectManager {
         if(NetworkUtils.isNetworkConnected(App.getInstance())){
             Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
             if (c.getClient() == null||!c.getClient().isConnected()) {
-                ToastUtils.showShort(App.getInstance(), "请先连接设备，或等待连接。");
+                ToastUtils.showShort(App.getInstance(), "请先连接设备");
                 return;
             }
             try {
@@ -364,7 +361,7 @@ public class MqttConnectManager {
             LogUtil.log.i("Connection established to " + ServiceConstants.MQTT_HOST + " on topic " + topic4);
         } catch (MqttException e) {
             e.printStackTrace();
-            ToastUtils.showShort(App.getInstance(), "订阅失败!请稍后重启再试！");
+//            ToastUtils.showShort(App.getInstance(), "订阅失败!请稍后重启再试！");
         }
     }
 
@@ -388,21 +385,25 @@ public class MqttConnectManager {
                 ServiceConstants.MQTT_QUALITY_OF_SERVICE,
                 ServiceConstants.MQTT_QUALITY_OF_SERVICE};
 
-        Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
-        if(c.getClient()!=null&&c.getClient().isConnected()){
-            try {
-                Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler).getClient()
-                        .subscribe(topic, qos, null,
-                                new ActionListener(IMEI, App.getInstance(),
-                                        ActionListener.Action.SUBSCRIBE,
-                                        ServiceConstants.handler,callback));
-            } catch (MqttException e) {
-                e.printStackTrace();
-                callback.onFail(new Exception("subscribe出错"));
+        if(NetworkUtils.isNetworkConnected(App.getInstance())){
+            Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+            if(c.getClient()!=null&&c.getClient().isConnected()){
+                try {
+                    Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler).getClient()
+                            .subscribe(topic, qos, null,
+                                    new ActionListener(IMEI, App.getInstance(),
+                                            ActionListener.Action.SUBSCRIBE,
+                                            ServiceConstants.handler,callback));
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                    callback.onFail(new Exception("subscribe出错"));
 //                LogUtil.log.i(IMEI + EventbusConstants.SUB_FAIL);
+                }
+            }else{
+                callback.onFail(new Exception("请先连接设备"));
             }
         }else{
-            callback.onFail(new Exception("请先连接设备"));
+            callback.onFail(new Exception("无网络连接"));
         }
     }
 
@@ -422,7 +423,7 @@ public class MqttConnectManager {
             return true;
         } catch (MqttException e) {
             e.printStackTrace();
-            ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
+//            ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
             return false;
         }
     }
@@ -440,23 +441,23 @@ public class MqttConnectManager {
         String topic5 = "dev2app/" + IMEI + "/notify";
         String[] topic = {topic1, topic2,topic3, topic4, topic5};
 
-        Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
-        if(c.getClient()!=null&&c.getClient().isConnected()){
-            try {
-                mac.unsubscribe(topic,null,new ActionListener(IMEI, App.getInstance(),
-                        ActionListener.Action.UNSUBSCRIBE, ServiceConstants.handler, callback));
-            } catch (MqttException e) {
-                e.printStackTrace();
-                ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
-//                EventBus.getDefault().post(
-//                        new FirstEvent(IMEI + EventbusConstants.UNSUB_FAIL));
-//                LogUtil.log.i(IMEI + EventbusConstants.UNSUB_FAIL);
-                callback.onFail(new Exception("unSubscribe出错"));
+        if(NetworkUtils.isNetworkConnected(App.getInstance())){
+            Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
+            if(c.getClient()!=null&&c.getClient().isConnected()){
+                try {
+                    mac.unsubscribe(topic,null,new ActionListener(IMEI, App.getInstance(),
+                            ActionListener.Action.UNSUBSCRIBE, ServiceConstants.handler, callback));
+                } catch (MqttException e) {
+                    e.printStackTrace();
+//                ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
+                    callback.onFail(new Exception("unSubscribe出错"));
+                }
+            }else{
+                callback.onFail(new Exception("请先连接设备"));
             }
         }else{
             callback.onFail(new Exception("无网络连接"));
         }
-
     }
 
     public boolean unSubscribeGPS(String IMEI) {

@@ -695,20 +695,20 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if(mqttConnectManager.returnMqttStatus()){
             //mqtt连接良好
             showWaitDialog();
-            mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+            jPushUtils.setJPushAlias("simcom_" + current_IMEI, new Callback() {
                 @Override
                 public void onSuccess() {
-                    LogUtil.log.i("unSubscribe-onSuccess");
-                    mqttConnectManager.subscribe(current_IMEI, new MqttConnectManager.Callback() {
+                    LogUtil.log.i("jPushUtils-setJPushAlias-onSuccess");
+                    mqttConnectManager.unSubscribe(previous_IMEI, new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
-                            LogUtil.log.i("subscribe-onSuccess");
-                            jPushUtils.setJPushAlias("simcom_" + current_IMEI, new Callback() {
+                            LogUtil.log.i("unSubscribe-onSuccess");
+                            mqttConnectManager.subscribe(current_IMEI, new MqttConnectManager.Callback() {
                                 @Override
                                 public void onSuccess() {
-                                    LogUtil.log.i("jPushUtils-setJPushAlias-onSuccess");
+                                    LogUtil.log.i("Subscribe-onSuccess");
                                     setManager.setIMEI(current_IMEI);
-                                    //查询APP初始状态
+//                                    //查询APP初始状态
                                     mqttConnectManager.sendMessage(mCenter.getInitialStatus(), current_IMEI);
                                     switchFragment.refreshBatteryToNULL();
                                     ToastUtils.showShort(FragmentActivity.this, "切换成功");
@@ -727,9 +727,11 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                                 }
 
                                 @Override
-                                public void onFail() {
+                                public void onFail(Exception e) {
                                     dismissWaitDialog();
-                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败,请退出登录");
+//                                    Subscribe失败
+                                    ToastUtils.showShort(App.getInstance(),
+                                            "切换设备失败,"+e.getMessage()+",请退出登录");
                                 }
                             });
                         }
@@ -737,20 +739,23 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                         @Override
                         public void onFail(Exception e) {
                             dismissWaitDialog();
-                            ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
+//                            unSubscribe失败
+                            ToastUtils.showShort(App.getInstance(),
+                                    "切换设备失败,"+e.getMessage()+",请退出登录");
                         }
                     });
                 }
 
                 @Override
-                public void onFail(Exception e) {
+                public void onFail() {
                     dismissWaitDialog();
-                    ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
+//                    setJPushAlias失败
+                    ToastUtils.showShort(App.getInstance(), "切换设备失败,请稍后再试");
                 }
             });
         }
         else{
-            ToastUtils.showShort(this,"mqtt连接失败");
+            ToastUtils.showShort(this, "mqtt连接失败");
         }
     }
 
