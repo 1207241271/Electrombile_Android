@@ -513,59 +513,6 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                     ToastUtils.showShort(App.getInstance(), "切换设备失败,请稍后再试");
                 }
             });
-            //mqtt连接良好
-//            mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
-//                @Override
-//                public void onSuccess() {
-//                    LogUtil.log.i("unSubscribe-onSuccess");
-//                    mqttConnectManager.subscribe(IMEI, new MqttConnectManager.Callback() {
-//                        @Override
-//                        public void onSuccess() {
-//                            LogUtil.log.i("subscribe-onSuccess");
-//                            jPushUtils.setJPushAlias("simcom_" + IMEI, new Callback() {
-//                                @Override
-//                                public void onSuccess() {
-//                                    LogUtil.log.i("jPushUtils-setJPushAlias-onSuccess");
-//                                    setManager.setIMEI(IMEI);
-//                                    mCenter = CmdCenter.getInstance();
-//                                    mqttConnectManager.sendMessage(mCenter.getInitialStatus(), IMEI);
-//                                    //更新IMEIlist
-//                                    String IMEI_previous = IMEIlist.get(0);
-//                                    IMEIlist.set(0, IMEI);
-//                                    IMEIlist.set(othercarListPosition + 1, IMEI_previous);
-//                                    setManager.setIMEIlist(IMEIlist);
-//                                    ToastUtils.showShort(CarInfoEditActivity.this, "切换设备成功");
-//                                    progressDialog.dismiss();
-//
-//                                    Intent intent = new Intent();
-//                                    intent.putExtra("string_key", "设备切换");
-//                                    intent.putExtra("boolean_key", Flag_Maincar);
-//                                    setResult(RESULT_OK, intent);
-//                                    CarInfoEditActivity.this.finish();
-//                                }
-//
-//                                @Override
-//                                public void onFail() {
-//                                    progressDialog.dismiss();
-//                                    ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),setJPushAlias失败,请退出登录");
-//                                }
-//                            });
-//                        }
-//
-//                        @Override
-//                        public void onFail(Exception e) {
-//                            progressDialog.dismiss();
-//                            ToastUtils.showShort(App.getInstance(), "切换设备失败(订阅失败),请退出登录");
-//                        }
-//                    });
-//                }
-//
-//                @Override
-//                public void onFail(Exception e) {
-//                    progressDialog.dismiss();
-//                    ToastUtils.showShort(App.getInstance(), "切换设备失败(解除订阅失败)");
-//                }
-//            });
         }
         else{
             ToastUtils.showShort(CarInfoEditActivity.this,"mqtt连接失败");

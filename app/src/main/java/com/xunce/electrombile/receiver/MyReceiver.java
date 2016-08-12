@@ -172,8 +172,6 @@ public class MyReceiver extends BroadcastReceiver {
         int code = protocol.getCode();
         int result = protocol.getResult();
         timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
-        ((FragmentActivity) mContext).cancelWaitTimeOut();
-
         switch (cmd) {
             //如果是设置围栏的命令
             case ProtocolConstants.CMD_FENCE_ON:
@@ -187,52 +185,61 @@ public class MyReceiver extends BroadcastReceiver {
 
             //如果是获取围栏的命令
             case ProtocolConstants.CMD_FENCE_GET:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseFenceGet(code,protocol);
                 break;
 
             //如果是开始找车的命令
             case ProtocolConstants.CMD_SEEK_ON:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseSeek(code, "开始找车");
                 break;
 
             //如果是停止找车的命令
             case ProtocolConstants.CMD_SEEK_OFF:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseSeek(code, "停止找车");
                 break;
 
             case ProtocolConstants.CMD_LOCATION:
-//                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseGetGPS(code,protocol);
                 break;
 
             case ProtocolConstants.APP_CMD_AUTO_LOCK_ON:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 //开启自动落锁
                 caseOpenAutoLock(code);
                 break;
 
             case ProtocolConstants.APP_CMD_AUTO_LOCK_OFF:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseCloseAutoLock(code);
                 break;
 
             case ProtocolConstants.APP_CMD_AUTO_PERIOD_GET:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseGetAutolockPeriod(code, protocol);
                 break;
 
             case ProtocolConstants.APP_CMD_AUTO_PERIOD_SET:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseSetAutoLockTime(code);
                 break;
 
             //获取自动落锁的状态
             case ProtocolConstants.APP_CMD_AUTOLOCK_GET:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseGetAutoLockStatus(code,protocol);
                 break;
 
             //查询电量
             case ProtocolConstants.APP_CMD_BATTERY:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseGetBatteryInfo(code,protocol);
                 break;
 
             case ProtocolConstants.APP_CMD_STATUS_GET:
+                ((FragmentActivity) mContext).cancelWaitTimeOut();
                 caseGetInitialStatus(code,protocol);
                 break;
 
