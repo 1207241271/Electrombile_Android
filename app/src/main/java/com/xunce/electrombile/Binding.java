@@ -152,12 +152,18 @@ public class Binding {
         List<String> IMEIlist = settingManager.getIMEIlist();
         if(FromActivity.equals("CarManageActivity")){
 
-            String IMEI_first = IMEIlist.get(0);
-            IMEIlist.add(IMEI_first);
+            if(IMEIlist.size() == 0){
+                IMEIlist.add(IMEI);
 
-            IMEIlist.set(0, settingManager.getIMEI());
-            settingManager.setIMEIlist(IMEIlist);
+                IMEIlist.set(0, settingManager.getIMEI());
+                settingManager.setIMEIlist(IMEIlist);
+            }else{
+                String IMEI_first = IMEIlist.get(0);
+                IMEIlist.add(IMEI_first);
 
+                IMEIlist.set(0, settingManager.getIMEI());
+                settingManager.setIMEIlist(IMEIlist);
+            }
             //添加设备的话  需要从服务器上获取车辆的头像啊  他们的执行顺序不是你想的那个样子
             leancloudManager.getHeadImageFromServer(settingManager.getIMEI());
             leancloudManager.getCarcreatedAt(settingManager.getIMEI());
@@ -172,7 +178,10 @@ public class Binding {
             settingManager.setIMEIlist(IMEIlist);
 
             leancloudManager.getHeadImageFromServer(settingManager.getIMEI());
-            Intent intent = new Intent(mContext,WelcomeActivity.class);
+//            Intent intent = new Intent(mContext,WelcomeActivity.class);
+//            mContext.startActivity(intent);
+            Intent intent = new Intent(mContext,FragmentActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             mContext.startActivity(intent);
         }
     }
