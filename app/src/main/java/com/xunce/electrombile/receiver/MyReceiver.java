@@ -263,6 +263,7 @@ public class MyReceiver extends BroadcastReceiver {
 
             case ProtocolConstants.ERR_OFFLINE:
                 ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                ((FragmentActivity)mContext).cancelWaitTimeOut();
                 if(((FragmentActivity) mContext).maptabFragment.LostCarSituation){
                     TracksManager.TrackPoint trackPoint = protocol.getNewResult();
                     if(trackPoint!=null){
@@ -372,6 +373,7 @@ public class MyReceiver extends BroadcastReceiver {
                     return;
                 case ProtocolConstants.ERR_OFFLINE:
                     ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                    ((FragmentActivity)mContext).cancelWaitTimeOut();
                     ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                     ((FragmentActivity) mContext).stopThread();
                     ((FragmentActivity) mContext).switchFragment.setOnlineStatus(false);
@@ -403,6 +405,7 @@ public class MyReceiver extends BroadcastReceiver {
                     return;
                 case ProtocolConstants.ERR_OFFLINE:
                     ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                    ((FragmentActivity)mContext).cancelWaitTimeOut();
                     ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                     ((FragmentActivity) mContext).stopThread();
                     break;
@@ -470,10 +473,12 @@ public class MyReceiver extends BroadcastReceiver {
                 return;
             case ProtocolConstants.ERR_OFFLINE:
                 ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                ((FragmentActivity)mContext).cancelWaitTimeOut();
                 ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                 break;
             case ProtocolConstants.ERR_INTERNAL:
                 ToastUtils.showShort(mContext, "服务器内部错误，请稍后再试。");
+                ((FragmentActivity)mContext).cancelWaitTimeOut();
                 break;
         }
     }
