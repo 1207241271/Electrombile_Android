@@ -533,7 +533,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
             public void done(List<AVObject> list, AVException e) {
                 if (e == null) {
                     //list的size一定是1
-                    if (list.size()>0) {
+                    if (list.size() > 0) {
                         AVObject avObject = list.get(0);
                         avObject.deleteInBackground(new DeleteCallback() {
                             @Override
@@ -551,10 +551,10 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                             }
                         });
                     }
-                    if(list.size()>1){
+                    if (list.size() > 1) {
                         LogUtil.log.i("list的size一定是1  哪里出错了?");
                     }
-                }else{
+                } else {
                     callback.onFail();
                 }
             }
@@ -607,8 +607,10 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                                             currentUser.logOut();
 
                                             //IMEIlist更新
-                                            IMEIlist.remove(0);
-                                            setManager.setIMEIlist(IMEIlist);
+                                            if(IMEIlist.size()>0){
+                                                IMEIlist.remove(0);
+                                                setManager.setIMEIlist(IMEIlist);
+                                            }
                                             setManager.setFirstLogin(true);
 
                                             //删除设备头像    sharepreference中的部分信息:IMEI号码对应的绑定日期和车昵称
@@ -646,7 +648,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                             ToastUtils.showShort(CarInfoEditActivity.this, "解绑失败,请稍后重试");
                         }
                     });
-                }else{
+                } else {
                     progressDialog.dismiss();
                     ToastUtils.showShort(CarInfoEditActivity.this, "请先连接设备");
                 }

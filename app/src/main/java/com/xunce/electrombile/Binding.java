@@ -169,7 +169,7 @@ public class Binding {
             leancloudManager.getCarcreatedAt(settingManager.getIMEI());
 
             Intent intent = new Intent(mContext,FragmentActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             mContext.startActivity(intent);
         }
         else{
@@ -181,7 +181,8 @@ public class Binding {
 //            Intent intent = new Intent(mContext,WelcomeActivity.class);
 //            mContext.startActivity(intent);
             Intent intent = new Intent(mContext,FragmentActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+//            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             mContext.startActivity(intent);
         }
     }

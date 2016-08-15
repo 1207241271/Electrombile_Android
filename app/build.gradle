@@ -113,7 +113,8 @@ android {
         tencent {}
         taobao {}
         FIR {
-            minSdkVersion 10
+//            minSdkVersion 10
+            minSdkVersion 11
 //            targetSdkVersion 17
         }
     }

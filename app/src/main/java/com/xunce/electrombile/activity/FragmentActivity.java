@@ -135,7 +135,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 //                return;
 //            }
             dismissWaitDialog();
-//            ToastUtils.showShort(FragmentActivity.this, "FragmentActivity指令下发失败，请检查网络和设备工作是否正常。");
+            ToastUtils.showShort(FragmentActivity.this, "服务器没有回复");
         }
     };
 
@@ -216,6 +216,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             mqttConnectManager.initMqtt();
             queryIMEIandMqttConnection();
             MyLog.d("FragmentActivity", "onStart-queryIMEIandMqttConnection");
+        }else{
+            mac = mqttConnectManager.getMac();
         }
     }
 
