@@ -646,7 +646,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             public void onFail(Exception e) {
                 m_context.cancelWaitTimeOut();
                 LogUtil.log.i("publish fail");
-                if(dialog){
+                if (dialog) {
                     if (e.getMessage().equals("无网络连接")) {
                         ToastUtils.showShort(m_context, "无网络连接");
                     } else {
@@ -678,6 +678,11 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             return;
         }
         Log.d("locateMobile","mBaiduMap != null");
+
+        if(track.point.latitude == 0&&track.point.longitude == 0){
+            return;
+        }
+
         mBaiduMap.hideInfoWindow();
         markerMobile.setPosition(track.point);
         MarkerLocationCenter(track.point);

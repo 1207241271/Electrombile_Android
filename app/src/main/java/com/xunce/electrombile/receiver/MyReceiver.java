@@ -264,16 +264,19 @@ public class MyReceiver extends BroadcastReceiver {
             case ProtocolConstants.ERR_OFFLINE:
                 ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
                 ((FragmentActivity)mContext).cancelWaitTimeOut();
+
+                TracksManager.TrackPoint trackPoint = protocol.getNewResult();
+                if(trackPoint!=null){
+                    Date date = trackPoint.time;
+                    CmdCenter mCenter = CmdCenter.getInstance();
+                    LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
+                    trackPoint = new TracksManager.TrackPoint(date,bdPoint);
+                }
+
                 if(((FragmentActivity) mContext).maptabFragment.LostCarSituation){
-                    TracksManager.TrackPoint trackPoint = protocol.getNewResult();
-                    if(trackPoint!=null){
-                        Date date = trackPoint.time;
-                        CmdCenter mCenter = CmdCenter.getInstance();
-                        LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
-                        trackPoint = new TracksManager.TrackPoint(date,bdPoint);
-                    }
                     ((FragmentActivity) mContext).maptabFragment.caseLostCarSituationOffline(trackPoint);
-//                    ((FragmentActivity) mContext).maptabFragment.LostCarSituation = false;
+                }else{
+                    ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
                 }
                 break;
 
