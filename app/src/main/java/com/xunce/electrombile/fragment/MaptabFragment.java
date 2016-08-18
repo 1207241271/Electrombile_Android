@@ -230,7 +230,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onStart(){
         com.orhanobut.logger.Logger.i(TAG, "onStart");
         super.onStart();
-        mqttConnectManager.subscribeGPS(setManager.getIMEI());
+//        mqttConnectManager.subscribeGPS(setManager.getIMEI());
     }
 
     @Override
@@ -240,6 +240,9 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         mMapView.setVisibility(View.VISIBLE);
         mMapView.onResume();
         super.onResume();
+        if(mBaiduMap == null){
+            mBaiduMap = mMapView.getMap();
+        }
     }
 
     @Override
@@ -254,7 +257,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onStop(){
         com.orhanobut.logger.Logger.i(TAG, "onStop");
         super.onStop();
-        mqttConnectManager.unSubscribeGPS(setManager.getIMEI());
+//        mqttConnectManager.unSubscribeGPS(setManager.getIMEI());
     }
 
     @Override
@@ -675,7 +678,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void locateMobile(TrackPoint track) {
         if (mBaiduMap == null){
             Log.d("locateMobile","mBaiduMap == null");
-            return;
+            mBaiduMap = mMapView.getMap();
         }
         Log.d("locateMobile","mBaiduMap != null");
 

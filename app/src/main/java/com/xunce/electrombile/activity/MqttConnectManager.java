@@ -48,25 +48,25 @@ public class MqttConnectManager {
     public static final String CONNECTING_FAIL = "CONNECTING_FAIL";
     public static String status = OK;
 
-//    final Handler handler = new Handler( ) {
-//        public void handleMessage(Message msg) {
-//            switch (msg.what) {
-//                case 0:
-//                   reconnectMqtt(new OnMqttConnectListener() {
-//                       @Override
-//                       public void MqttConnectSuccess() {
-//
-//                       }
-//
-//                       @Override
-//                       public void MqttConnectFail() {
-////                           handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
-//                       }
-//                   });
-//                    break;
-//            }
-//        }
-//    };
+    final Handler handler = new Handler( ) {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    reconnectMqtt(new OnMqttConnectListener() {
+                        @Override
+                        public void MqttConnectSuccess() {
+                            Log.d("connectlost-reconnect","MqttConnectSuccess");
+                        }
+
+                        @Override
+                        public void MqttConnectFail() {
+                            Log.d("connectlost-reconnect","MqttConnectFail");
+                        }
+                    });
+                    break;
+            }
+        }
+    };
 
     private MqttConnectManager() {
 
@@ -82,32 +82,6 @@ public class MqttConnectManager {
     public void setContext(Context context) {
         mcontext = context;
     }
-
-//    private Connection getConnection(){
-//        Connections connections = Connections.getInstance(mcontext);
-//        String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
-//        String handle = uri + ServiceConstants.clientId;
-//        connection = connections.getConnection(handle);
-//        if(connection == null){
-//            connection = Connection.createConnection(ServiceConstants.clientId,
-//                    ServiceConstants.MQTT_HOST,
-//                    ServiceConstants.PORT,
-//                    mcontext,
-//                    false);
-//            mcp = new MqttConnectOptions();
-//        /*
-//         * true :那么在客户机建立连接时，将除去客户机的任何旧预订。当客户机断开连接时，会除去客户机在会话期间创建的任何新预订。
-//         * false:那么客户机创建的任何预订都会被添加至客户机在连接之前就已存在的所有预订。当客户机断开连接时，所有预订仍保持活动状态。
-//         * 简单来讲，true的话就是每次连接都要重新订阅，false的话就是不用重新订阅
-//         */
-//            mcp.setCleanSession(false);
-//            connection.addConnectionOptions(mcp);
-//            connections.addConnection(connection);
-//            return connection;
-//        }else{
-//            return connection;
-//        }
-//    }
 
     public void initMqtt() {
         Connections connections = Connections.getInstance(mcontext);
@@ -161,18 +135,19 @@ public class MqttConnectManager {
                     ServiceConstants.connection_status = "connection lost";
                     Log.d("initMqtt","connection lost");
 
-                    reconnectMqtt(new OnMqttConnectListener() {
-                        @Override
-                        public void MqttConnectSuccess() {
-                            Log.d("connectlost-reconnect","MqttConnectSuccess");
-                        }
-
-                        @Override
-                        public void MqttConnectFail() {
-                            Log.d("connectlost-reconnect","MqttConnectFail");
-//                            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
-                        }
-                    });
+//                    reconnectMqtt(new OnMqttConnectListener() {
+//                        @Override
+//                        public void MqttConnectSuccess() {
+//                            Log.d("connectlost-reconnect","MqttConnectSuccess");
+//                        }
+//
+//                        @Override
+//                        public void MqttConnectFail() {
+//                            Log.d("connectlost-reconnect","MqttConnectFail");
+////                            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
+//                        }
+//                    });
+                    handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
                 }
             }
 
@@ -341,7 +316,7 @@ public class MqttConnectManager {
         //订阅命令字
         String topic1 = "dev2app/" + IMEI + "/cmd";
         //订阅GPS数据
-//        String topic2 = "dev2app/" + IMEI + "/gps";
+        String topic2 = "dev2app/" + IMEI + "/gps";
         //订阅上报的信号强度
         String topic3 = "dev2app/" + IMEI + "/433";
         //订阅报警
@@ -349,8 +324,9 @@ public class MqttConnectManager {
 
         String topic5 = "dev2app/" + IMEI + "/notify";
 
-        String[] topic = {topic1, topic3, topic4, topic5};
+        String[] topic = {topic1, topic2,topic3, topic4, topic5};
         int[] qos = {ServiceConstants.MQTT_QUALITY_OF_SERVICE,
+                ServiceConstants.MQTT_QUALITY_OF_SERVICE,
                 ServiceConstants.MQTT_QUALITY_OF_SERVICE,
                 ServiceConstants.MQTT_QUALITY_OF_SERVICE,
                 ServiceConstants.MQTT_QUALITY_OF_SERVICE};
@@ -460,34 +436,34 @@ public class MqttConnectManager {
         }
     }
 
-    public boolean unSubscribeGPS(String IMEI) {
-        String topic = "dev2app/" + IMEI + "/gps";
-        try {
-            if(returnMqttStatus()){
-                mac.unsubscribe(topic);
-                mac.unsubscribe(topic);
-                return true;
-            }
-            return false;
-        } catch (MqttException e) {
-            e.printStackTrace();
-            ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
-            return false;
-        }
-    }
+//    public boolean unSubscribeGPS(String IMEI) {
+//        String topic = "dev2app/" + IMEI + "/gps";
+//        try {
+//            if(returnMqttStatus()){
+//                mac.unsubscribe(topic);
+//                mac.unsubscribe(topic);
+//                return true;
+//            }
+//            return false;
+//        } catch (MqttException e) {
+//            e.printStackTrace();
+//            ToastUtils.showShort(App.getInstance(), "取消订阅失败!请稍后重启再试！");
+//            return false;
+//        }
+//    }
 
 
-    public void subscribeGPS(String IMEI){
-        String topic = "dev2app/" + IMEI + "/gps";
-        try {
-            if(returnMqttStatus()){
-                mac.subscribe(topic, ServiceConstants.MQTT_QUALITY_OF_SERVICE);
-            }
-        } catch (MqttException e) {
-            e.printStackTrace();
-            ToastUtils.showShort(App.getInstance(), "订阅失败!请稍后重启再试！");
-        }
-    }
+//    public void subscribeGPS(String IMEI){
+//        String topic = "dev2app/" + IMEI + "/gps";
+//        try {
+//            if(returnMqttStatus()){
+//                mac.subscribe(topic, ServiceConstants.MQTT_QUALITY_OF_SERVICE);
+//            }
+//        } catch (MqttException e) {
+//            e.printStackTrace();
+//            ToastUtils.showShort(App.getInstance(), "订阅失败!请稍后重启再试！");
+//        }
+//    }
 
     public interface Callback{
         public void onSuccess();

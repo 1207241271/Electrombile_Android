@@ -40,7 +40,7 @@ public class AboutActivity extends Activity{
         }
 
 
-        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
+//        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
         returnBtn = (Button)findViewById(R.id.btn_returnFromFelp);
         returnBtn.setOnClickListener(new View.OnClickListener() {
             @Override

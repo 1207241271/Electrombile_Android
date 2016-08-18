@@ -803,10 +803,12 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void setOnlineStatus(boolean status){
-        if(status){
-            tv_status.setText("小安宝设备正常使用");
-        }else{
-            tv_status.setText("小安宝设备出现异常");
+        if(tv_status!=null){
+            if(status){
+                tv_status.setText("小安宝设备正常使用");
+            }else{
+                tv_status.setText("小安宝设备出现异常");
+            }
         }
     }
 

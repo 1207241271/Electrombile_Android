@@ -77,6 +77,7 @@ android {
             buildConfigField "boolean", "LOG_DEBUG", "false"
 
             minifyEnabled false
+//            minifyEnabled true
             shrinkResources false
 
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -115,7 +116,7 @@ android {
         FIR {
 //            minSdkVersion 10
             minSdkVersion 11
-//            targetSdkVersion 17
+            targetSdkVersion 22
         }
     }
 

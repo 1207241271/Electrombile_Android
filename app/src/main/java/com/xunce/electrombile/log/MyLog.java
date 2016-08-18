@@ -162,25 +162,28 @@ public class MyLog {
                 Date comparedDate = now.getTime();
 
                 File[] files = file.listFiles();
-
-                for(int i = 0;i<files.length;i++){
-                    String fileName = files[i].getName();
-                    if(fileName.length()!=17){
+                if(files!=null){
+                    for(int i = 0;i<files.length;i++){
+                        String fileName = files[i].getName();
+                        if(fileName.length()!=17){
 //                        Log.d("MyLog","fileName.length()!=17");
-                        continue;
-                    }
-//                    Log.d("MyLog","fileName.length()==17");
-                    //得到了日期
-                    String subfileName = fileName.substring(0, 10);
-                    try{
-                        Date date = logfile.parse(subfileName);
-                        if(date.before(comparedDate)){
-                            files[i].delete();
+                            continue;
                         }
-                    }catch(Exception e){
-                        e.printStackTrace();
+//                    Log.d("MyLog","fileName.length()==17");
+                        //得到了日期
+                        String subfileName = fileName.substring(0, 10);
+                        try{
+                            Date date = logfile.parse(subfileName);
+                            if(date.before(comparedDate)){
+                                files[i].delete();
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
                     }
                 }
+
+
             }
         };
         new Thread(runnable).start();

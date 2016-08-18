@@ -56,7 +56,7 @@ public class App extends Application {
 //            }
 //        });
 
-        AVAnalytics.enableCrashReport(this, true);
+//        AVAnalytics.enableCrashReport(this, true);
 
         MyLog.delFile();
         DBManage.updateDatabase();
