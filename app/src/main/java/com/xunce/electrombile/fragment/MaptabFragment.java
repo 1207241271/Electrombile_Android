@@ -375,17 +375,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 findCarGuide1();
             }
         });
-
-        BitmapDescriptor bitmap = BitmapDescriptorFactory
-                .fromResource(R.drawable.icon_marka);
-        //构建MarkerOption，用于在地图上添加Marker
-        LatLng point = new LatLng(30.5171, 114.4392);
-        MarkerOptions option2 = new MarkerOptions()
-                .position(point)
-                .icon(bitmap);
-        //在地图上添加Marker，并显示
-        markerMobile = (Marker) mBaiduMap.addOverlay(option2);
-
+        initMarkerMobile();
         titleTextView.setText("地图");
         layout_FindMode_up.setVisibility(View.INVISIBLE);
         btn_arriveNearby.setVisibility(View.INVISIBLE);
@@ -395,6 +385,19 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         HideInfowindow();
         setCarname();
     }
+
+    private void initMarkerMobile(){
+        BitmapDescriptor bitmap = BitmapDescriptorFactory
+                .fromResource(R.drawable.icon_marka);
+        //构建MarkerOption，用于在地图上添加Marker
+        LatLng point = new LatLng(30.5171, 114.4392);
+        MarkerOptions option2 = new MarkerOptions()
+                .position(point)
+                .icon(bitmap);
+        //在地图上添加Marker，并显示
+        markerMobile = (Marker) mBaiduMap.addOverlay(option2);
+    }
+
 
     //找车模式的UI
     private void ToFindCarModeUI(){
@@ -687,6 +690,10 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
         mBaiduMap.hideInfoWindow();
+
+        if(markerMobile == null){
+            initMarkerMobile();
+        }
         markerMobile.setPosition(track.point);
         MarkerLocationCenter(track.point);
 

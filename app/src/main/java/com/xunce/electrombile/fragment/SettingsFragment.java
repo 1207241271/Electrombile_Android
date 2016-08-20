@@ -224,24 +224,35 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             @Override
             public void onClick(View v) {
                 mqttConnectManager = MqttConnectManager.getInstance();
-                mqttConnectManager.unSubscribe(setManager.getIMEI());
-                Intent intent;
-                intent = new Intent();
-                intent.setAction("com.xunce.electrombile.alarmservice");
-                intent.setPackage(m_context.getPackageName());
-                m_context.stopService(intent);
-                ToastUtils.showShort(m_context, "退出登录成功");
-                setManager.cleanAll();
+                mqttConnectManager.unSubscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        Intent intent;
+                        intent = new Intent();
+                        intent.setAction("com.xunce.electrombile.alarmservice");
+                        intent.setPackage(m_context.getPackageName());
+                        m_context.stopService(intent);
+                        ToastUtils.showShort(m_context, "退出登录成功");
+                        setManager.cleanAll();
 
-                //关闭mqttclient
-                mqttConnectManager.MqttDisconnect();
+                        //关闭mqttclient
+                        mqttConnectManager.MqttDisconnect();
 
-                FragmentActivity.cancelAllNotification();
-                intent = new Intent(m_context, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                AVUser.logOut();
-                getActivity().finish();
+                        FragmentActivity.cancelAllNotification();
+                        intent = new Intent(m_context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        AVUser.logOut();
+                        getActivity().finish();
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+                        ToastUtils.showShort(m_context,"退出登录失败，解订阅失败"+e.getMessage());
+
+                    }
+                });
+
             }
         });
         cancel.setOnClickListener(new View.OnClickListener() {

@@ -31,6 +31,7 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.serializer.AfterFilter;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
@@ -148,6 +149,21 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                     getBatteryInfo();
                     updateTotalItinerary();
                     break;
+
+                case 2:
+                    mqttConnectManager.subscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            ToastUtils.showShort(FragmentActivity.this,"重新订阅topic成功");
+                            afterSubscribe();
+                        }
+
+                        @Override
+                        public void onFail(Exception e) {
+                            ToastUtils.showShort(FragmentActivity.this,"重新订阅topic失败");
+                            handler.sendEmptyMessageDelayed(2,60000);
+                        }
+                    });
             }
         }
     };
@@ -365,23 +381,21 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                 com.orhanobut.logger.Logger.i("MqttConnectSuccess", "mqtt连接成功(是否反复重连 反复成功?)");
                 if (firsttime_Flag) {
                     mac = mqttConnectManager.getMac();
-                    mqttConnectManager.subscribe(setManager.getIMEI());
-                    ToastUtils.showShort(FragmentActivity.this, "服务器连接成功");
-                    setManager.setMqttStatus(true);
-                    //开启报警服务
-                    startAlarmService();
+//                    mqttConnectManager.subscribe(setManager.getIMEI());
+                    mqttConnectManager.subscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            ToastUtils.showShort(FragmentActivity.this, "订阅topic成功，60s后重试");
+                            afterSubscribe();
+                        }
 
-                    //获取小安宝的初始状态:电量;自动落锁状态;小安宝的开关状态
-                    sendMessage(FragmentActivity.this, mCenter.getInitialStatus(), setManager.getIMEI());
+                        @Override
+                        public void onFail(Exception e) {
+                            ToastUtils.showShort(FragmentActivity.this, "订阅topic失败，60s后重试");
+                            handler.sendEmptyMessageDelayed(2,60000);
 
-                    //获取总公里数
-                    updateTotalItinerary();
-
-                    firsttime_Flag = false;
-
-                    RefreshThread refreshThread = new RefreshThread();
-                    myThread = new Thread(refreshThread);
-                    myThread.start();
+                        }
+                    });
                 }
             }
 
@@ -392,6 +406,25 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             }
         });
         mqttConnectManager.getMqttConnection();
+    }
+
+    private void afterSubscribe(){
+//        ToastUtils.showShort(FragmentActivity.this, "服务器连接成功");
+        setManager.setMqttStatus(true);
+        //开启报警服务
+        startAlarmService();
+
+        //获取小安宝的初始状态:电量;自动落锁状态;小安宝的开关状态
+        sendMessage(FragmentActivity.this, mCenter.getInitialStatus(), setManager.getIMEI());
+
+        //获取总公里数
+        updateTotalItinerary();
+
+        firsttime_Flag = false;
+
+        RefreshThread refreshThread = new RefreshThread();
+        myThread = new Thread(refreshThread);
+        myThread.start();
     }
 
     /**

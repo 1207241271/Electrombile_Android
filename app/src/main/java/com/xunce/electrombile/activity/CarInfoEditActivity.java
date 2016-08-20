@@ -671,7 +671,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                                                 public void onSuccess() {
                                                     progressDialog.dismiss();
                                                     setManager.setIMEI(NextCarIMEI);
-                                                    mqttConnectManager.subscribe(NextCarIMEI);
+//                                                    mqttConnectManager.subscribe(NextCarIMEI);
                                                     mqttConnectManager.sendMessage(mCenter.getInitialStatus(), NextCarIMEI);
 
                                                     IMEIlist.remove(0);
