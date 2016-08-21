@@ -6,6 +6,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.mqtt.Connections;
 
 /**
  * Created by heyukun on 2015/4/24.
@@ -40,7 +42,7 @@ public class AboutActivity extends Activity{
         }
 
 
-//        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
+        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
         returnBtn = (Button)findViewById(R.id.btn_returnFromFelp);
         returnBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,7 +69,13 @@ public class AboutActivity extends Activity{
         });
         tv_appInfo = (TextView)findViewById(R.id.tv_appInfo);
         tv_appInfo.setText("安全宝 V" + versionName);
-        tv_mqtt_connecitonstatus.setText(ServiceConstants.connection_status);
+
+        boolean flag = Connections.getInstance(this).getConnection(ServiceConstants.handler).getConnectionOptions().isCleanSession();
+        if(flag){
+            tv_mqtt_connecitonstatus.setText("isCleanSession--true");
+        }else{
+            tv_mqtt_connecitonstatus.setText("isCleanSession--false");
+        }
     }
 
     @Override

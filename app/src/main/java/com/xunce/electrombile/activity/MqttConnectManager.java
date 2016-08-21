@@ -14,6 +14,7 @@ import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.log.MyLog;
+import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.mqtt.ActionListener;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
@@ -41,12 +42,6 @@ public class MqttConnectManager {
     MqttConnectOptions mcp;
     Connection connection;
     OnMqttConnectListener onMqttConnectListener;
-
-    public static final String OK = "OK";
-    public static final String LOST = "LOST";
-    public static final String IS_CONNECTING = "IS_CONNECTING";
-    public static final String CONNECTING_FAIL = "CONNECTING_FAIL";
-    public static String status = OK;
 
     final Handler handler = new Handler( ) {
         public void handleMessage(Message msg) {
@@ -90,6 +85,7 @@ public class MqttConnectManager {
         final String handle = uri + ServiceConstants.clientId;
         connection = connections.getConnection(handle);
         if (connection == null) {
+            Log.d("initMqtt","connection = null  新建connection");
             connection = Connection.createConnection(ServiceConstants.clientId,
                     ServiceConstants.MQTT_HOST,
                     ServiceConstants.PORT,
@@ -101,9 +97,12 @@ public class MqttConnectManager {
          * false:那么客户机创建的任何预订都会被添加至客户机在连接之前就已存在的所有预订。当客户机断开连接时，所有预订仍保持活动状态。
          * 简单来讲，true的话就是每次连接都要重新订阅，false的话就是不用重新订阅
          */
-            mcp.setCleanSession(false);
+            mcp.setCleanSession(true);
             connection.addConnectionOptions(mcp);
             connections.addConnection(connection);
+        }else{
+            Log.d("initMqtt","connection != null");
+            connection.getConnectionOptions().setCleanSession(true);
         }
         ServiceConstants.handler = connection.handle();
         mac = connection.getClient();
@@ -134,19 +133,6 @@ public class MqttConnectManager {
 
                     ServiceConstants.connection_status = "connection lost";
                     Log.d("initMqtt","connection lost");
-
-//                    reconnectMqtt(new OnMqttConnectListener() {
-//                        @Override
-//                        public void MqttConnectSuccess() {
-//                            Log.d("connectlost-reconnect","MqttConnectSuccess");
-//                        }
-//
-//                        @Override
-//                        public void MqttConnectFail() {
-//                            Log.d("connectlost-reconnect","MqttConnectFail");
-////                            handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
-//                        }
-//                    });
                     handler.sendMessageDelayed(handler.obtainMessage(0), 5000);
                 }
             }
@@ -164,35 +150,50 @@ public class MqttConnectManager {
     }
 
     public void reconnectMqtt(final OnMqttConnectListener callback) {
-        if(NetworkUtils.isNetworkConnected(App.getInstance())){
-            Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
-            try {
-                c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        ServiceConstants.connection_status = "connected";
-                        connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
-                        callback.MqttConnectSuccess();
-                        ToastUtils.showShort(App.getInstance(),"debug:reconnectMqtt服务器连接成功");
-                    }
+        Connection c = Connections.getInstance(mcontext).getConnection(connection.handle());
+        if(c.getStatus().equals("DISCONNECTED")||c.getStatus().equals("NONE")){
+            if(NetworkUtils.isNetworkConnected(App.getInstance())){
+                try {
+                    c.changeConnectionStatus(Connection.ConnectionStatus.CONNECTING);
+                    c.getClient().connect(connection.getConnectionOptions(), this, new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                            ServiceConstants.connection_status = "connected";
+                            connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
+                            callback.MqttConnectSuccess();
+                            ToastUtils.showShort(App.getInstance(),"debug:reconnectMqtt服务器连接成功");
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
-                        callback.MqttConnectFail();
-                        ToastUtils.showShort(App.getInstance(), "debug:reconnectMqtt服务器连接失败");
-                    }
-                });
-            } catch (MqttException e1) {
-                e1.printStackTrace();
+                            subscribe(SettingManager.getInstance().getIMEI(), new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅成功");
+                                    Log.d("MqttConnectManager","连接mqtt之后订阅成功");
+                                }
+
+                                @Override
+                                public void onFail(Exception e) {
+                                    ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅失败");
+                                    Log.d("MqttConnectManager","连接mqtt之后订阅失败");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                            connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
+                            callback.MqttConnectFail();
+                            ToastUtils.showShort(App.getInstance(), "debug:reconnectMqtt服务器连接失败");
+                        }
+                    });
+                } catch (MqttException e1) {
+                    e1.printStackTrace();
+                }
+            }else{
+                //无网络
+                callback.MqttConnectFail();
             }
-        }else{
-            //无网络
-            callback.MqttConnectFail();
         }
     }
-
-
 
     public void getMqttConnection(){
         try {
@@ -204,6 +205,20 @@ public class MqttConnectManager {
                     MyLog.d("getMqttConnection", "MqttConnectSuccess 连接服务器成功");
                     ServiceConstants.connection_status = "connected";
                     connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
+
+                    subscribe(SettingManager.getInstance().getIMEI(), new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅成功");
+                            Log.d("MqttConnectManager","连接mqtt之后订阅成功");
+                        }
+
+                        @Override
+                        public void onFail(Exception e) {
+                            ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅失败");
+                            Log.d("MqttConnectManager","连接mqtt之后订阅失败");
+                        }
+                    });
                 }
 
                 @Override
