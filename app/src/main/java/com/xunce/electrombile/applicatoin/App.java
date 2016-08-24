@@ -9,8 +9,6 @@ import com.xunce.electrombile.database.DBManage;
 import com.xunce.electrombile.log.MyLog;
 
 import cn.jpush.android.api.JPushInterface;
-import im.fir.sdk.FIR;
-//import io.yunba.android.manager.YunBaManager;
 
 
 /**
@@ -28,8 +26,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        //initial BugHD
-        FIR.init(this);
+
         instance = this;
 
         //initial the Baidu map SDK
@@ -41,22 +38,8 @@ public class App extends Application {
 
         JPushInterface.setDebugMode(true);
         JPushInterface.init(this);
-//        YunBaManager.start(getApplicationContext());
 
-
-//        YunBaManager.subscribe(getApplicationContext(), new String[]{"e2link/"+setManager.getIMEI()}, new IMqttActionListener() {
-//
-//            @Override
-//            public void onSuccess(IMqttToken arg0) {
-//                Log.d(TAG, "Subscribe topic succeed");
-//            }
-//            @Override
-//            public void onFailure(IMqttToken arg0, Throwable arg1) {
-//                Log.d(TAG, "Subscribe topic failed");
-//            }
-//        });
-
-//        AVAnalytics.enableCrashReport(this, true);
+        AVAnalytics.enableCrashReport(this, true);
 
         MyLog.delFile();
         DBManage.updateDatabase();
