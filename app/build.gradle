@@ -12,8 +12,8 @@ def releaseTime() {
 }
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion '23.0.3'
+    compileSdkVersion 24
+    buildToolsVersion '24.0.1'
 
     def versionPropsFile = file('version.properties')
 
@@ -53,6 +53,9 @@ android {
     defaultConfig {
         applicationId "com.xunce.electrombile"
         multiDexEnabled true
+
+        //refer to https://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client
+        useLibrary 'org.apache.http.legacy'
         minSdkVersion 10
        // targetSdkVersion 3
     }
@@ -136,7 +139,7 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
-    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:support-v4:24.2.0'
 
     compile 'cn.leancloud.android:avoscloud-sdk:v3.13.6'
     compile 'cn.leancloud.android:avoscloud-statistics:v3.13.6'
