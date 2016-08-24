@@ -161,18 +161,15 @@ public class MqttConnectManager {
                             ServiceConstants.connection_status = "connected";
                             connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
                             callback.MqttConnectSuccess();
-                            ToastUtils.showShort(App.getInstance(),"debug:reconnectMqtt服务器连接成功");
 
                             subscribe(SettingManager.getInstance().getIMEI(), new Callback() {
                                 @Override
                                 public void onSuccess() {
-                                    ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅成功");
                                     Log.d("MqttConnectManager","连接mqtt之后订阅成功");
                                 }
 
                                 @Override
                                 public void onFail(Exception e) {
-                                    ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅失败");
                                     Log.d("MqttConnectManager","连接mqtt之后订阅失败");
                                 }
                             });
@@ -182,7 +179,6 @@ public class MqttConnectManager {
                         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                             connection.changeConnectionStatus(Connection.ConnectionStatus.DISCONNECTED);
                             callback.MqttConnectFail();
-                            ToastUtils.showShort(App.getInstance(), "debug:reconnectMqtt服务器连接失败");
                         }
                     });
                 } catch (MqttException e1) {
@@ -209,13 +205,11 @@ public class MqttConnectManager {
                     subscribe(SettingManager.getInstance().getIMEI(), new Callback() {
                         @Override
                         public void onSuccess() {
-                            ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅成功");
                             Log.d("MqttConnectManager","连接mqtt之后订阅成功");
                         }
 
                         @Override
                         public void onFail(Exception e) {
-                            ToastUtils.showShort(App.getInstance(),"连接mqtt之后订阅失败");
                             Log.d("MqttConnectManager","连接mqtt之后订阅失败");
                         }
                     });
