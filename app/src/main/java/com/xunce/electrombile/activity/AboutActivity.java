@@ -25,7 +25,7 @@ public class AboutActivity extends Activity{
     Button feadbackBtn;
     TextView tv_appInfo;
     String versionName;
-    TextView tv_mqtt_connecitonstatus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +42,6 @@ public class AboutActivity extends Activity{
         }
 
 
-        tv_mqtt_connecitonstatus = (TextView)findViewById(R.id.mqtt_connecitonstatus);
         returnBtn = (Button)findViewById(R.id.btn_returnFromFelp);
         returnBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,7 +56,7 @@ public class AboutActivity extends Activity{
                 try{
                     Intent intent = new Intent(Intent.ACTION_SENDTO);
                     intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_SUBJECT, "安全宝客户端V" + versionName+ " - 信息反馈");
+                    intent.putExtra(Intent.EXTRA_SUBJECT, "小安宝客户端V" + versionName+ " - 信息反馈");
                     intent.putExtra(Intent.EXTRA_TEXT, "我的建议：");
                     intent.setData(Uri.parse("mailto:support@huakexunce.com"));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -68,14 +67,7 @@ public class AboutActivity extends Activity{
             }
         });
         tv_appInfo = (TextView)findViewById(R.id.tv_appInfo);
-        tv_appInfo.setText("安全宝 V" + versionName);
-
-        boolean flag = Connections.getInstance(this).getConnection(ServiceConstants.handler).getConnectionOptions().isCleanSession();
-        if(flag){
-            tv_mqtt_connecitonstatus.setText("isCleanSession--true");
-        }else{
-            tv_mqtt_connecitonstatus.setText("isCleanSession--false");
-        }
+        tv_appInfo.setText("小安宝 V" + versionName);
     }
 
     @Override
