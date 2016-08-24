@@ -134,7 +134,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private ImageView img_angle4;
     private ImageView img_angle5;
     private TextView tv_status;
-    private TextView tv_mqttStatus;
 
     public static final int TAKE_PHOTE=1;
     public static final int CROP_PHOTO=2;
@@ -369,7 +368,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             }
         });
 
-        tv_mqttStatus = (TextView)v.findViewById(R.id.tv_mqttStatus);
     }
 
     private void initEvent() {
@@ -807,7 +805,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             if(status){
                 tv_status.setText("小安宝设备正常使用");
             }else{
-                tv_status.setText("小安宝设备出现异常");
+                tv_status.setText("设备离线,请检查车辆是否处于地下室等无信号的地方");
             }
         }
     }
@@ -1205,12 +1203,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.show();
     }
 
-
-    public void refreshMqttstatus(String status){
-        if(tv_mqttStatus!=null){
-            tv_mqttStatus.setText(status);
-        }
-    }
 
     @Subscribe
     public void onFirstEvent(FirstEvent event){

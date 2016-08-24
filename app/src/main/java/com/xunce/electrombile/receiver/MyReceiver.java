@@ -50,9 +50,8 @@ public class MyReceiver extends BroadcastReceiver {
             ((FragmentActivity)mContext).cancelWaitTimeOut();
         }
     };
-    private String callbackStatus;
-    private String callbackAction;
-    private String destinationName;
+
+
     private byte select = 0;
     private Protocol protocol;
     private SettingManager settingManager;
@@ -99,11 +98,11 @@ public class MyReceiver extends BroadcastReceiver {
         Logger.i("接收调用%s",intent.getExtras().toString());
         //Log.i(TAG, intent.getExtras().toString());
         Bundle bundle = intent.getExtras();
-        callbackStatus = bundle.get(ActivityConstants.callbackStatus).toString();
-        callbackAction = bundle.get(ActivityConstants.callbackAction).toString();
+        String callbackStatus = bundle.get(ActivityConstants.callbackStatus).toString();
+        String callbackAction = bundle.get(ActivityConstants.callbackAction).toString();
         if (ActivityConstants.OK.equals(callbackStatus)) {
             if (callbackAction.equals(ActivityConstants.messageArrived)) {
-                destinationName = bundle.get(ActivityConstants.destinationName).toString();
+                String destinationName = bundle.get(ActivityConstants.destinationName).toString();
                 String s = bundle.get(ActivityConstants.PARCEL).toString();
                 if (destinationName.contains("cmd")) {
                     select = 0x01;
@@ -262,7 +261,7 @@ public class MyReceiver extends BroadcastReceiver {
                 return;
 
             case ProtocolConstants.ERR_OFFLINE:
-                ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
                 ((FragmentActivity)mContext).cancelWaitTimeOut();
 
                 TracksManager.TrackPoint trackPoint = protocol.getNewResult();
@@ -375,7 +374,7 @@ public class MyReceiver extends BroadcastReceiver {
                     timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 2);
                     return;
                 case ProtocolConstants.ERR_OFFLINE:
-                    ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                    ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
                     ((FragmentActivity)mContext).cancelWaitTimeOut();
                     ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                     ((FragmentActivity) mContext).stopThread();
@@ -407,7 +406,7 @@ public class MyReceiver extends BroadcastReceiver {
                     timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 2);
                     return;
                 case ProtocolConstants.ERR_OFFLINE:
-                    ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                    ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
                     ((FragmentActivity)mContext).cancelWaitTimeOut();
                     ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                     ((FragmentActivity) mContext).stopThread();
@@ -475,7 +474,7 @@ public class MyReceiver extends BroadcastReceiver {
                 timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 2);
                 return;
             case ProtocolConstants.ERR_OFFLINE:
-                ToastUtils.showShort(mContext, "设备不在线，请检查电源。");
+                ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
                 ((FragmentActivity)mContext).cancelWaitTimeOut();
                 ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
                 break;

@@ -35,15 +35,6 @@
                 android:text = "小安宝"
                 android:textSize="17.33sp"
                 android:textColor="#d0f9e5"/>
-
-            <TextView
-                android:id="@+id/tv_mqttStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:textColor="#ffffff"
-                android:text = "none"/>
         </RelativeLayout>
 
         <RelativeLayout
@@ -297,7 +288,7 @@
                 android:layout_alignLeft="@+id/tv1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="17.33sp"
+                android:textSize="12.67sp"
                 android:textColor="#009f53"
                 android:text=""/>
         </RelativeLayout>
