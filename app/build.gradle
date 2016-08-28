@@ -56,8 +56,8 @@ android {
 
         //refer to https://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client
         useLibrary 'org.apache.http.legacy'
-        minSdkVersion 10
-       // targetSdkVersion 3
+        minSdkVersion 14
+        targetSdkVersion 24
     }
 
     signingConfigs {
@@ -115,7 +115,6 @@ android {
         xiaomi {}
         tencent {}
         FIR {
-            minSdkVersion 11
             targetSdkVersion 22
         }
     }
