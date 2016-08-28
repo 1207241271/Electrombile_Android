@@ -3,10 +3,8 @@ package com.xunce.electrombile.activity.account;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,10 +21,8 @@ import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.BaseActivity;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
-import com.xunce.electrombile.utils.useful.StringUtils;
+
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RegisterActivity_Part1 extends BaseActivity {
     private EditText et_PhoneNumber;
@@ -114,7 +110,7 @@ public class RegisterActivity_Part1 extends BaseActivity {
                 //判断手机号是否是对的
                 phone = et_PhoneNumber.getText().toString().trim();
 
-                if(!ForgetPassActivity2.IsPhoneNomberOK(phone,RegisterActivity_Part1.this)){
+                if(!ForgetPassActivity2.IsPhoneNumberOK(phone,RegisterActivity_Part1.this)){
                     return;
                 }
 
