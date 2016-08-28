@@ -120,7 +120,7 @@ android {
     }
 
     productFlavors.all { flavor ->
-        flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+        flavor.manifestPlaceholders = [CHANNEL_VALUE: name]
     }
 
     //fix third library duplicate META-INF problem

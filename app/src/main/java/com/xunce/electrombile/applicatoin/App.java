@@ -40,6 +40,7 @@ public class App extends Application {
         JPushInterface.init(this);
 
         AVAnalytics.enableCrashReport(this, true);
+        AVAnalytics.setAnalyticsEnabled(true);
 
         MyLog.delFile();
         DBManage.updateDatabase();
