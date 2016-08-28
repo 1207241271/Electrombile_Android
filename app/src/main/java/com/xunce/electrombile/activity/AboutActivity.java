@@ -2,19 +2,15 @@ package com.xunce.electrombile.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.xunce.electrombile.Constants.ServiceConstants;
+import com.xunce.electrombile.BuildConfig;
 import com.xunce.electrombile.R;
-import com.xunce.electrombile.mqtt.Connections;
 
 /**
  * Created by heyukun on 2015/4/24.
@@ -22,7 +18,7 @@ import com.xunce.electrombile.mqtt.Connections;
 public class AboutActivity extends Activity{
 
     Button returnBtn;
-    Button feadbackBtn;
+    Button feedbackBtn;
     TextView tv_appInfo;
     String versionName;
 
@@ -31,15 +27,8 @@ public class AboutActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        //获取版本信息
-        PackageManager pm = getPackageManager();
-        try {
-            PackageInfo pi = pm.getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_ACTIVITIES);
-            versionName = pi.versionName;
 
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
+        versionName = BuildConfig.VERSION_NAME;
 
 
         returnBtn = (Button)findViewById(R.id.btn_returnFromFelp);
@@ -49,8 +38,8 @@ public class AboutActivity extends Activity{
                 finish();
             }
         });
-        feadbackBtn = (Button)findViewById(R.id.btn_feadBack);
-        feadbackBtn.setOnClickListener(new View.OnClickListener() {
+        feedbackBtn = (Button)findViewById(R.id.btn_feadBack);
+        feedbackBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try{
