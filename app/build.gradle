@@ -63,16 +63,24 @@ android {
     signingConfigs {
         debug {
             keyAlias 'androiddebugkey'
-            keyPassword 'Xc20150101'
             storeFile file('../keystore/Electromile.debug.keystore')
-            storePassword 'Xc20150101'
         }
         release {
             keyAlias 'androidreleasekey'
-            keyPassword 'Xc20150101'
             storeFile file('../keystore/Electromile.release.keystore')
-            storePassword 'Xc20150101'
         }
+    }
+
+    def propsFile = rootProject.file('keystore.properties')
+    if (propsFile.exists() ) {
+        def props = new Properties()
+        props.load(new FileInputStream(propsFile))
+        android.signingConfigs['release'].storePassword = props['storePassword']
+        android.signingConfigs['release'].keyPassword = props['keyPassword']
+        android.signingConfigs['release'].storePassword = props['storePassword']
+        android.signingConfigs['release'].keyPassword = props['keyPassword']
+    }else {
+        throw new GradleException("Could not read keystore.properties!")
     }
 
     buildTypes {
