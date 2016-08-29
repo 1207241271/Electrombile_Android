@@ -26,4 +26,16 @@ allprojects {
             url "https://repo.eclipse.org/content/repositories/paho-snapshots/"
         }
     }
+
+    apply plugin: 'checkstyle'
+    task checkstyle(type: Checkstyle) {
+        source 'src'
+        include '**/*.java'
+        exclude '**/gen/**'
+        exclude '**/R.java'
+        exclude '**/BuildConfig.java'
+        configFile new File(rootDir, "checkstyle.xml")
+        // empty classpath
+        classpath = files()
+    }
 }
