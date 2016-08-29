@@ -1,3 +1,4 @@
+import groovy.swing.SwingBuilder
 apply plugin: 'com.android.application'
 
 def getDate() {
@@ -9,6 +10,54 @@ def getDate() {
 
 def releaseTime() {
     return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if(taskGraph.hasTask(':app:assembleRelease')) {
+        def storePass = ''
+        def keyPass = ''
+        if(System.console() == null) {
+            new SwingBuilder().edt {
+                dialog(modal: true,
+                        title: 'Enter password',
+                        alwaysOnTop: true,
+                        resizable: false,
+                        locationRelativeTo: null,
+                        pack: true,
+                        show: true
+                ) {
+                    vbox { // Put everything below each other
+                        label(text: "Please enter store passphrase:")
+                        def inputStorePass = passwordField()
+                        label(text: "Please enter key passphrase:")
+                        def inputKeyPass = passwordField()
+                        button(defaultButton: true,
+                                text: 'OK',
+                                actionPerformed: {
+                            storePass = inputStorePass.password;
+                            keyPass = inputKeyPass.password;
+                            dispose();
+                        })
+                    }
+                }
+            }
+        } else {
+            storePass = System.console().readPassword("\nPlease enter store passphrase: ")
+            keyPass = System.console().readPassword("\nPlease enter key passphrase: ")
+        }
+
+        if(storePass.size() <= 0 || keyPass.size() <= 0) {
+            throw new InvalidUserDataException("You must enter the passwords to proceed.")
+        }
+
+        storePass = new String(storePass)
+        keyPass = new String(keyPass)
+
+        android.signingConfigs.release.storePassword = storePass
+        android.signingConfigs.release.keyPassword = keyPass
+        android.signingConfigs.debug.storePassword = storePass
+        android.signingConfigs.debug.keyPassword = keyPass
+    }
 }
 
 android {
@@ -77,8 +126,8 @@ android {
         props.load(new FileInputStream(propsFile))
         android.signingConfigs['release'].storePassword = props['storePassword']
         android.signingConfigs['release'].keyPassword = props['keyPassword']
-        android.signingConfigs['release'].storePassword = props['storePassword']
-        android.signingConfigs['release'].keyPassword = props['keyPassword']
+        android.signingConfigs['debug'].storePassword = props['storePassword']
+        android.signingConfigs['debug'].keyPassword = props['keyPassword']
     }else {
         throw new GradleException("Could not read keystore.properties!")
     }
