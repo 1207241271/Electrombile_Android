@@ -99,7 +99,7 @@ public class ForgetPassActivity2 extends Activity {
          */
 //        Pattern p = Pattern.compile("^1(3[0-9]|4[57]|5[0-35-9]|7[01678]|8[0-9])\\\\d{8}$");
         //我们不需要那么精准，用下面的模式检查就可以了
-        Pattern p = Pattern.compile("^1[3|4|5|7|8][0-9]\\d{8}]$");
+        Pattern p = Pattern.compile("^1[3|4|5|7|8][0-9]\\d{8}$");
         Matcher m = p.matcher(phone);
         if (!m.matches()) {
             ToastUtils.showShort(context, "手机号码不正确");
