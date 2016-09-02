@@ -13,8 +13,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
-import android.media.Image;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,10 +33,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -78,7 +74,8 @@ import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
 import com.xunce.electrombile.eventbus.EventbusConstants;
-import com.xunce.electrombile.eventbus.FirstEvent;
+import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -100,7 +97,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener {
     private static final int DELAYTIME = 1000;
@@ -188,6 +187,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
+        //----------  EventBus Register
         EventBus.getDefault().register(this);
     }
 
@@ -336,7 +336,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
                                 try {
                                     int itinerary = (int)avObject.get("itinerary");
-                                    refreshItineraryInfo(itinerary/1000.0);
+                                    Map eventMap = new HashMap();
+                                    eventMap.put(EventbusConstants.FetchItineraryEvent,itinerary/1000.0);
+                                    EventBus.getDefault().post(new ObjectEvent(eventMap));
+//                                    refreshItineraryInfo(itinerary/1000.0);
                                     ToastUtils.showShort(m_context,"获取累计公里数成功");
                                 } catch (Exception ee) {
                                     ee.printStackTrace();
@@ -1205,7 +1208,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
 
     @Subscribe
-    public void onFirstEvent(FirstEvent event){
+    public void onMessageEvent(MessageEvent event){
         if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
             m_context.cancelWaitTimeOut();
             msgSuccessArrived();
@@ -1216,6 +1219,13 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             } else {
                 closeStateAlarmBtn();
             }
+        }
+    }
+    @Subscribe
+    public  void  onObjectEvent(ObjectEvent event){
+        Map eventMap = event.getEventMap();
+        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
+                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString())/1000.0);
         }
     }
 }

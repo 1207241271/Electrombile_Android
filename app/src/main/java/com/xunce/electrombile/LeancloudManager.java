@@ -20,7 +20,7 @@ import com.avos.avoscloud.GetDataCallback;
 import com.avos.avoscloud.SaveCallback;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.eventbus.EventbusConstants;
-import com.xunce.electrombile.eventbus.FirstEvent;
+import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -260,7 +260,7 @@ public class LeancloudManager {
                         else{
                             settingManager.setCarName(IMEI,avObject.get("name").toString());
                         }
-                        EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromgetHeadImageFromServer));
+                        EventBus.getDefault().post(new MessageEvent(EventbusConstants.FromgetHeadImageFromServer));
 
 
                         //设备头像
