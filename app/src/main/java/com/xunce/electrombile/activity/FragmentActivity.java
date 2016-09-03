@@ -47,6 +47,7 @@ import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.applicatoin.Historys;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.fragment.SwitchFragment;
@@ -73,6 +74,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cn.jpush.android.api.JPushInterface;
 
@@ -866,6 +868,13 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 //        String msg = "onEventMainThread收到了消息：" + event.getMsg();
         if(event.getMsg().equals(EventbusConstants.FromgetHeadImageFromServer)){
             refreshBindList1();
+        }
+    }
+    @Subscribe
+    public  void  onObjectEvent(ObjectEvent event){
+        Map eventMap = event.getEventMap();
+        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
+//            refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString())/1000.0);
         }
     }
 }

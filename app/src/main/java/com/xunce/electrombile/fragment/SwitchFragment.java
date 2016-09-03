@@ -99,6 +99,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener {
@@ -336,7 +337,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
                                 try {
                                     int itinerary = (int)avObject.get("itinerary");
-                                    Map eventMap = new HashMap();
+                                    Map<String,Double> eventMap = new HashMap();
                                     eventMap.put(EventbusConstants.FetchItineraryEvent,itinerary/1000.0);
                                     EventBus.getDefault().post(new ObjectEvent(eventMap));
 //                                    refreshItineraryInfo(itinerary/1000.0);
@@ -959,7 +960,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void refreshItineraryInfo(double itinerary){
-        tv_distance.setText(itinerary + "公里");
+        tv_distance.setText(String.format(Locale.CHINA,"%.2f%s",itinerary,"公里"));
 
         //星
         if(itinerary<500){
@@ -1225,7 +1226,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     public  void  onObjectEvent(ObjectEvent event){
         Map eventMap = event.getEventMap();
         if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString())/1000.0);
+                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString()));
         }
     }
 }
