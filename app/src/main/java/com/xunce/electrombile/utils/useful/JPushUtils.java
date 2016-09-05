@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.jpush.android.api.BasicPushNotificationBuilder;
 import cn.jpush.android.api.JPushInterface;
 import cn.jpush.android.api.TagAliasCallback;
 
@@ -89,6 +90,7 @@ public class JPushUtils {
     }
 
     private JPushUtils() {
+        //----------    intance Init;
         mContext = App.getInstance();
     }
 
@@ -148,12 +150,10 @@ public class JPushUtils {
         handler.sendMessage(handler.obtainMessage(MSG_SET_ALIAS, alias));
         //调用JPush API设置Alias
     }
-
-
-
     public interface SetTagCallback{
         void setTagSuccess();
         void setTagFail();
     }
+
 }
 
