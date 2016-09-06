@@ -11,4 +11,10 @@ public class EventbusConstants {
 
     public static final String  FetchItineraryEvent = "FetchItineraryEvent";
 
+    public static final String  VALUE   =   "VALUE";
+    public enum objectEventType{
+        EventType_FetchItinerary,           //获取总里程数
+        EventType_FenceSet,                 //设置小安宝开关
+        EventType_FenceGet;                 //获取小安宝开关
+    }
 }

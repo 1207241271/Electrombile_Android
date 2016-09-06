@@ -67,6 +67,7 @@ import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -870,11 +871,18 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             refreshBindList1();
         }
     }
-    @Subscribe
+
+    //----------    priority is higher than SwitchFragment, first Arrive
+    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
     public  void  onObjectEvent(ObjectEvent event){
-        Map eventMap = event.getEventMap();
-        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-//            refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString())/1000.0);
+        switch (event.eventType){
+            //-----------   get And set Is similar
+            case EventType_FenceSet:
+            case EventType_FenceGet:
+                boolean alarmFlag   =  Boolean.parseBoolean(event.getEventMap().get(EventbusConstants.VALUE).toString());
+                this.setManager.setAlarmFlag(alarmFlag);
+                this.cancelWaitTimeOut();
+                break;
         }
     }
 }

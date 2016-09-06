@@ -17,6 +17,7 @@ import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
@@ -35,6 +36,8 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by lybvinci on 2015/10/22.
@@ -171,79 +174,84 @@ public class MyReceiver extends BroadcastReceiver {
         int code = protocol.getCode();
         int result = protocol.getResult();
         timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
-        switch (cmd) {
-            //如果是设置围栏的命令
-            case ProtocolConstants.CMD_FENCE_ON:
-                caseFence(code, true, "防盗开启成功");
-                break;
+        //----------    check code is Success
+        if (code == ProtocolConstants.ERR_SUCCESS) {
+            switch (cmd) {
+                //lf cmd is turn on switch
+                case ProtocolConstants.CMD_FENCE_ON:
+                    caseFenceSet(true, "防盗开启成功");
+                    break;
 
-            //如果是设置关闭围栏的命令
-            case ProtocolConstants.CMD_FENCE_OFF:
-                caseFence(code, false, "防盗关闭成功");
-                break;
+                //如果是设置关闭围栏的命令
+                case ProtocolConstants.CMD_FENCE_OFF:
+                    caseFenceSet(false, "防盗关闭成功");
+                    break;
 
-            //如果是获取围栏的命令
-            case ProtocolConstants.CMD_FENCE_GET:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseFenceGet(code,protocol);
-                break;
+                //如果是获取围栏的命令
+                case ProtocolConstants.CMD_FENCE_GET:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseFenceGet(code, protocol);
+                    break;
 
-            //如果是开始找车的命令
-            case ProtocolConstants.CMD_SEEK_ON:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseSeek(code, "开始找车");
-                break;
+                //如果是开始找车的命令
+                case ProtocolConstants.CMD_SEEK_ON:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseSeek(code, "开始找车");
+                    break;
 
-            //如果是停止找车的命令
-            case ProtocolConstants.CMD_SEEK_OFF:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseSeek(code, "停止找车");
-                break;
+                //如果是停止找车的命令
+                case ProtocolConstants.CMD_SEEK_OFF:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseSeek(code, "停止找车");
+                    break;
 
-            case ProtocolConstants.CMD_LOCATION:
-                caseGetGPS(code,protocol);
-                break;
+                case ProtocolConstants.CMD_LOCATION:
+                    caseGetGPS(code, protocol);
+                    break;
 
-            case ProtocolConstants.APP_CMD_AUTO_LOCK_ON:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                //开启自动落锁
-                caseOpenAutoLock(code);
-                break;
+                case ProtocolConstants.APP_CMD_AUTO_LOCK_ON:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    //开启自动落锁
+                    caseOpenAutoLock(code);
+                    break;
 
-            case ProtocolConstants.APP_CMD_AUTO_LOCK_OFF:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseCloseAutoLock(code);
-                break;
+                case ProtocolConstants.APP_CMD_AUTO_LOCK_OFF:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseCloseAutoLock(code);
+                    break;
 
-            case ProtocolConstants.APP_CMD_AUTO_PERIOD_GET:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseGetAutolockPeriod(code, protocol);
-                break;
+                case ProtocolConstants.APP_CMD_AUTO_PERIOD_GET:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseGetAutolockPeriod(code, protocol);
+                    break;
 
-            case ProtocolConstants.APP_CMD_AUTO_PERIOD_SET:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseSetAutoLockTime(code);
-                break;
+                case ProtocolConstants.APP_CMD_AUTO_PERIOD_SET:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseSetAutoLockTime(code);
+                    break;
 
-            //获取自动落锁的状态
-            case ProtocolConstants.APP_CMD_AUTOLOCK_GET:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseGetAutoLockStatus(code,protocol);
-                break;
+                //获取自动落锁的状态
+                case ProtocolConstants.APP_CMD_AUTOLOCK_GET:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseGetAutoLockStatus(code, protocol);
+                    break;
 
-            //查询电量
-            case ProtocolConstants.APP_CMD_BATTERY:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseGetBatteryInfo(code,protocol);
-                break;
+                //查询电量
+                case ProtocolConstants.APP_CMD_BATTERY:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseGetBatteryInfo(code, protocol);
+                    break;
 
-            case ProtocolConstants.APP_CMD_STATUS_GET:
-                ((FragmentActivity) mContext).cancelWaitTimeOut();
-                caseGetInitialStatus(code,protocol);
-                break;
+                case ProtocolConstants.APP_CMD_STATUS_GET:
+                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+                    caseGetInitialStatus(code, protocol);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
+        }else {
+            dealErr(code);
         }
     }
 
@@ -439,32 +447,24 @@ public class MyReceiver extends BroadcastReceiver {
     }
 
     private void caseFenceGet(int code,Protocol protocol) {
-        if (ProtocolConstants.ERR_SUCCESS == code) {
-            int state = protocol.getNewState();
-
-            if (ProtocolConstants.ON == state) {
-                ((FragmentActivity) mContext).setManager.setAlarmFlag(true);
-
-            } else if (ProtocolConstants.OFF == state) {
-                ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
-            }
-            EventBus.getDefault().post(new MessageEvent(EventbusConstants.FromcaseFenceGet));
-
-            ToastUtils.showShort(mContext, "查询小安宝开关状态成功");
-        } else {
-            dealErr(code);
+        int state = protocol.getNewState();
+        boolean alarmFlag   =   false;
+        if (ProtocolConstants.ON == state) {
+            alarmFlag   =   true;
         }
+        Map<String,Boolean> objectMap   =   new HashMap<>();
+        objectMap.put(EventbusConstants.VALUE,alarmFlag);
+        EventBus.getDefault().post(new ObjectEvent(objectMap, EventbusConstants.objectEventType.EventType_FenceGet));
+        //----------    destination is FragmentActivity And SwitchFragment
+        ToastUtils.showShort(mContext, "查询小安宝开关状态成功");
     }
 
-    private void caseFence(int code, boolean successAlarmFlag, String success) {
-        if (ProtocolConstants.ERR_SUCCESS == code) {
-            ((FragmentActivity) mContext).setManager.setAlarmFlag(successAlarmFlag);
-            EventBus.getDefault().post(new MessageEvent(EventbusConstants.FromcaseFence));
-
-            ToastUtils.showShort(mContext, success);
-        } else {
-            dealErr(code);
-        }
+    private void caseFenceSet(boolean alarmFlag, String tip) {
+        Map<String,Boolean> objectMap = new HashMap<String, Boolean>();
+        objectMap.put(EventbusConstants.VALUE,alarmFlag);
+        EventBus.getDefault().post(new ObjectEvent(objectMap, EventbusConstants.objectEventType.EventType_FenceSet));
+        //----------    destination is FragmentActivity And SwitchFragment
+        ToastUtils.showShort(mContext, tip);
     }
 
     private void dealErr(int code) {

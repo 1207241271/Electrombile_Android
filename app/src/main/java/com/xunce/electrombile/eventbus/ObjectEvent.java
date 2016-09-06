@@ -7,12 +7,18 @@ import java.util.Map;
  */
 public class ObjectEvent {
     public final Map eventMap;
+    public final EventbusConstants.objectEventType  eventType;
 
-    public ObjectEvent(Map newMap){
+    //MAP : {value:"the result of set",others}
+    public ObjectEvent(Map newMap , EventbusConstants.objectEventType type){
         this.eventMap = newMap;
+        eventType = type;
     }
 
     public Map getEventMap() {
         return eventMap;
+    }
+    public EventbusConstants.objectEventType getEventType(){
+        return eventType;
     }
 }

@@ -86,6 +86,7 @@ import com.xunce.electrombile.utils.useful.StringUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -338,9 +339,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                                 try {
                                     int itinerary = (int)avObject.get("itinerary");
                                     Map<String,Double> eventMap = new HashMap();
-                                    eventMap.put(EventbusConstants.FetchItineraryEvent,itinerary/1000.0);
-                                    EventBus.getDefault().post(new ObjectEvent(eventMap));
-//                                    refreshItineraryInfo(itinerary/1000.0);
+                                    eventMap.put(EventbusConstants.VALUE,itinerary/1000.0);
+                                    EventBus.getDefault().post(new ObjectEvent(eventMap,EventbusConstants.objectEventType.EventType_FetchItinerary));
                                     ToastUtils.showShort(m_context,"获取累计公里数成功");
                                 } catch (Exception ee) {
                                     ee.printStackTrace();
@@ -1210,23 +1210,23 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     @Subscribe
     public void onMessageEvent(MessageEvent event){
-        if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
-            m_context.cancelWaitTimeOut();
-            msgSuccessArrived();
-        }else if(event.getMsg().equals(EventbusConstants.FromcaseFenceGet)){
-            if (setManager.getAlarmFlag()) {
-                openStateAlarmBtn();
-                showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
-            } else {
-                closeStateAlarmBtn();
-            }
-        }
+
     }
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public  void  onObjectEvent(ObjectEvent event){
-        Map eventMap = event.getEventMap();
-        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString()));
+        switch (event.eventType){
+            case EventType_FenceSet:
+                msgSuccessArrived();
+                break;
+            case EventType_FenceGet:
+                if (setManager.getAlarmFlag()){
+                    openStateAlarmBtn();
+                    showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
+                }else {
+                    closeStateAlarmBtn();;
+                }
+                break;
         }
+
     }
 }
