@@ -16,7 +16,7 @@ import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.eventbus.EventbusConstants;
-import com.xunce.electrombile.eventbus.FirstEvent;
+import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
@@ -448,7 +448,7 @@ public class MyReceiver extends BroadcastReceiver {
             } else if (ProtocolConstants.OFF == state) {
                 ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
             }
-            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromcaseFenceGet));
+            EventBus.getDefault().post(new MessageEvent(EventbusConstants.FromcaseFenceGet));
 
             ToastUtils.showShort(mContext, "查询小安宝开关状态成功");
         } else {
@@ -459,7 +459,7 @@ public class MyReceiver extends BroadcastReceiver {
     private void caseFence(int code, boolean successAlarmFlag, String success) {
         if (ProtocolConstants.ERR_SUCCESS == code) {
             ((FragmentActivity) mContext).setManager.setAlarmFlag(successAlarmFlag);
-            EventBus.getDefault().post(new FirstEvent(EventbusConstants.FromcaseFence));
+            EventBus.getDefault().post(new MessageEvent(EventbusConstants.FromcaseFence));
 
             ToastUtils.showShort(mContext, success);
         } else {

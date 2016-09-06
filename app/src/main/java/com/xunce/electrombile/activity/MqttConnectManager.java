@@ -12,7 +12,6 @@ import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.eventbus.EventbusConstants;
-import com.xunce.electrombile.eventbus.FirstEvent;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.mqtt.ActionListener;

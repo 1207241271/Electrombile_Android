@@ -9,6 +9,6 @@ public class EventbusConstants {
     public static final String FromcaseFenceGet = "FromcaseFenceGet";
     public static final String FromMyReceiverTimeHandler = "FromMyReceiverTimeHandler";
 
-
+    public static final String  FetchItineraryEvent = "FetchItineraryEvent";
 
 }
