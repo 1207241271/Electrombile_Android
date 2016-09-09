@@ -340,7 +340,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                                     int itinerary = (int)avObject.get("itinerary");
                                     Map<String,Double> eventMap = new HashMap();
                                     eventMap.put(EventbusConstants.VALUE,itinerary/1000.0);
-                                    EventBus.getDefault().post(new ObjectEvent(eventMap,EventbusConstants.objectEventType.EventType_FetchItinerary));
+                                    EventBus.getDefault().post(new ObjectEvent(eventMap,EventbusConstants.objectEventBusType.EventType_FetchItinerary));
                                     ToastUtils.showShort(m_context,"获取累计公里数成功");
                                 } catch (Exception ee) {
                                     ee.printStackTrace();
@@ -1212,21 +1212,21 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onMessageEvent(MessageEvent event){
 
     }
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public  void  onObjectEvent(ObjectEvent event){
-        switch (event.eventType){
-            case EventType_FenceSet:
-                msgSuccessArrived();
-                break;
-            case EventType_FenceGet:
-                if (setManager.getAlarmFlag()){
-                    openStateAlarmBtn();
-                    showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
-                }else {
-                    closeStateAlarmBtn();;
-                }
-                break;
+    @Subscribe
+    public  void  onObjectEvent(ObjectEvent event) {
+            switch (event.eventType) {
+                case EventType_FenceSet:
+                    msgSuccessArrived();
+                    break;
+                case EventType_FenceGet:
+                    if (setManager.getAlarmFlag()) {
+                        openStateAlarmBtn();
+                        showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
+                    } else {
+                        closeStateAlarmBtn();
+                        ;
+                    }
+                    break;
+            }
         }
-
-    }
 }

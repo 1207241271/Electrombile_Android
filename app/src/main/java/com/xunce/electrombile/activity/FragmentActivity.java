@@ -864,16 +864,16 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     }
 
 
-    @Subscribe
+    @Subscribe(priority = 1)
     public void onMessageEvent(MessageEvent event){
 //        String msg = "onEventMainThread收到了消息：" + event.getMsg();
-        if(event.getMsg().equals(EventbusConstants.FromgetHeadImageFromServer)){
-            refreshBindList1();
+        if(event.getMsg().equals(EventbusConstants.CancelWaitTimeOut)){
+            this.cancelWaitTimeOut();
         }
     }
 
     //----------    priority is higher than SwitchFragment, first Arrive
-    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
+    @Subscribe(priority = 1)
     public  void  onObjectEvent(ObjectEvent event){
         switch (event.eventType){
             //-----------   get And set Is similar
@@ -881,7 +881,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             case EventType_FenceGet:
                 boolean alarmFlag   =  Boolean.parseBoolean(event.getEventMap().get(EventbusConstants.VALUE).toString());
                 this.setManager.setAlarmFlag(alarmFlag);
-                this.cancelWaitTimeOut();
+//                this.cancelWaitTimeOut();
                 break;
         }
     }
