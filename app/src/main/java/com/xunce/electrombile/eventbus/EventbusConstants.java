@@ -4,10 +4,14 @@ package com.xunce.electrombile.eventbus;
  * Created by lybvinci on 16/8/11.
  */
 public class EventbusConstants {
-    public enum  objectEventBusType{
+    public enum  eventBusType{
         EventType_FetchItinerary,           //获取总里程数
         EventType_FenceSet,                 //设置小安宝开关
-        EventType_FenceGet,                 //获取小安宝开关
+        EventType_FenceGet,                 //获取小安宝开关开关
+        EventType_AutoLockSet,              //设置自动落锁
+        EventType_AutoLockGet,              //获取自动落锁
+        EventType_AutoPeriodSet,            //设置落锁时间
+        EventType_AutoPeriodGet,            //获取落锁时间
         EventType_CMDGPSGET                 //CMDGPS数据获得
     }
 

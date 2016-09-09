@@ -74,8 +74,10 @@ import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -190,7 +192,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
         //----------  EventBus Register
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -263,7 +264,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -338,9 +338,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
                                 try {
                                     int itinerary = (int)avObject.get("itinerary");
-                                    Map<String,Double> eventMap = new HashMap();
-                                    eventMap.put(EventbusConstants.VALUE,itinerary/1000.0);
-                                    EventBus.getDefault().post(new ObjectEvent(eventMap,EventbusConstants.objectEventBusType.EventType_FetchItinerary));
+                                    EventBus.getDefault().post(new QueryItineraryEvent(itinerary/1000.0));
                                     ToastUtils.showShort(m_context,"获取累计公里数成功");
                                 } catch (Exception ee) {
                                     ee.printStackTrace();
@@ -1209,24 +1207,20 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
 
     @Subscribe
-    public void onMessageEvent(MessageEvent event){
-
+    public void onFenceEvent(FenceEvent event){
+        if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceGet)){
+            if (event.isAlarmFlag()) {
+                openStateAlarmBtn();
+                showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
+            }else {
+                closeStateAlarmBtn();
+            }
+        }else {
+            msgSuccessArrived();
+        }
     }
     @Subscribe
-    public  void  onObjectEvent(ObjectEvent event) {
-            switch (event.eventType) {
-                case EventType_FenceSet:
-                    msgSuccessArrived();
-                    break;
-                case EventType_FenceGet:
-                    if (setManager.getAlarmFlag()) {
-                        openStateAlarmBtn();
-                        showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
-                    } else {
-                        closeStateAlarmBtn();
-                        ;
-                    }
-                    break;
-            }
-        }
+    public  void  onQueryItineraryEvent(QueryItineraryEvent event){
+        this.refreshItineraryInfo(event.getItinerary());
+    }
 }

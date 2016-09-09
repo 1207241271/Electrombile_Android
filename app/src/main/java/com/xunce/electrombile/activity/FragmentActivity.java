@@ -45,6 +45,7 @@ import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.applicatoin.Historys;
+import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
@@ -217,7 +218,6 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         registerMessageReceiver();
         jPushUtils.setJPushAlias("simcom_" + setManager.getIMEI());
 
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -310,7 +310,6 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (TracksManager.getTracks() != null) TracksManager.clearTracks();
 
         super.onDestroy();
-        EventBus.getDefault().unregister(this);//反注册EventBus
     }
 
     @Override
@@ -872,17 +871,12 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         }
     }
 
-    //----------    priority is higher than SwitchFragment, first Arrive
-    @Subscribe(priority = 1)
-    public  void  onObjectEvent(ObjectEvent event){
-        switch (event.eventType){
-            //-----------   get And set Is similar
-            case EventType_FenceSet:
-            case EventType_FenceGet:
-                boolean alarmFlag   =  Boolean.parseBoolean(event.getEventMap().get(EventbusConstants.VALUE).toString());
-                this.setManager.setAlarmFlag(alarmFlag);
-//                this.cancelWaitTimeOut();
-                break;
+    @Subscribe
+    public void onAutoLockEvent(AutoLockEvent event){
+        if (event.isAutoLockFlag()){
+            this.sendMessage(this,this.mCenter.cmdAutolockTimeSet(5),this.setManager.getIMEI());
         }
+        this.setManager.setAutoLockStatus(event.isAutoLockFlag());
     }
+
 }

@@ -8,9 +8,13 @@ import android.view.View;
 
 import com.baidu.mapapi.model.LatLng;
 import com.xunce.electrombile.activity.FragmentActivity;
+import com.xunce.electrombile.eventbus.EmptyEvent;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 
 /**
@@ -67,12 +71,22 @@ public class BaseFragment extends Fragment{
 
     @Override
     public void onStop() {
-        super.onStop();
+        EventBus.getDefault().unregister(this);
         close = true;
+        super.onStop();
+    }
+    @Override
+    public void onStart(){
+        EventBus.getDefault().register(this);
+        super.onStart();
     }
 
     public interface GPSDataChangeListener {
         void gpsCallBack(LatLng desLat, TracksManager.TrackPoint trackPoint);
+    }
+    @Subscribe
+    public void onEmptyEvent(EmptyEvent event){
+
     }
 }
 

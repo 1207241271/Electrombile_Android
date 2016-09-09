@@ -15,9 +15,13 @@ import com.xunce.electrombile.Constants.ActivityConstants;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
+import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FenceEvent;
+import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.SetManagerEvent;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
@@ -208,29 +212,25 @@ public class MyReceiver extends BroadcastReceiver {
                     break;
 
                 case ProtocolConstants.APP_CMD_AUTO_LOCK_ON:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
+
                     //开启自动落锁
                     caseOpenAutoLock(code);
                     break;
 
                 case ProtocolConstants.APP_CMD_AUTO_LOCK_OFF:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseCloseAutoLock(code);
                     break;
 
                 case ProtocolConstants.APP_CMD_AUTO_PERIOD_GET:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseGetAutolockPeriod(code, protocol);
                     break;
 
                 case ProtocolConstants.APP_CMD_AUTO_PERIOD_SET:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseSetAutoLockTime(code);
                     break;
 
                 //获取自动落锁的状态
                 case ProtocolConstants.APP_CMD_AUTOLOCK_GET:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseGetAutoLockStatus(code, protocol);
                     break;
 
@@ -275,73 +275,76 @@ public class MyReceiver extends BroadcastReceiver {
                 return;
             case ProtocolConstants.ERR_OFFLINE:
                 ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
-                ((FragmentActivity)mContext).cancelWaitTimeOut();
-                ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
+                EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
+                //----------    set Flag
+                EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_FenceGet,false));
                 break;
             case ProtocolConstants.ERR_INTERNAL:
                 ToastUtils.showShort(mContext, "服务器内部错误，请稍后再试。");
-                ((FragmentActivity)mContext).cancelWaitTimeOut();
+                EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
                 break;
         }
     }
 
     private void caseOpenAutoLock(int code){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         //执行fragmentactivity中的函数
         if(0 == code){
             //默认是自动落锁5分钟
-            ((FragmentActivity) mContext).sendMessage((FragmentActivity) mContext,
-                    ((FragmentActivity) mContext).mCenter.cmdAutolockTimeSet(5), ((FragmentActivity) mContext).setManager.getIMEI());
-
-            ((FragmentActivity)mContext).setManager.setAutoLockStatus(true);
+            EventBus.getDefault().post(new AutoLockEvent(true));
             return;
         }
         dealErr(code);
     }
 
     private void caseCloseAutoLock(int code){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(0 == code){
             ToastUtils.showShort(mContext, "自动落锁关闭");
-            ((FragmentActivity) mContext).setManager.setAutoLockStatus(false);
+            EventBus.getDefault().post(new AutoLockEvent(false));
             return;
         }
         dealErr(code);
     }
 
     private void caseGetAutolockPeriod(int code,Protocol protocol) {
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if (0 == code) {
             int period = protocol.getPeriod();
-            ((FragmentActivity) mContext).setManager.setAutoLockTime(period);
+            EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoPeriodGet,period));
             return;
         }
         dealErr(code);
     }
 
     public void caseSetAutoLockTime(int code){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(code == 0){
            //自动落锁时间成功设置之后  把时间写到本地
             ToastUtils.showShort(mContext, "自动落锁成功");
-            ((FragmentActivity) mContext).setManager.setAutoLockTime(Autolock.period);
-
+            EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoPeriodSet,Autolock.period));
             return;
         }
         dealErr(code);
     }
 
     public void caseGetAutoLockStatus(int code,Protocol protocol){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(code == 0){
             //已经获取到了自动落锁的状态
             int state = protocol.getNewState();
             if(state == 1){
                 ToastUtils.showShort(mContext, "自动落锁为打开状态");
-                ((FragmentActivity) mContext).setManager.setAutoLockStatus(true);
+                EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoLockGet,true));
                 //若为打开状态  还要查询到自动落锁的时间
+
                 ((FragmentActivity) mContext).sendMessage((FragmentActivity) mContext,
                         ((FragmentActivity) mContext).mCenter.cmdAutolockTimeGet(), ((FragmentActivity) mContext).setManager.getIMEI());
 
             }
             else if(state == 0){
                 ToastUtils.showShort(mContext, "自动落锁为关闭状态");
-                ((FragmentActivity) mContext).setManager.setAutoLockStatus(false);
+                EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoLockGet,false));
             }
             return;
         }
@@ -445,12 +448,11 @@ public class MyReceiver extends BroadcastReceiver {
             if (ProtocolConstants.ON == state) {
                 alarmFlag = true;
             }
-            Map<String, Boolean> objectMap = new HashMap<>();
-            objectMap.put(EventbusConstants.VALUE, alarmFlag);
             //----------    cancel  wait time out
             EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
             //----------    destination is FragmentActivity And SwitchFragment
-            EventBus.getDefault().post(new ObjectEvent(objectMap, EventbusConstants.objectEventBusType.EventType_FenceGet));
+            EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_FenceGet,alarmFlag));
+            EventBus.getDefault().post(new FenceEvent(EventbusConstants.eventBusType.EventType_FenceGet,alarmFlag));
             ToastUtils.showShort(mContext, "查询小安宝开关状态成功");
         }else {
             dealErr(code);
@@ -459,12 +461,11 @@ public class MyReceiver extends BroadcastReceiver {
 
     private void caseFenceSet(int code,boolean alarmFlag, String tip) {
         if (code == ProtocolConstants.ERR_SUCCESS) {
-            Map<String, Boolean> objectMap = new HashMap<String, Boolean>();
-            objectMap.put(EventbusConstants.VALUE, alarmFlag);
             //----------    cancel  wait time out
             EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
             //----------    destination is FragmentActivity And SwitchFragment
-            EventBus.getDefault().post(new ObjectEvent(objectMap, EventbusConstants.objectEventBusType.EventType_FenceSet));
+            EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoLockSet,alarmFlag));
+            EventBus.getDefault().post(new FenceEvent(EventbusConstants.eventBusType.EventType_FenceSet,alarmFlag));
             ToastUtils.showShort(mContext, tip);
         }else {
             dealErr(code);
@@ -531,12 +532,8 @@ public class MyReceiver extends BroadcastReceiver {
             CmdCenter   cmdCenter   =   CmdCenter.getInstance();
             LatLng  bdPoint =   cmdCenter.convertPoint(trackPoint.point);
             trackPoint  =   new TracksManager.TrackPoint(date,bdPoint);
-
-            //----------    set EventObject
-            Map<String,Object>  objectMap   =   new HashMap<>();
-            objectMap.put(EventbusConstants.VALUE,trackPoint);
-            objectMap.put(EventbusConstants.carSituation,carSituatuin);
-            EventBus.getDefault().post(new ObjectEvent(objectMap, EventbusConstants.objectEventBusType.EventType_CMDGPSGET));
+//            //----------    set EventObject
+            EventBus.getDefault().post(new GPSEvent(carSituatuin, trackPoint));
         }
     }
 }

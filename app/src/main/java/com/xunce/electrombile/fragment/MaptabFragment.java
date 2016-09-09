@@ -54,6 +54,7 @@ import com.xunce.electrombile.activity.FindCarActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.TestddActivity;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.manager.TracksManager.TrackPoint;
@@ -198,8 +199,6 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         m_context.registerReceiver(MyBroadcastReceiver, filter);
         sdfWithSecond = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         mqttConnectManager = MqttConnectManager.getInstance();
-
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -854,31 +853,46 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
     }
 
-    @Subscribe
-    public void onMessageEvent(MessageEvent event){
-        Log.i(TAG,"test");
-    }
-
+//    @Subscribe(priority = 0)
+//    public void onObjectEvent(ObjectEvent event) {
+//        switch (event.eventType){
+//            //----------    CMD_GPS GET
+//            case EventType_CMDGPSGET:
+//                TrackPoint trackPoint=(TrackPoint) event.getEventMap().get(EventbusConstants.VALUE);
+//                if ( event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Online)){
+//                    this.locateMobile(trackPoint);
+//                    this.caseLostCarSituationSuccess();
+//                }else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Waiting)){
+//                    this.locateMobile(trackPoint);
+//                    this.caseLostCarSituationWaiting();
+//                } else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Offline)) {
+//                    if (this.LostCarSituation){
+//                        this.caseLostCarSituationOffline(trackPoint);
+//                    }else {
+//                        this.locateMobile(trackPoint);
+//                    }
+//                }
+//                break;
+//        }
+//    }
     @Subscribe(priority = 0)
-    public void onObjectEvent(ObjectEvent event) {
-        switch (event.eventType){
-            //----------    CMD_GPS GET
-            case EventType_CMDGPSGET:
-                TrackPoint trackPoint=(TrackPoint) event.getEventMap().get(EventbusConstants.VALUE);
-                if ( event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Online)){
-                    this.locateMobile(trackPoint);
-                    this.caseLostCarSituationSuccess();
-                }else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Waiting)){
-                    this.locateMobile(trackPoint);
-                    this.caseLostCarSituationWaiting();
-                } else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Offline)) {
-                    if (this.LostCarSituation){
-                        this.caseLostCarSituationOffline(trackPoint);
-                    }else {
-                        this.locateMobile(trackPoint);
-                    }
-                }
+    public void onGPSEvent(GPSEvent event){
+        TrackPoint  trackPoint = event.getTrackPoint();
+        switch (event.carSituationType){
+            case carSituation_Online:
+                this.locateMobile(trackPoint);
+                this.caseLostCarSituationSuccess();
                 break;
+            case carSituation_Waiting:
+                this.locateMobile(trackPoint);
+                this.caseLostCarSituationWaiting();
+                break;
+            case carSituation_Offline:
+                if (this.LostCarSituation){
+                    this.caseLostCarSituationOffline(trackPoint);
+                }else {
+                    this.locateMobile(trackPoint);
+                }
         }
     }
 }
