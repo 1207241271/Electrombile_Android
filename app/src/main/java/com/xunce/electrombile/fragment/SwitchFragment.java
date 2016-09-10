@@ -73,6 +73,7 @@ import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
+import com.xunce.electrombile.eventbus.BatteryInfoEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
@@ -1205,10 +1206,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.show();
     }
 
-
     @Subscribe
     public void onFenceEvent(FenceEvent event){
-        if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceGet)){
+        if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceSet)){
             if (event.isAlarmFlag()) {
                 openStateAlarmBtn();
                 showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
@@ -1222,5 +1222,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Subscribe
     public  void  onQueryItineraryEvent(QueryItineraryEvent event){
         this.refreshItineraryInfo(event.getItinerary());
+    }
+    @Subscribe
+    public void onBatteryInfoEvent(BatteryInfoEvent event){
+        this.refreshBatteryInfo();
     }
 }

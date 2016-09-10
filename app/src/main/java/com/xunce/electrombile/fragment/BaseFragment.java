@@ -77,8 +77,8 @@ public class BaseFragment extends Fragment{
     }
     @Override
     public void onStart(){
-        EventBus.getDefault().register(this);
         super.onStart();
+        EventBus.getDefault().register(this);
     }
 
     public interface GPSDataChangeListener {

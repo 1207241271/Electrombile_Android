@@ -49,6 +49,7 @@ import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.RefreshThreadEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.fragment.SwitchFragment;
@@ -222,9 +223,9 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
     @Override
     protected void onStart() {
+        super.onStart();
         MyLog.d("FragmentActivity","onStart");
         com.orhanobut.logger.Logger.i("FragmentActivity-onStart", "start");
-        super.onStart();
         if (!NetworkUtils.isNetworkConnected(this)) {
             NetworkUtils.networkDialog(this, true);
         }
@@ -237,6 +238,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         }else{
             mac = mqttConnectManager.getMac();
         }
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -295,7 +297,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (myThread != null) {
             myThread.interrupt();
         }
-
+        EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
@@ -863,7 +865,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     }
 
 
-    @Subscribe(priority = 1)
+    @Subscribe
     public void onMessageEvent(MessageEvent event){
 //        String msg = "onEventMainThread收到了消息：" + event.getMsg();
         if(event.getMsg().equals(EventbusConstants.CancelWaitTimeOut)){
@@ -873,10 +875,21 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
     @Subscribe
     public void onAutoLockEvent(AutoLockEvent event){
-        if (event.isAutoLockFlag()){
-            this.sendMessage(this,this.mCenter.cmdAutolockTimeSet(5),this.setManager.getIMEI());
+        switch (event.getEventBusType()){
+            case EventType_AutoLockGet:
+                if (event.isAutoLockFlag()){
+                    this.sendMessage(this,this.mCenter.cmdAutolockTimeSet(5),this.setManager.getIMEI());
+                }
+                this.setManager.setAutoLockStatus(event.isAutoLockFlag());
+                break;
+            case EventType_AutoStatusGet:
+                this.sendMessage(this,this.mCenter.cmdAutolockTimeGet(),this.setManager.getIMEI());
+                break;
         }
-        this.setManager.setAutoLockStatus(event.isAutoLockFlag());
-    }
 
+    }
+    @Subscribe
+    public void onRefreshThreadEvent(RefreshThreadEvent event){
+        this.stopThread();
+    }
 }

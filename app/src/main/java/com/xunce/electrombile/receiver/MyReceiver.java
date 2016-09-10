@@ -16,11 +16,14 @@ import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.eventbus.AutoLockEvent;
+import com.xunce.electrombile.eventbus.BatteryInfoEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.OnlineStatusEvent;
+import com.xunce.electrombile.eventbus.RefreshThreadEvent;
 import com.xunce.electrombile.eventbus.SetManagerEvent;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
@@ -197,13 +200,11 @@ public class MyReceiver extends BroadcastReceiver {
 
                 //如果是开始找车的命令
                 case ProtocolConstants.CMD_SEEK_ON:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseSeek(code, "开始找车");
                     break;
 
                 //如果是停止找车的命令
                 case ProtocolConstants.CMD_SEEK_OFF:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseSeek(code, "停止找车");
                     break;
 
@@ -236,12 +237,10 @@ public class MyReceiver extends BroadcastReceiver {
 
                 //查询电量
                 case ProtocolConstants.APP_CMD_BATTERY:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseGetBatteryInfo(code, protocol);
                     break;
 
                 case ProtocolConstants.APP_CMD_STATUS_GET:
-                    ((FragmentActivity) mContext).cancelWaitTimeOut();
                     caseGetInitialStatus(code, protocol);
                     break;
 
@@ -291,7 +290,7 @@ public class MyReceiver extends BroadcastReceiver {
         //执行fragmentactivity中的函数
         if(0 == code){
             //默认是自动落锁5分钟
-            EventBus.getDefault().post(new AutoLockEvent(true));
+            EventBus.getDefault().post(new AutoLockEvent(true, EventbusConstants.eventBusType.EventType_AutoLockGet));
             return;
         }
         dealErr(code);
@@ -301,7 +300,7 @@ public class MyReceiver extends BroadcastReceiver {
         EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(0 == code){
             ToastUtils.showShort(mContext, "自动落锁关闭");
-            EventBus.getDefault().post(new AutoLockEvent(false));
+            EventBus.getDefault().post(new AutoLockEvent(false, EventbusConstants.eventBusType.EventType_AutoLockGet));
             return;
         }
         dealErr(code);
@@ -337,10 +336,7 @@ public class MyReceiver extends BroadcastReceiver {
                 ToastUtils.showShort(mContext, "自动落锁为打开状态");
                 EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_AutoLockGet,true));
                 //若为打开状态  还要查询到自动落锁的时间
-
-                ((FragmentActivity) mContext).sendMessage((FragmentActivity) mContext,
-                        ((FragmentActivity) mContext).mCenter.cmdAutolockTimeGet(), ((FragmentActivity) mContext).setManager.getIMEI());
-
+                EventBus.getDefault().post(new AutoLockEvent(true, EventbusConstants.eventBusType.EventType_AutoStatusGet));
             }
             else if(state == 0){
                 ToastUtils.showShort(mContext, "自动落锁为关闭状态");
@@ -352,6 +348,7 @@ public class MyReceiver extends BroadcastReceiver {
     }
 
     private void caseGetInitialStatus(int code,Protocol protocol){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(code == 0){
             TracksManager.TrackPoint trackPoint = protocol.getInitialStatusResult();
             if(trackPoint!=null){
@@ -360,37 +357,28 @@ public class MyReceiver extends BroadcastReceiver {
                 CmdCenter mCenter = CmdCenter.getInstance();
                 LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
                 trackPoint = new TracksManager.TrackPoint(date,bdPoint);
-                ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
+
+                EventBus.getDefault().post(new GPSEvent(EventbusConstants.carSituationType.carSituation_Online,trackPoint));
 
                 //发送广播吧
                 Intent intent = new Intent("com.app.bc.test");
                 intent.putExtra("KIND","GETINITIALSTATUS");
                 mContext.sendBroadcast(intent);//发送广播事件
 
-                ((FragmentActivity) mContext).startThread();
+                EventBus.getDefault().post(new RefreshThreadEvent(false));
             }
         }
         else{
-            switch (code) {
-                case ProtocolConstants.ERR_WAITING:
-                    ToastUtils.showShort(mContext, "正在设置命令，请稍后...");
-                    timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 2);
-                    return;
-                case ProtocolConstants.ERR_OFFLINE:
-                    ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
-                    ((FragmentActivity)mContext).cancelWaitTimeOut();
-                    ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
-                    ((FragmentActivity) mContext).stopThread();
-                    ((FragmentActivity) mContext).switchFragment.setOnlineStatus(false);
-                    break;
-                case ProtocolConstants.ERR_INTERNAL:
-                    ToastUtils.showShort(mContext, "服务器内部错误，请稍后再试。");
-                    break;
+            if (code == ProtocolConstants.ERR_OFFLINE){
+                EventBus.getDefault().post(new RefreshThreadEvent(true));
+                EventBus.getDefault().post(new OnlineStatusEvent(false));
             }
+            dealErr(code);
         }
     }
 
     private void caseGetBatteryInfo(int code,Protocol protocol){
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if(code == 0){
             if(!protocol.getBatteryInfo()){
                 ToastUtils.showShort(mContext,"获取电量失败");
@@ -398,31 +386,20 @@ public class MyReceiver extends BroadcastReceiver {
             else{
                 ToastUtils.showShort(mContext,"获取电量成功");
                 //这个时候有可能会出现switchFragment的view没有渲染好的情况
-                ((FragmentActivity) mContext).switchFragment.refreshBatteryInfo();
+                EventBus.getDefault().post(new BatteryInfoEvent());
             }
         }
         else{
-//            dealErr(code);
-            switch (code) {
-                case ProtocolConstants.ERR_WAITING:
-                    ToastUtils.showShort(mContext, "正在设置命令，请稍后...");
-                    timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 2);
-                    return;
-                case ProtocolConstants.ERR_OFFLINE:
-                    ToastUtils.showShort(mContext, "设备离线，请确认车辆未处于地下室等信号较差区域");
-                    ((FragmentActivity)mContext).cancelWaitTimeOut();
-                    ((FragmentActivity) mContext).setManager.setAlarmFlag(false);
-                    ((FragmentActivity) mContext).stopThread();
-                    break;
-                case ProtocolConstants.ERR_INTERNAL:
-                    ToastUtils.showShort(mContext, "服务器内部错误，请稍后再试。");
-                    break;
+            if (code == ProtocolConstants.ERR_OFFLINE){
+                EventBus.getDefault().post(new RefreshThreadEvent(true));
             }
+            dealErr(code);
         }
     }
 
 
     private void caseSeek(int code, String success) {
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         if (ProtocolConstants.ERR_SUCCESS == code) {
             ToastUtils.showShort(mContext, success);
         } else {
@@ -492,22 +469,23 @@ public class MyReceiver extends BroadcastReceiver {
     }
 
     private void cmdGPSgetresult(Protocol protocol,int code){
-        TracksManager.TrackPoint trackPoint = protocol.getNewResult();
-        if(trackPoint!=null){
-            Date date = trackPoint.time;
-            CmdCenter mCenter = CmdCenter.getInstance();
-            LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
-            trackPoint = new TracksManager.TrackPoint(date,bdPoint);
-            ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
-            if(((FragmentActivity) mContext).maptabFragment.LostCarSituation){
-                if(code == 101){
-                    ((FragmentActivity) mContext).maptabFragment.caseLostCarSituationWaiting();
-                }
-                else if(code == 0){
-                    ((FragmentActivity) mContext).maptabFragment.caseLostCarSituationSuccess();
-                }
-            }
-        }
+        sendGPSData(protocol,code);
+//        TracksManager.TrackPoint trackPoint = protocol.getNewResult();
+//        if(trackPoint!=null){
+//            Date date = trackPoint.time;
+//            CmdCenter mCenter = CmdCenter.getInstance();
+//            LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
+//            trackPoint = new TracksManager.TrackPoint(date,bdPoint);
+//            ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
+//            if(((FragmentActivity) mContext).maptabFragment.LostCarSituation){
+//                if(code == 101){
+//                    ((FragmentActivity) mContext).maptabFragment.caseLostCarSituationWaiting();
+//                }
+//                else if(code == 0){
+//                    ((FragmentActivity) mContext).maptabFragment.caseLostCarSituationSuccess();
+//                }
+//            }
+//        }
     }
 
     private void sendGPSData(Protocol protocol,int code){
@@ -532,7 +510,7 @@ public class MyReceiver extends BroadcastReceiver {
             CmdCenter   cmdCenter   =   CmdCenter.getInstance();
             LatLng  bdPoint =   cmdCenter.convertPoint(trackPoint.point);
             trackPoint  =   new TracksManager.TrackPoint(date,bdPoint);
-//            //----------    set EventObject
+            //----------    set EventObject
             EventBus.getDefault().post(new GPSEvent(carSituatuin, trackPoint));
         }
     }
