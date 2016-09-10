@@ -47,6 +47,7 @@ import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.applicatoin.Historys;
 import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.RefreshThreadEvent;
@@ -891,5 +892,15 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     @Subscribe
     public void onRefreshThreadEvent(RefreshThreadEvent event){
         this.stopThread();
+    }
+
+    @Subscribe
+    public void onGPSEvent(GPSEvent event){
+        if (!event.isFromCMD) {
+            TracksManager.TrackPoint prePoint = event.trackPoint;
+            TracksManager.TrackPoint truePoint = new TracksManager.TrackPoint(prePoint.time, this.mCenter.convertPoint(prePoint.point));
+            this.setManager.setInitLocation(prePoint.point.latitude + "", prePoint.point.longitude + "");
+            this.maptabFragment.locateMobile(truePoint);
+        }
     }
 }

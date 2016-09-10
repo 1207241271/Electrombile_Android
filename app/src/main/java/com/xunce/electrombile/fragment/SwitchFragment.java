@@ -77,6 +77,7 @@ import com.xunce.electrombile.eventbus.BatteryInfoEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
@@ -1226,5 +1227,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Subscribe
     public void onBatteryInfoEvent(BatteryInfoEvent event){
         this.refreshBatteryInfo();
+    }
+    @Subscribe
+    public void onNotifiyArriviedEvent(NotifiyArriviedEvent event){
+        this.openStateAlarmBtn();
+        this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
     }
 }

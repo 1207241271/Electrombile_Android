@@ -21,6 +21,7 @@ import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.OnlineStatusEvent;
 import com.xunce.electrombile.eventbus.RefreshThreadEvent;
@@ -57,7 +58,8 @@ public class MyReceiver extends BroadcastReceiver {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             ToastUtils.showShort(mContext, "设备超时！");
-            ((FragmentActivity)mContext).cancelWaitTimeOut();
+            EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
+//            ((FragmentActivity)mContext).cancelWaitTimeOut();
         }
     };
 
@@ -163,11 +165,13 @@ public class MyReceiver extends BroadcastReceiver {
                     Date date = new Date(timestamp*1000);
                     SimpleDateFormat sdfWithSecond = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String date_str = sdfWithSecond.format(date);
-                    //改变小安宝开关的样式  现在为开启状态  这个函数没有改变开关样式 为什么啊
-                    ((FragmentActivity) mContext).setManager.setAlarmFlag(true);
-                    ((FragmentActivity) mContext).switchFragment.openStateAlarmBtn();
-                    ((FragmentActivity) mContext).switchFragment.showNotification(date_str+"自动落锁成功",
-                            FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
+
+                    EventBus.getDefault().post(new SetManagerEvent(EventbusConstants.eventBusType.EventType_FenceGet,true));
+                    EventBus.getDefault().post(new NotifiyArriviedEvent(date_str));
+//                    ((FragmentActivity) mContext).setManager.setAlarmFlag(true);
+//                    ((FragmentActivity) mContext).switchFragment.openStateAlarmBtn();
+//                    ((FragmentActivity) mContext).switchFragment.showNotification(date_str+"自动落锁成功",
+//                            FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
                 }
                 break;
 
@@ -358,7 +362,7 @@ public class MyReceiver extends BroadcastReceiver {
                 LatLng bdPoint = mCenter.convertPoint(trackPoint.point);
                 trackPoint = new TracksManager.TrackPoint(date,bdPoint);
 
-                EventBus.getDefault().post(new GPSEvent(EventbusConstants.carSituationType.carSituation_Online,trackPoint));
+                EventBus.getDefault().post(new GPSEvent(EventbusConstants.carSituationType.carSituation_Online,trackPoint,true));
 
                 //发送广播吧
                 Intent intent = new Intent("com.app.bc.test");
@@ -452,6 +456,7 @@ public class MyReceiver extends BroadcastReceiver {
 
 
     private void onGPSArrived(Protocol protocol) {
+        EventBus.getDefault().post(new MessageEvent(EventbusConstants.CancelWaitTimeOut));
         float Flat = protocol.getLat();
         float Flong = protocol.getLng();
         if (Flat == -1 || Flong == -1) {
@@ -460,11 +465,13 @@ public class MyReceiver extends BroadcastReceiver {
 
         Date curDate = new Date(System.currentTimeMillis());//获取当前时间
         TracksManager.TrackPoint trackPoint = null;
-        trackPoint = new TracksManager.TrackPoint(curDate, ((FragmentActivity) mContext).mCenter.convertPoint(new LatLng(Flat, Flong)));
-        LogUtil.log.i("保存数据1");
-        ((FragmentActivity) mContext).setManager.setInitLocation(Flat + "", Flong + "");
+        trackPoint = new TracksManager.TrackPoint(curDate,Flat,Flong);
         timeHandler.removeMessages(ProtocolConstants.TIME_OUT);
+        LogUtil.log.i("保存数据1");
         LogUtil.log.i("onGPSArrived-locateMobile");
+        EventBus.getDefault().post(new GPSEvent(EventbusConstants.carSituationType.carSituation_Online,trackPoint,false));
+//                new TracksManager.TrackPoint(curDate, ((FragmentActivity) mContext).mCenter.convertPoint(new LatLng(Flat, Flong)));
+        ((FragmentActivity) mContext).setManager.setInitLocation(Flat + "", Flong + "");
         ((FragmentActivity) mContext).maptabFragment.locateMobile(trackPoint);
     }
 
@@ -511,7 +518,7 @@ public class MyReceiver extends BroadcastReceiver {
             LatLng  bdPoint =   cmdCenter.convertPoint(trackPoint.point);
             trackPoint  =   new TracksManager.TrackPoint(date,bdPoint);
             //----------    set EventObject
-            EventBus.getDefault().post(new GPSEvent(carSituatuin, trackPoint));
+            EventBus.getDefault().post(new GPSEvent(carSituatuin, trackPoint,true));
         }
     }
 }

@@ -876,23 +876,25 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 //        }
 //    }
     @Subscribe(priority = 0)
-    public void onGPSEvent(GPSEvent event){
-        TrackPoint  trackPoint = event.getTrackPoint();
-        switch (event.carSituationType){
-            case carSituation_Online:
-                this.locateMobile(trackPoint);
-                this.caseLostCarSituationSuccess();
-                break;
-            case carSituation_Waiting:
-                this.locateMobile(trackPoint);
-                this.caseLostCarSituationWaiting();
-                break;
-            case carSituation_Offline:
-                if (this.LostCarSituation){
-                    this.caseLostCarSituationOffline(trackPoint);
-                }else {
+    public void onGPSEvent(GPSEvent event) {
+        if (event.isFromCMD) {
+            TrackPoint trackPoint = event.getTrackPoint();
+            switch (event.carSituationType) {
+                case carSituation_Online:
                     this.locateMobile(trackPoint);
-                }
+                    this.caseLostCarSituationSuccess();
+                    break;
+                case carSituation_Waiting:
+                    this.locateMobile(trackPoint);
+                    this.caseLostCarSituationWaiting();
+                    break;
+                case carSituation_Offline:
+                    if (this.LostCarSituation) {
+                        this.caseLostCarSituationOffline(trackPoint);
+                    } else {
+                        this.locateMobile(trackPoint);
+                    }
+            }
         }
     }
 }
