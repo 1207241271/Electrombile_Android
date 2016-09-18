@@ -50,6 +50,7 @@ import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.eventbus.RefreshThreadEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
@@ -192,7 +193,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                         }
                         AVObject avObject = list.get(0);
                         int itinerary = (int) avObject.get("itinerary");
-                        switchFragment.refreshItineraryInfo(itinerary / 1000.0);
+                        EventBus.getDefault().post(new QueryItineraryEvent(itinerary / 1000.0));
                     }
                 } else {
                     ToastUtils.showShort(FragmentActivity.this, "在DID表中查询该IMEI 查询失败");
