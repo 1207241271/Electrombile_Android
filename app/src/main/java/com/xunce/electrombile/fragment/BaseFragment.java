@@ -48,6 +48,15 @@ public class BaseFragment extends Fragment{
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            EventBus.getDefault().register(this);
+        } else {
+            EventBus.getDefault().unregister(this);
+        }
+    }
+    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
@@ -71,15 +80,16 @@ public class BaseFragment extends Fragment{
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
+//        EventBus.getDefault().unregister(this);
         close = true;
         super.onStop();
     }
     @Override
     public void onStart(){
         super.onStart();
-        EventBus.getDefault().register(this);
+//        EventBus.getDefault().register(this);
     }
+
 
     public interface GPSDataChangeListener {
         void gpsCallBack(LatLng desLat, TracksManager.TrackPoint trackPoint);

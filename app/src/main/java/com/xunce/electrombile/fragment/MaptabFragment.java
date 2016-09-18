@@ -140,7 +140,9 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                         mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
                         tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
                         if (LostCarSituation) {
-                            dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                            if (dialog_tv_LastLocateTime!=null) {
+                                dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                            }
                         }
                         mBaiduMap.showInfoWindow(mInfoWindow);
                         //设置车辆位置  填到textview中
@@ -252,6 +254,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             mBaiduMap = mMapView.getMap();
         }
     }
+
 
     @Override
     public void onPause() {
@@ -769,7 +772,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         tv_CarPosition.setText("车辆位置:" + reverseGeoCodeResult);
         tv_FindModeCarPosition.setText("车辆位置:" + reverseGeoCodeResult);
 
-        if (LostCarSituation) {
+        if (LostCarSituation&&dialog_tv_LastCarLocation!=null) {
             dialog_tv_LastCarLocation.setText(reverseGeoCodeResult);
             setLostCarSituationFlag();
         }
@@ -801,7 +804,9 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     public void caseLostCarSituationSuccess() {
         playHandler.removeMessages(1);
-        dialog_tv_status.setText("设备在室外,定位成功");
+        if (dialog_tv_status!=null) {
+            dialog_tv_status.setText("设备在室外,定位成功");
+        }
         status_GPSornot = "设备在室外,定位成功";
         setLostCarSituationFlag();
     }
@@ -848,7 +853,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     private void setLostCarSituationFlag() {
-        if (!dialog_tv_LastCarLocation.getText().equals("") && !dialog_tv_status.getText().equals("状态:正在更新")) {
+        if (dialog_tv_LastCarLocation!=null&&!dialog_tv_LastCarLocation.getText().equals("") && !dialog_tv_status.getText().equals("状态:正在更新")) {
             LostCarSituation = false;
         }
     }

@@ -245,6 +245,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Override
     public void onStop(){
         super.onStop();
+
     }
 
     @Override
@@ -960,7 +961,13 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void refreshItineraryInfo(double itinerary){
-        tv_distance.setText(String.format(Locale.CHINA,"%.2f%s",itinerary,"公里"));
+        String  itineraryStr    =   String.format(Locale.CHINA,"%.2f公里",itinerary);
+        tv_distance.setText(itineraryStr);
+        if (itineraryStr == null){
+            tv_distance.setText("数据出错");
+        }else {
+            tv_distance.setText(itineraryStr);
+        }
 
         //星
         if(itinerary<500){
