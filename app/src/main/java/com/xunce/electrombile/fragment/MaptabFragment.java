@@ -152,9 +152,11 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                     break;
                 //设备在室内
                 case 1:
-                    dialog_tv_status.setText("设备在室内");
-                    status_GPSornot = "设备在室内";
-                    setLostCarSituationFlag();
+                    if (dialog_tv_status!=null) {
+                        dialog_tv_status.setText("设备在室内");
+                        status_GPSornot = "设备在室内";
+                        setLostCarSituationFlag();
+                    }
                     break;
             }
         }
