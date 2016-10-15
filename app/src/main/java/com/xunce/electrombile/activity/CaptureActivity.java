@@ -158,7 +158,11 @@ public class CaptureActivity extends Activity implements Callback {
         inactivityTimer.onActivity();
         playBeepSoundAndVibrate();
         String resultString = result.getText();
-
+        if (resultString.charAt(8) != '"'){
+            StringBuilder sb = new StringBuilder(resultString);
+            sb.insert(8,'"');
+            resultString = sb.toString();
+        }
         String IMEI;
         if (resultString.contains("IMEI")) {
             try {

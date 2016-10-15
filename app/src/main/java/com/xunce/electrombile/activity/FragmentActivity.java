@@ -45,9 +45,13 @@ import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.applicatoin.Historys;
+import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.QueryItineraryEvent;
+import com.xunce.electrombile.eventbus.RefreshThreadEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.fragment.SwitchFragment;
@@ -67,6 +71,7 @@ import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -188,7 +193,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                         }
                         AVObject avObject = list.get(0);
                         int itinerary = (int) avObject.get("itinerary");
-                        switchFragment.refreshItineraryInfo(itinerary / 1000.0);
+                        EventBus.getDefault().post(new QueryItineraryEvent(itinerary / 1000.0));
                     }
                 } else {
                     ToastUtils.showShort(FragmentActivity.this, "在DID表中查询该IMEI 查询失败");
@@ -216,14 +221,13 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         registerMessageReceiver();
         jPushUtils.setJPushAlias("simcom_" + setManager.getIMEI());
 
-        EventBus.getDefault().register(this);
     }
 
     @Override
     protected void onStart() {
+        super.onStart();
         MyLog.d("FragmentActivity","onStart");
         com.orhanobut.logger.Logger.i("FragmentActivity-onStart", "start");
-        super.onStart();
         if (!NetworkUtils.isNetworkConnected(this)) {
             NetworkUtils.networkDialog(this, true);
         }
@@ -236,6 +240,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         }else{
             mac = mqttConnectManager.getMac();
         }
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -294,7 +299,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (myThread != null) {
             myThread.interrupt();
         }
-
+        EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
@@ -309,7 +314,6 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
         if (TracksManager.getTracks() != null) TracksManager.clearTracks();
 
         super.onDestroy();
-        EventBus.getDefault().unregister(this);//反注册EventBus
     }
 
     @Override
@@ -699,15 +703,17 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
     public void refreshBindList1(){
         IMEIlist = setManager.getIMEIlist();
-        BindedCarIMEI.setText(setManager.getCarName(IMEIlist.get(0)));
+        if (IMEIlist != null && IMEIlist.size() > 0) {
+            BindedCarIMEI.setText(setManager.getCarName(IMEIlist.get(0)));
 
-        HashMap<String, Object> map = null;
-        list.clear();
-        for (int i = 1; i < IMEIlist.size(); i++) {
-            map = new HashMap<>();
-            map.put("whichcar",setManager.getCarName(IMEIlist.get(i)));
-            map.put("img", R.drawable.othercar);
-            list.add(map);
+            HashMap<String, Object> map = null;
+            list.clear();
+            for (int i = 1; i < IMEIlist.size(); i++) {
+                map = new HashMap<>();
+                map.put("whichcar", setManager.getCarName(IMEIlist.get(i)));
+                map.put("img", R.drawable.othercar);
+                list.add(map);
+            }
         }
         simpleAdapter.notifyDataSetChanged();
     }
@@ -866,15 +872,38 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     @Subscribe
     public void onMessageEvent(MessageEvent event){
 //        String msg = "onEventMainThread收到了消息：" + event.getMsg();
-        if(event.getMsg().equals(EventbusConstants.FromgetHeadImageFromServer)){
-            refreshBindList1();
+        if(event.getMsg().equals(EventbusConstants.CancelWaitTimeOut)){
+            this.cancelWaitTimeOut();
         }
     }
+
     @Subscribe
-    public  void  onObjectEvent(ObjectEvent event){
-        Map eventMap = event.getEventMap();
-        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-//            refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString())/1000.0);
+    public void onAutoLockEvent(AutoLockEvent event){
+        switch (event.getEventBusType()){
+            case EventType_AutoLockGet:
+                if (event.isAutoLockFlag()){
+                    this.sendMessage(this,this.mCenter.cmdAutolockTimeSet(5),this.setManager.getIMEI());
+                }
+                this.setManager.setAutoLockStatus(event.isAutoLockFlag());
+                break;
+            case EventType_AutoStatusGet:
+                this.sendMessage(this,this.mCenter.cmdAutolockTimeGet(),this.setManager.getIMEI());
+                break;
+        }
+
+    }
+    @Subscribe
+    public void onRefreshThreadEvent(RefreshThreadEvent event){
+        this.stopThread();
+    }
+
+    @Subscribe
+    public void onGPSEvent(GPSEvent event){
+        if (!event.isFromCMD) {
+            TracksManager.TrackPoint prePoint = event.trackPoint;
+            TracksManager.TrackPoint truePoint = new TracksManager.TrackPoint(prePoint.time, this.mCenter.convertPoint(prePoint.point));
+            this.setManager.setInitLocation(prePoint.point.latitude + "", prePoint.point.longitude + "");
+            this.maptabFragment.locateMobile(truePoint);
         }
     }
 }

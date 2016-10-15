@@ -133,7 +133,7 @@ public class TestddActivity extends Activity{
 
     private void insertNullData(){
         long timeStamp = endT.getTime()/1000;
-        dbManage.insert(timeStamp, -1, null, null, null, 0);
+        dbManage.insert(timeStamp, -1, "", "", "", 0);
     }
 
     private void insertDateTrackSecond(){
@@ -322,7 +322,10 @@ public class TestddActivity extends Activity{
                         if (!startT.equals(todayDate) && FlagRecentDate) {
                             long timeStamp = endT.getTime() / 1000;
                             //存到数据库
-                            dbManage.insert(timeStamp, -1, null, null, null, 0);
+                            if (dbManage == null) {
+                                dbManage = new DBManage(TestddActivity.this, IMEI);
+                            }
+                            dbManage.insert(timeStamp,-1,"", "", "", 0);
                         }
 
                         //需要插入到数据库中  表示没有数据啊

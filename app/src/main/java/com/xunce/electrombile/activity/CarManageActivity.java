@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +52,8 @@ public class CarManageActivity extends Activity {
     @Override
     protected void onStart(){
         super.onStart();
-        initView();
         initEvents();
+        initView();
     }
 
     private void initView(){
@@ -82,10 +83,6 @@ public class CarManageActivity extends Activity {
 
         ListView listview = (ListView)findViewById(R.id.OtherCarListview);
 
-        Othercarlist = new ArrayList<>();
-        settingManager = SettingManager.getInstance();
-
-        IMEIlist = new ArrayList<>();
 
         RelativeLayout layout_CurrentCar = (RelativeLayout)findViewById(R.id.RelativeLayout_currentcar);
         layout_CurrentCar.setOnClickListener(new View.OnClickListener() {
@@ -126,7 +123,6 @@ public class CarManageActivity extends Activity {
                 new String[]{"img","WhichCar"},
                 new int[]{R.id.img,R.id.WhichCar});
 
-        listview.setAdapter(adapter);
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -141,6 +137,8 @@ public class CarManageActivity extends Activity {
 
             }
         });
+        listview.setAdapter(adapter);
+
     }
 
     @Override
@@ -224,26 +222,24 @@ public class CarManageActivity extends Activity {
 
     private void initEvents(){
         getIMEIlist();
-//        HashMap<String, Object> map;
-//        for(int i = 1;i<IMEIlist.size();i++){
-//            map = new HashMap<String, Object>();
-//            map.put("WhichCar",settingManager.getCarName(IMEIlist.get(i)));
-//            map.put("img",R.drawable.othercar);
-//            Othercarlist.add(map);
-//        }
-//        adapter.notifyDataSetChanged();
-        refreshList();
+        Othercarlist = new ArrayList<>();
+        getOtherCarList();
     }
 
     private void refreshList(){
+        getOtherCarList();
+        adapter.notifyDataSetChanged();
+    }
+
+    private void getOtherCarList(){
         HashMap<String, Object> map;
+        Othercarlist.clear();
         for(int i = 1;i<IMEIlist.size();i++){
             map = new HashMap<String, Object>();
             map.put("WhichCar",settingManager.getCarName(IMEIlist.get(i)));
             map.put("img",R.drawable.othercar);
             Othercarlist.add(map);
         }
-        adapter.notifyDataSetChanged();
     }
 
 
@@ -279,6 +275,7 @@ public class CarManageActivity extends Activity {
 
 
     public void getIMEIlist(){
+        settingManager = SettingManager.getInstance();
         IMEIlist = settingManager.getIMEIlist();
     }
 

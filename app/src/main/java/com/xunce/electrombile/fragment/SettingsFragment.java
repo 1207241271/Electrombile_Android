@@ -30,6 +30,8 @@ import com.xunce.electrombile.activity.account.PersonalCenterActivity;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
+import org.greenrobot.eventbus.EventBus;
+
 
 public class SettingsFragment extends BaseFragment implements View.OnClickListener {
     private static String TAG = "SettingsFragment";

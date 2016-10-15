@@ -73,9 +73,13 @@ import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
+import com.xunce.electrombile.eventbus.BatteryInfoEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -86,6 +90,7 @@ import com.xunce.electrombile.utils.useful.StringUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -189,7 +194,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
         //----------  EventBus Register
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -241,6 +245,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Override
     public void onStop(){
         super.onStop();
+
     }
 
     @Override
@@ -262,7 +267,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -337,10 +341,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
                                 try {
                                     int itinerary = (int)avObject.get("itinerary");
-                                    Map<String,Double> eventMap = new HashMap();
-                                    eventMap.put(EventbusConstants.FetchItineraryEvent,itinerary/1000.0);
-                                    EventBus.getDefault().post(new ObjectEvent(eventMap));
-//                                    refreshItineraryInfo(itinerary/1000.0);
+                                    EventBus.getDefault().post(new QueryItineraryEvent(itinerary/1000.0));
                                     ToastUtils.showShort(m_context,"获取累计公里数成功");
                                 } catch (Exception ee) {
                                     ee.printStackTrace();
@@ -960,7 +961,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void refreshItineraryInfo(double itinerary){
-        tv_distance.setText(String.format(Locale.CHINA,"%.2f%s",itinerary,"公里"));
+        String  itineraryStr    =   String.format(Locale.CHINA,"%.2f公里",itinerary);
+        if (tv_distance != null){
+            tv_distance.setText(itineraryStr);
+        }
 
         //星
         if(itinerary<500){
@@ -1207,26 +1211,30 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.show();
     }
 
-
     @Subscribe
-    public void onMessageEvent(MessageEvent event){
-        if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
-            m_context.cancelWaitTimeOut();
-            msgSuccessArrived();
-        }else if(event.getMsg().equals(EventbusConstants.FromcaseFenceGet)){
-            if (setManager.getAlarmFlag()) {
+    public void onFenceEvent(FenceEvent event){
+        if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceSet)){
+            if (event.isAlarmFlag()) {
                 openStateAlarmBtn();
-                showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
-            } else {
+                showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
+            }else {
                 closeStateAlarmBtn();
             }
+        }else {
+            msgSuccessArrived();
         }
     }
     @Subscribe
-    public  void  onObjectEvent(ObjectEvent event){
-        Map eventMap = event.getEventMap();
-        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString()));
-        }
+    public  void  onQueryItineraryEvent(QueryItineraryEvent event){
+        this.refreshItineraryInfo(event.getItinerary());
+    }
+    @Subscribe
+    public void onBatteryInfoEvent(BatteryInfoEvent event){
+        this.refreshBatteryInfo();
+    }
+    @Subscribe
+    public void onNotifiyArriviedEvent(NotifiyArriviedEvent event){
+        this.openStateAlarmBtn();
+        this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
     }
 }

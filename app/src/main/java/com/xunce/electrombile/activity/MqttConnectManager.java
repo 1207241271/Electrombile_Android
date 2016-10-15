@@ -304,7 +304,7 @@ public class MqttConnectManager {
     public void sendMessage(final byte[] message, final String IMEI) {
         if(NetworkUtils.isNetworkConnected(App.getInstance())){
             Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
-            if (c.getClient() == null||!c.getClient().isConnected()) {
+            if (c == null || c.getClient() == null||!c.getClient().isConnected()) {
                 ToastUtils.showShort(App.getInstance(), "请先连接设备");
                 return;
             }

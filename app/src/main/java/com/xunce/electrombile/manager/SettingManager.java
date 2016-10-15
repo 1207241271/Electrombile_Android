@@ -22,7 +22,11 @@ import android.content.SharedPreferences;
 
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.SetManagerEvent;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -85,6 +89,7 @@ public class SettingManager {
     private SettingManager() {
         Context cc = App.getInstance();
         spf = cc.getSharedPreferences(SHARE_PREFERENCES, Context.MODE_PRIVATE);
+        EventBus.getDefault().register(this);
     }
 
     /**
@@ -420,5 +425,21 @@ public class SettingManager {
 
     public long getUpdateDatabaseTime(){
         return spf.getLong("UPDATEDATABASETIME",0);
+    }
+
+    @Subscribe
+    public void onSetManagerEvent(SetManagerEvent event){
+        switch (event.getEventBusType()){
+            case EventType_FenceGet:
+            case EventType_FenceSet:
+                boolean alarmFlag = Boolean.parseBoolean(event.getValue().toString());
+                this.setAlarmFlag(alarmFlag);
+                break;
+            case EventType_AutoLockGet:
+            case EventType_AutoLockSet:
+                boolean autoLockFlag = Boolean.parseBoolean(event.getValue().toString());
+                this.setAutoLockStatus(autoLockFlag);
+                break;
+        }
     }
 }
