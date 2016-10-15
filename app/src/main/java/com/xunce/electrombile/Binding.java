@@ -211,23 +211,12 @@ public class Binding {
                             Log.d("成功", "IMEI查询到" + list.size() + " 条符合条件的数据");
                             //一个设备可以绑定多个用户,但是这个类是唯一的，确保不重复生成相同的对象。
                             if (list.size() > 0) {
-//                                Message message = Message.obtain();
-//                                message.what = handler_key.FAILED.ordinal();
-//                                message.obj = "设备已经被绑定！";
-//                                mHandler.sendMessage(message);
                                 ToastUtils.showShort(mContext,"设备已经被绑定");
                                 return;
                             }
                             ToastUtils.showShort(mContext, "您正在绑定主车辆...");
 
                             bindDevice.put("device", avObjects.get(0));
-//                            if (list.size() > 0) {
-//                                bindDevice.put("isAdmin", false);
-//                                ToastUtils.showShort(mContext, "您正在绑定附属车辆...");
-//                            } else {
-//                                bindDevice.put("isAdmin", true);
-//                                ToastUtils.showShort(mContext, "您正在绑定主车辆...");
-//                            }
                             bindDevice.put("isAdmin", true);
                             bindDevice.put("IMEI", IMEI);
                             bindDevice.saveInBackground(new SaveCallback() {

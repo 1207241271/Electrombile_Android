@@ -703,15 +703,17 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
     public void refreshBindList1(){
         IMEIlist = setManager.getIMEIlist();
-        BindedCarIMEI.setText(setManager.getCarName(IMEIlist.get(0)));
+        if (IMEIlist != null && IMEIlist.size() > 0) {
+            BindedCarIMEI.setText(setManager.getCarName(IMEIlist.get(0)));
 
-        HashMap<String, Object> map = null;
-        list.clear();
-        for (int i = 1; i < IMEIlist.size(); i++) {
-            map = new HashMap<>();
-            map.put("whichcar",setManager.getCarName(IMEIlist.get(i)));
-            map.put("img", R.drawable.othercar);
-            list.add(map);
+            HashMap<String, Object> map = null;
+            list.clear();
+            for (int i = 1; i < IMEIlist.size(); i++) {
+                map = new HashMap<>();
+                map.put("whichcar", setManager.getCarName(IMEIlist.get(i)));
+                map.put("img", R.drawable.othercar);
+                list.add(map);
+            }
         }
         simpleAdapter.notifyDataSetChanged();
     }

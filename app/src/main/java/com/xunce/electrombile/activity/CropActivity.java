@@ -18,16 +18,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.xunce.electrombile.LeancloudManager;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.manager.SettingManager;
 
-public class CropActivity extends Activity{
+public class CropActivity extends Activity {
     private String filePath;
     private ImageView srcPic;
     private SettingManager settingManager;
     private LeancloudManager leancloudManager;
     private Bitmap bitmap = null;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +49,11 @@ public class CropActivity extends Activity{
 
         srcPic = (ImageView) findViewById(R.id.src_pic);
 
-        try{
+        try {
             bitmap = getThumbnail(imageUri);
             srcPic.setImageBitmap(bitmap);
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -53,21 +61,29 @@ public class CropActivity extends Activity{
         sure.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                bitmap = ((BitmapDrawable)srcPic.getDrawable()).getBitmap();
-                saveMyBitmaptoFile(bitmap,IMEI);
-                Intent intent = new Intent();
-                intent.putExtra("filePath", filePath);
-                setResult(RESULT_OK, intent);
-                finish();
+                BitmapDrawable bitmapDrawable = (BitmapDrawable) srcPic.getDrawable();
+                if (bitmapDrawable != null){
+                    bitmap = bitmapDrawable.getBitmap();
+                    saveMyBitmaptoFile(bitmap, IMEI);
+                    Intent intent = new Intent();
+                    intent.putExtra("filePath", filePath);
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }else {
+                    Log.e("Fail","can't crop the image");
+                }
             }
         });
 
         settingManager = SettingManager.getInstance();
         leancloudManager = LeancloudManager.getInstance();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    public void bitmapRelease(){
-        if(bitmap != null && !bitmap.isRecycled()){
+    public void bitmapRelease() {
+        if (bitmap != null && !bitmap.isRecycled()) {
             // 回收并且置为null
             bitmap.recycle();
             bitmap = null;
@@ -75,13 +91,13 @@ public class CropActivity extends Activity{
         }
     }
 
-    public Bitmap getThumbnail(Uri uri) throws FileNotFoundException, IOException{
+    public Bitmap getThumbnail(Uri uri) throws FileNotFoundException, IOException {
         InputStream input = this.getContentResolver().openInputStream(uri);
 
         BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
         onlyBoundsOptions.inJustDecodeBounds = true;
-        onlyBoundsOptions.inDither=true;//optional
-        onlyBoundsOptions.inPreferredConfig=Bitmap.Config.ARGB_8888;//optional
+        onlyBoundsOptions.inDither = true;//optional
+        onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
         BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
         input.close();
         if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1))
@@ -93,27 +109,27 @@ public class CropActivity extends Activity{
 
         BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
         bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio);
-        bitmapOptions.inDither=true;//optional
-        bitmapOptions.inPreferredConfig=Bitmap.Config.ARGB_8888;//optional
+        bitmapOptions.inDither = true;//optional
+        bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
         input = this.getContentResolver().openInputStream(uri);
         Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
         input.close();
         return bitmap;
     }
 
-    private static int getPowerOfTwoForSampleRatio(double ratio){
+    private static int getPowerOfTwoForSampleRatio(double ratio) {
         int k = Integer.highestOneBit((int) Math.floor(ratio));
-        if(k==0) return 1;
+        if (k == 0) return 1;
         else return k;
     }
 
     //bitmap写文件
-    public void saveMyBitmaptoFile(Bitmap mBitmap,String IMEI){
+    public void saveMyBitmaptoFile(Bitmap mBitmap, String IMEI) {
         //如果用户没有内存卡这句话会不会出错
 //        filePath = Environment.getExternalStorageDirectory() + "/"+IMEI+"crop_result.jpg";
 //        File f = new File(filePath);
 
-        File f = new File(this.getExternalFilesDir(null), IMEI+"crop_result.jpg");
+        File f = new File(this.getExternalFilesDir(null), IMEI + "crop_result.jpg");
 
         FileOutputStream fOut = null;
         try {
@@ -129,9 +145,49 @@ public class CropActivity extends Activity{
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
         srcPic.setImageURI(null);
         bitmapRelease();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Crop Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.xunce.electrombile.activity/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Crop Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.xunce.electrombile.activity/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
     }
 }

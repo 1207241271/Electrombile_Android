@@ -962,10 +962,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     public void refreshItineraryInfo(double itinerary){
         String  itineraryStr    =   String.format(Locale.CHINA,"%.2f公里",itinerary);
-        tv_distance.setText(itineraryStr);
-        if (itineraryStr == null){
-            tv_distance.setText("数据出错");
-        }else {
+        if (tv_distance != null){
             tv_distance.setText(itineraryStr);
         }
 
