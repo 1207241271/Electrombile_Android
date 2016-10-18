@@ -1,5 +1,6 @@
 package com.xunce.electrombile.fragment;
 
+import android.Manifest;
 import android.app.Activity;
 
 import android.app.Dialog;
@@ -9,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -24,7 +26,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -40,6 +45,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
@@ -534,18 +540,18 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     }
 
                     private void setWeather(String cityName,String temperature,String type) {
-                        tv_temperature.setText(temperature+"摄氏度");
-                        tv_weatherCondition.setText(type);
-                        tv_location.setText(cityName);
+                        if (tv_temperature != null) {
+                            tv_temperature.setText(temperature + "摄氏度");
+                            tv_weatherCondition.setText(type);
+                            tv_location.setText(cityName);
 
-                        if(type.contains("雨")){
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.rain)));
-                        }
-                        else if(type.contains("雪")){
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.snow)));
-                        }
-                        else{
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.sunny)));
+                            if (type.contains("雨")) {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.rain)));
+                            } else if (type.contains("雪")) {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.snow)));
+                            } else {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.sunny)));
+                            }
                         }
                     }
 
@@ -891,22 +897,34 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 break;
 
             case R.id.tv_pop_camera:
-                File outputImage1 = new File(Environment.getExternalStorageDirectory(),"output_image.jpg");
-                try{
-                    if(outputImage1.exists()){
-                        outputImage1.delete();
-                    }
-                    outputImage1.createNewFile();
-                }catch(IOException e){
-                    e.printStackTrace();
-                }
-                imageUri = Uri.fromFile(outputImage1);
-                Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
-                intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(intent1,TAKE_PHOTE);
-                mpopupWindow.dismiss();
-                break;
 
+
+                int permisson = PermissionChecker.checkSelfPermission(m_context, Manifest.permission.CAMERA);
+
+                if (PackageManager.PERMISSION_GRANTED == permisson){
+                    File outputImage1 = new File(Environment.getExternalStorageDirectory(),"output_image.jpg");
+                    try{
+                        if(outputImage1.exists()){
+                            outputImage1.delete();
+                        }
+                        outputImage1.createNewFile();
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
+                    imageUri = Uri.fromFile(outputImage1);
+                    Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
+                    intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent1,TAKE_PHOTE);
+                    mpopupWindow.dismiss();
+                    break;
+                }else {
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(m_context,Manifest.permission.CAMERA)){
+                        Log.i("debug", "we should explain why we need this permission!");
+                    }else {
+                        ActivityCompat.requestPermissions(m_context,new String[]{Manifest.permission.CAMERA},1003);
+                    }
+                    break;
+                }
             case R.id.tv_pop_cancel:
                 mpopupWindow.dismiss();
                 break;
@@ -914,6 +932,26 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode){
+            case 1003:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
+                    intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent1,TAKE_PHOTE);
+                    mpopupWindow.dismiss();
+                }else {
+                    Toast.makeText(m_context, "很遗憾你把相机权限禁用了。请务必开启相机权限享受我们提供的服务吧。", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+        }
+
     }
 
     class BitmapWorkerTask extends AsyncTask<Void, Void, Bitmap> {

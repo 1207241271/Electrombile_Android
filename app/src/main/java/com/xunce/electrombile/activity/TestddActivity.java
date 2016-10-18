@@ -554,7 +554,6 @@ public class TestddActivity extends Activity{
                         adapter.notifyDataSetChanged();
                         dialog.setTitle("此时间段内没有数据");
                         dialog.show();
-
                         return;
                     }
                     else{
@@ -570,7 +569,6 @@ public class TestddActivity extends Activity{
 
                         adapter.notifyDataSetChanged();
                         getSecondTableData();
-
                         return;
                     }
                 }
