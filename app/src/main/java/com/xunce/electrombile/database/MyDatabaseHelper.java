@@ -41,7 +41,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_DATETRACK);
         db.execSQL(CREATE_DATETRACKSECOND);
 
-        Toast.makeText(mContext, "created succeeded", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(mContext, "created succeeded", Toast.LENGTH_SHORT).show();
     }
 
     @Override

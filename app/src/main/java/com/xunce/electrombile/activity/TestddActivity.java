@@ -31,12 +31,10 @@ import com.baidu.mapapi.SDKInitializer;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.bean.TracksBean;
 import com.xunce.electrombile.database.DBManage;
-import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager;
 import com.xunce.electrombile.manager.TracksManager.TrackPoint;
 import com.xunce.electrombile.services.HttpService;
-import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
@@ -440,7 +438,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
             watiDialog.dismiss();
 
         }catch (Exception e){
-
+            e.printStackTrace();
         }
     }
 
@@ -461,6 +459,14 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 message.setData(bundle);
                 message.what = 110;
                 mhandler.sendMessage(message);
+            }
+
+            @Override
+            public void dealError(short errorCode) {
+                if (errorCode == HttpService.URLNULLError){
+                    dialog.setTitle("数据查询异常，请稍后再试");
+                    dialog.show();
+                }
             }
         });
     }

@@ -14,6 +14,7 @@ import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
 public class HttpService extends Service {
     private String data = "服务器正在运行";
     private static final String Tag = "httpService";
+    public  static final short  URLNULLError = 100;
     private Callback callback;
     @Override
     public void onCreate(){
@@ -23,6 +24,12 @@ public class HttpService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
+        if (intent == null || intent.getStringExtra("url") == null){
+            if (callback != null) {
+                callback.dealError(URLNULLError);
+            }
+            return super.onStartCommand(intent,flags,startId);
+        }
         final String url = intent.getStringExtra("url");
         new Thread() {
             @Override
@@ -74,5 +81,6 @@ public class HttpService extends Service {
 
     public static interface Callback{
         void onDataChange(String data);
+        void dealError(short errorCode);
     }
 }

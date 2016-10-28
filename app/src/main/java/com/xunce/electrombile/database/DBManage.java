@@ -60,9 +60,9 @@ public class DBManage {
         cv.put("OneTrackMile",OneTrackMile);
 
         long res = sqldb.insert("datetrack", null, cv);
-        if(-1 == res){
-            Toast.makeText(mcontext, "insert失败", Toast.LENGTH_SHORT).show();
-        }
+//        if(-1 == res){
+//            Toast.makeText(mcontext, "insert失败", Toast.LENGTH_SHORT).show();
+//        }
     }
 
 //    public void delete(){
@@ -79,10 +79,10 @@ public class DBManage {
     public void delete(String filter){
         int res = sqldb.delete("datetrack", filter, null);
         if(0 == res){
-            Toast.makeText(mcontext,"删除失败",Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mcontext,"删除失败",Toast.LENGTH_SHORT).show();
         }
         else{
-            Toast.makeText(mcontext,"成功删除了"+res+"行的数据",Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mcontext,"成功删除了"+res+"行的数据",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -126,7 +126,7 @@ public class DBManage {
         cv.put("speed",speed);
         long res = sqldb2.insert("datetracksecond", null, cv);
         if(-1 == res){
-            Toast.makeText(mcontext, "insert失败", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mcontext, "insert失败", Toast.LENGTH_SHORT).show();
         }
     }
 
