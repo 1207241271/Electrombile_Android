@@ -416,6 +416,14 @@ public class TestddActivity extends Activity implements ServiceConnection{
     public void dealwithPointArray(String results){
         try{
             JSONObject jsonObject = new JSONObject(results);
+            if (jsonObject.has("code")){
+                int code = jsonObject.getInt("code");
+                if (code == 102 || code == 101){
+                    dialog.setTitle("此时间段内没有数据");
+                    dialog.show();
+                    return;
+                }
+            }
             org.json.JSONArray GPSArray = jsonObject.getJSONArray("gps");
             if (startT.equals(todayDate) && GPSArray.length() == 1){
                 List<Map<String,String>> listMap = new ArrayList<>();
