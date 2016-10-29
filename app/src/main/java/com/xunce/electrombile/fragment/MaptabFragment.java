@@ -51,6 +51,7 @@ import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CaptureActivity;
 import com.xunce.electrombile.activity.FindCarActivity;
+import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.TestddActivity;
 import com.xunce.electrombile.eventbus.EventbusConstants;
@@ -528,10 +529,12 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     //第一次调用
     private boolean isGPSOpened(int type) {
-        LocationManager locationManager
-                = (LocationManager) m_context.getSystemService(Context.LOCATION_SERVICE);
+        Object object =  m_context.getSystemService(Context.LOCATION_SERVICE);
+        if (object != null){
+            locationManager = (LocationManager) object;
+        }
         // 通过GPS卫星定位，定位级别可以精确到街（通过24颗卫星定位，在室外和空旷的地方定位准确、速度快）
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        if (locationManager != null && !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (type == SHOWGPSDIALOG) {
                 //设置gps的dialog
                 Dialog GPSDialog = new AlertDialog.Builder(m_context).setMessage("GPS定位手机位置更加准确,请开启GPS!")
@@ -723,7 +726,10 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
      */
     private void refreshTrack(TrackPoint track) {
         currentTrack = track;
-        m_context.dismissWaitDialog();
+        if (m_context != null){
+            m_context.dismissWaitDialog();
+
+        }
     }
 
     /**

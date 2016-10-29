@@ -7,6 +7,9 @@ import com.avos.avoscloud.AVObject;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,9 +32,10 @@ public class TracksManager implements Serializable{
     private final String KET_LONG = "lon";
     private final String SPEED = "speed";
     private final String KET_LAT = "lat";
+    private final String TIMESTAMP = "timestamp";
 
-    private final long MAX_TIMEINRVAL = 30 * 60;//30分钟
-    private final long MAX_DISTANCE = 200;//30分钟
+    private final long MAX_TIMEINRVAL = 20 * 60;//30分钟
+    private final long MAX_DISTANCE = 15;//30分钟
     private CmdCenter mCenter;
     private HashMap<String, ArrayList<ArrayList<TrackPoint>>> map;
     public HashMap<String, ArrayList<Integer>> milesMap;
@@ -100,21 +104,18 @@ public class TracksManager implements Serializable{
 //                if(dataList.size() > 1) {
 //                    tracks.add(dataList);
 //                }
-                if(tracks.get(tracks.size() - 1).size() <= 1)
+                if(tracks.get(tracks.size() - 1).size() <= 1) {
                     tracks.remove(tracks.size() - 1);
-                    dataList = new ArrayList<>();
-                    tracks.add(dataList);
                 }
+                dataList = new ArrayList<>();
+                tracks.add(dataList);
+            }
 
             //打印当前点信息
 //            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             TrackPoint p = new TrackPoint(thisObject.getCreatedAt(), bdPoint,speed);
             //不确定这样处理会不会有什么错误   现在关于日期处理的这个部分还没有搞得很清楚
             p.time.setHours(p.time.getHours());
-//            if(isOutOfHubei(bdPoint)){
-//                Log.i(TAG, "out range");
-//                continue;
-//            }
             dataList.add(p);
             lastSavedObject = thisObject;
             lastSavedPoint = bdPoint;
@@ -126,6 +127,54 @@ public class TracksManager implements Serializable{
         }
         Log.i(TAG, "tracks1 size:" + tracks.size());
         SetMapTrack(groupposition, tracks);
+    }
+
+    public void setTracks(int groupPostion, JSONArray array){
+        tracks = new ArrayList<>();
+        Log.i("Track managet-----","setTracks"+array.length());
+        JSONObject lastSavedObject = null;
+        LatLng lastSavedPoint = null;
+        ArrayList<TrackPoint> pointList = null;
+
+        for (int i = 0; i < array.length(); i++) {
+            try {
+                JSONObject object = (JSONObject) array.get(i);
+
+                if (pointList == null) {
+                    pointList = new ArrayList<>();
+                    tracks.add(pointList);
+                }
+                double lat = object.getDouble(KET_LAT);
+                double lon = object.getDouble(KET_LONG);
+                int speed = object.getInt(SPEED);
+                LatLng oldPoint = new LatLng(lat, lon);
+                LatLng bdPoint = mCenter.convertPoint(oldPoint);
+                double dis = Math.abs(DistanceUtil.getDistance(lastSavedPoint, bdPoint));
+                Log.i("****", dis + "");
+                if (lastSavedObject != null && dis <= MAX_DISTANCE) {
+                    continue;
+                }
+                if (lastSavedObject != null && (object.getInt(TIMESTAMP) - lastSavedObject.getInt(TIMESTAMP) >= MAX_TIMEINRVAL)) {
+                    if (tracks.get(tracks.size() - 1).size() <= 1) {
+                        tracks.remove(tracks.size() - 1);
+                    }
+                    pointList = new ArrayList<>();
+                    tracks.add(pointList);
+                }
+                TrackPoint point = new TrackPoint(new Date(object.getLong(TIMESTAMP) * 1000), bdPoint, speed);
+                point.time.setHours(point.time.getHours());
+                pointList.add(point);
+                lastSavedObject = object;
+                lastSavedPoint = bdPoint;
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            }
+        if (tracks.size() == 1 && tracks.get(0).size() <= 1||tracks.get(tracks.size()-1).size() <= 1){
+            tracks.remove(tracks.size() - 1);
+        }
+        SetMapTrack(groupPostion , tracks);
+
     }
 
     public void initTracks(int size){

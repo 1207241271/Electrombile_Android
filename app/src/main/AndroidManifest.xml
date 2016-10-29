@@ -228,6 +228,8 @@
             </intent-filter>
         </service>
 
+        <service android:name=".services.HttpService"/>
+
         <receiver android:name=".fragment.SwitchFragment$NetWorkListen">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />

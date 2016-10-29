@@ -4,28 +4,37 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.FindCallback;
+import com.avos.avoscloud.okhttp.internal.framed.Http2;
+import com.avos.avoscloud.okhttp.internal.http.HttpMethod;
 import com.baidu.mapapi.SDKInitializer;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.bean.TracksBean;
 import com.xunce.electrombile.database.DBManage;
-import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager;
 import com.xunce.electrombile.manager.TracksManager.TrackPoint;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
@@ -39,11 +48,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 
 import com.xunce.electrombile.view.RefreshableView;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 //这个函数太大了
-public class TestddActivity extends Activity{
+public class TestddActivity extends Activity implements ServiceConnection{
     private static final String DATE = "date";
     private static final String DISTANCEPERDAY = "distancePerDay";
     private static final String STARTPOINT = "startPoint";
@@ -92,6 +107,9 @@ public class TestddActivity extends Activity{
 //    private ArrayList<Integer> localmilesList;
     private String IMEI;
 
+
+    private HttpService.Binder httpBinder = null;
+
     private Handler mhandler = new Handler(){
         @Override
         public void handleMessage(android.os.Message msg){
@@ -112,6 +130,10 @@ public class TestddActivity extends Activity{
                 case 1:
                     insertDatabase();
                     break;
+                case 110:
+                    dealwithPointArray(msg.getData().getString("data"));
+                    break;
+
             }
         }
     };
@@ -295,160 +317,155 @@ public class TestddActivity extends Activity{
             return;
         }
 
-//        String ItineraryTableName = "Itinerary_"+IMEI;
-        totalSkip += skip;
-        final int finalSkip = totalSkip;
-        AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
-        query.setLimit(1000);
-        query.whereEqualTo("IMEI", IMEI);
-        query.whereGreaterThanOrEqualTo("createdAt", startT);
-        query.whereLessThan("createdAt", endT);
-        query.setSkip(finalSkip);
-
+        String baseURL = "http://api.xiaoan110.com:80/v1/history/";
+//        String url = "http://test.xiaoan110.com:8081/v1/history/865067021652600?start=146000001&end=146000006";
+        String url = baseURL+IMEI+"?start="+startT.getTime()/1000+"&end="+endT.getTime()/1000;
         watiDialog.setMessage("正在查询数据，请稍后…");
         watiDialog.show();
 
-        query.findInBackground(new FindCallback<AVObject>() {
-            @Override
-            public void done(List<AVObject> avObjects, AVException e) {
-                if (e == null) {
-                    if (avObjects.size() == 0) {
-                        //该天没有轨迹
-                        watiDialog.dismiss();
-                        dialog.setTitle("此时间段内没有数据");
-                        dialog.show();
-
-                        //在数据表里插入一条数据  表示没有数据
-                        if (!startT.equals(todayDate) && FlagRecentDate) {
-                            long timeStamp = endT.getTime() / 1000;
-                            //存到数据库
-                            if (dbManage == null) {
-                                dbManage = new DBManage(TestddActivity.this, IMEI);
-                            }
-                            dbManage.insert(timeStamp,-1,"", "", "", 0);
-                        }
-
-                        //需要插入到数据库中  表示没有数据啊
-                        List<Map<String, String>> listMap = new ArrayList<>();
-                        childData.set(GroupPosition, listMap);
-                        adapter.notifyDataSetChanged();
-                        return;
-
-                    }
-//                    else {
-                        //创建数据库
-//                        if (!startT.equals(todayDate) && (FlagRecentDate)) {
+        Intent intent = new Intent(TestddActivity.this, HttpService.class);
+        intent.putExtra("url",url);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
+//        String result = HttpUtil.sendGet(url,null);
+//        Log.d("Array",result);
+////        String ItineraryTableName = "Itinerary_"+IMEI;
+//        totalSkip += skip;
+//        final int finalSkip = totalSkip;
+//        AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
+//        query.setLimit(1000);
+//        query.whereEqualTo("IMEI", IMEI);
+//        query.whereGreaterThanOrEqualTo("createdAt", startT);
+//        query.whereLessThan("createdAt", endT);
+//        query.setSkip(finalSkip);
+//
+//
+//
+//        query.findInBackground(new FindCallback<AVObject>() {
+//            @Override
+//            public void done(List<AVObject> avObjects, AVException e) {
+//                if (e == null) {
+//                    if (avObjects.size() == 0) {
+//                        //该天没有轨迹
+//                        watiDialog.dismiss();
+//                        dialog.setTitle("此时间段内没有数据");
+//                        dialog.show();
+//
+//                        //在数据表里插入一条数据  表示没有数据
+//                        if (!startT.equals(todayDate) && FlagRecentDate) {
+//                            long timeStamp = endT.getTime() / 1000;
+//                            //存到数据库
 //                            if (dbManage == null) {
 //                                dbManage = new DBManage(TestddActivity.this, IMEI);
 //                            }
-//                            //什么时候需要创建这张表  当为近期的数据的时候
-//                            String date = sdf.format(endT);
-//                            dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+//                            dbManage.insert(timeStamp,-1,"", "", "", 0);
 //                        }
 //
-//                        final int count = avObjects.size();
+//                        //需要插入到数据库中  表示没有数据啊
+//                        List<Map<String, String>> listMap = new ArrayList<>();
+//                        childData.set(GroupPosition, listMap);
+//                        adapter.notifyDataSetChanged();
+//                        return;
 //
-//                        tracksManager.initTracks(count);
-//                        trackCount = 0;
-
-//                        if (localmilesList == null) {
-//                            localmilesList = new ArrayList<Integer>();
-//                        } else {
-//                            localmilesList.clear();
-//                        }
-
-//                        for (final AVObject avObject : avObjects) {
-//                            //再查询一次  查询对应的gps
-//                            long start_timestamp = avObject.getLong("start");
-//                            long end_timestamp = avObject.getLong("end");
-//                            if (start_timestamp > 10 && end_timestamp > 10) {
-//                                AVQuery<AVObject> query = new AVQuery<AVObject>("GPS");
-//                                query.setLimit(1000);
-//                                query.whereEqualTo("IMEI", IMEI);
-//
-//                                //单位转换:  由秒转换成毫秒
-////                                Date startDate = new Date(start_timestamp * 1000);
-////                                Date endDate = new Date(end_timestamp * 1000);
-//                                query.whereGreaterThanOrEqualTo("time", start_timestamp);
-//                                query.whereLessThan("time", end_timestamp);
-//                                query.findInBackground(new FindCallback<AVObject>() {
-//                                    @Override
-//                                    public void done(List<AVObject> list, AVException e) {
-//                                        if (e == null) {
-//                                            //如果固件分段有问题的话  这个地方的size可能为0或者1
-//                                            //这个地方有多次查询  是可能出现轨迹的顺序错乱的
-//                                            if (list.size() > 0) {
-//                                                tracksManager.setOneTrack(list, trackCount);
-//                                                int mile = (int) avObject.get("miles");
-//                                                localmilesList.add(mile);
-//                                            }
-//                                            trackCount++;
-//                                            if (trackCount == count) {
-//                                                //在这里需要先对tracks进行顺序调整
-//                                                tracksManager.orderTracks();
-//                                                updateListView();
-//                                                tracksManager.setMilesMap(GroupPosition, localmilesList);
-//                                            }
-//                                        } else {
-//                                            dialog.setTitle("查询失败" + e.getMessage());
-//                                            dialog.show();
-//                                            watiDialog.dismiss();
-//                                        }
-//                                    }
-//                                });
-//                            } else {
-//                                trackCount++;
-//                                if (trackCount == count) {
-//                                    //说明当天查到的数据是由测试数据的  这个时候就处理为无数据
-//                                    watiDialog.dismiss();
-//                                    dialog.setTitle("此时间段内没有数据");
-//                                    dialog.show();
-//                                }
-//                            }
-//                        }
+//                    } else if(startT.equals(todayDate)&&avObjects.size() == 1){
+//                        List<Map<String, String>> listMap = new ArrayList<>();
+//                        childData.set(GroupPosition, listMap);
+//                        adapter.notifyDataSetChanged();
+//                        dialog.setTitle("此时间段内没有数据");
+//                        dialog.show();
+//                        return;
 //                    }
-                    else if(startT.equals(todayDate)&&avObjects.size() == 1){
-                        List<Map<String, String>> listMap = new ArrayList<>();
-                        childData.set(GroupPosition, listMap);
-                        adapter.notifyDataSetChanged();
-                        dialog.setTitle("此时间段内没有数据");
-                        dialog.show();
-                        return;
-                    }
-
-                    //创建数据库
-                    if (!startT.equals(todayDate) && (FlagRecentDate)) {
-                        if (dbManage == null) {
-                            dbManage = new DBManage(TestddActivity.this, IMEI);
-                        }
-                        //什么时候需要创建这张表  当为近期的数据的时候
-                        String date = sdf.format(endT);
-                        dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
-                    }
-                    for (AVObject thisObject : avObjects) {
-                        totalAVObjects.add(thisObject);
-                    }
-                    if (avObjects.size() >= 1000) {
-                        //     Log.d(TAG, "data more than 1000");
-                        findCloud(1000);
-                    }
-                    if ((totalAVObjects.size() > 1000) && (avObjects.size() < 1000) ||
-                            (totalSkip == 0) && (avObjects.size() < 1000)) {
-                        tracksManager.setTranks(GroupPosition, totalAVObjects);
-//                        //更新本地数据
-                        TracksBean.getInstance().setTracksData(tracksManager.getTracks());
-
-                        updateListView();
-                        watiDialog.dismiss();
-                    }
-
+//
+//                    //创建数据库
+//                    if (!startT.equals(todayDate) && (FlagRecentDate)) {
+//                        if (dbManage == null) {
+//                            dbManage = new DBManage(TestddActivity.this, IMEI);
+//                        }
+//                        //什么时候需要创建这张表  当为近期的数据的时候
+//                        String date = sdf.format(endT);
+//                        dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+//                    }
+//                    for (AVObject thisObject : avObjects) {
+//                        totalAVObjects.add(thisObject);
+//                    }
+//                    if (avObjects.size() >= 1000) {
+//                        //     Log.d(TAG, "data more than 1000");
+//                        findCloud(1000);
+//                    }
+//                    if ((totalAVObjects.size() > 1000) && (avObjects.size() < 1000) ||
+//                            (totalSkip == 0) && (avObjects.size() < 1000)) {
+//                        tracksManager.setTranks(GroupPosition, totalAVObjects);
+////                        //更新本地数据
+//                        TracksBean.getInstance().setTracksData(tracksManager.getTracks());
+//
+//                        updateListView();
+//                        watiDialog.dismiss();
+//                    }
+//
+//                }
+//                else {
+//                    watiDialog.dismiss();
+//                    //在leancloud上没有对应的里程表
+//                    if (e.getCode() == 101) {
+//                        ToastUtils.showShort(TestddActivity.this, "无数据表");
+//                    }
+//                }
+//            }
+//        });
+    }
+    public void dealwithPointArray(String results){
+        try{
+            JSONObject jsonObject = new JSONObject(results);
+            org.json.JSONArray GPSArray = jsonObject.getJSONArray("gps");
+            if (startT.equals(todayDate) && GPSArray.length() == 1){
+                List<Map<String,String>> listMap = new ArrayList<>();
+                childData.set(GroupPosition,listMap);
+                adapter.notifyDataSetChanged();
+                dialog.setTitle("此时间段内没有数据");
+                dialog.show();
+                return;
+            }
+            if (!startT.equals(todayDate) && FlagRecentDate){
+                if(dbManage == null){
+                    dbManage = new DBManage(TestddActivity.this, IMEI);
                 }
-                else {
-                    watiDialog.dismiss();
-                    //在leancloud上没有对应的里程表
-                    if (e.getCode() == 101) {
-                        ToastUtils.showShort(TestddActivity.this, "无数据表");
-                    }
+                String date = sdf.format(endT);
+                dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+            }
+            tracksManager.setTracks(GroupPosition , GPSArray);
+            TracksBean.getInstance().setTracksData(tracksManager.getTracks());
+            updateListView();
+            watiDialog.dismiss();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder){
+        httpBinder = (HttpService.Binder) iBinder;
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onDataChange(String data){
+                Message message = new Message();
+                Bundle bundle = new Bundle();
+                bundle.putString("data",data);
+                message.setData(bundle);
+                message.what = 110;
+                mhandler.sendMessage(message);
+            }
+
+            @Override
+            public void dealError(short errorCode) {
+                if (errorCode == HttpService.URLNULLError){
+                    dialog.setTitle("数据查询异常，请稍后再试");
+                    dialog.show();
                 }
             }
         });
@@ -554,7 +571,6 @@ public class TestddActivity extends Activity{
                         adapter.notifyDataSetChanged();
                         dialog.setTitle("此时间段内没有数据");
                         dialog.show();
-
                         return;
                     }
                     else{
@@ -570,7 +586,6 @@ public class TestddActivity extends Activity{
 
                         adapter.notifyDataSetChanged();
                         getSecondTableData();
-
                         return;
                     }
                 }
