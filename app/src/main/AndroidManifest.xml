@@ -116,7 +116,8 @@
         <activity
             android:name=".activity.MapOfflineActivity"
             android:label="MapOffline" />
-
+        <activity android:name=".activity.BatteryTypeActivity"
+            android:label="BatteryType"/>
         <!-- jpush-->
         <activity
             android:name="cn.jpush.android.ui.PushActivity"

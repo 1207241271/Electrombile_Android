@@ -269,7 +269,9 @@ public class SettingManager {
         return spf.getInt("miles",0);
     }
 
+    public void setBatteryType(int type){ spf.edit().putInt("batteryType",type).apply();}
 
+    public int getBatteryType(){return spf.getInt("batteryType",0);}
 
     public String getFlagCarSwitched(){
         return spf.getString(FLAGCARSWITCHED, "没有切换");

@@ -589,6 +589,9 @@ public class TestddActivity extends Activity implements ServiceConnection{
         Map<String, String> map;
         GroupPosition = groupPosition;
         List<Map<String,String>> list = childData.get(groupPosition);
+        if (list.size() == 0){
+            dialog.setTitle("此时间段内没有数据");
+        }
         for(int i=0;i < list.size();i++)
         {
             map = list.get(i);
