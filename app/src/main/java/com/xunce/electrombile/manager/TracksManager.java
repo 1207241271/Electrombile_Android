@@ -8,6 +8,7 @@ import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -174,7 +176,43 @@ public class TracksManager implements Serializable{
             tracks.remove(tracks.size() - 1);
         }
         SetMapTrack(groupPostion , tracks);
+    }
 
+    public ArrayList<TrackPoint> getTrackWithJSON(JSONArray array){
+        ArrayList<TrackPoint> trackPoints = new ArrayList<>();
+        try {
+            for (int i =0 ; i<array.length();i++){
+                JSONObject object = (JSONObject) array.get(i);
+                double lat = object.getDouble(KET_LAT);
+                double lon = object.getDouble(KET_LONG);
+                int speed = object.getInt(SPEED);
+                LatLng oldPoint = new LatLng(lat, lon);
+                LatLng bdPoint = mCenter.convertPoint(oldPoint);
+                TrackPoint trackPoint = new TrackPoint(new Date(object.getLong(TIMESTAMP) * 1000), bdPoint, speed);
+                trackPoints.add(trackPoint);
+            }
+            return trackPoints;
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ArrayList<TrackPoint> getTrackWithList(List<Map<String,Double>> list){
+        ArrayList<TrackPoint> trackPoints = new ArrayList<>();
+            Map<String,Double> map;
+            for (int i = 0 ; i<list.size();i++){
+                map = list.get(i);
+                double lat = map.get("lat");
+                double lon = map.get("lon");
+                double timestamp = map.get("timestamp");
+                double speed = map.get("speed");
+                LatLng oldPoint = new LatLng(lat,lon);
+                LatLng bdPoint = mCenter.convertPoint(oldPoint);
+                TrackPoint trackPoint = new TrackPoint(new Date((long) timestamp*1000),bdPoint,(int)speed);
+                trackPoints.add(trackPoint);
+            }
+        return trackPoints;
     }
 
     public void initTracks(int size){

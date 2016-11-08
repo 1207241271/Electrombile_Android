@@ -23,7 +23,7 @@ public class HttpService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public int onStartCommand(final Intent intent, int flags, int startId){
         if (intent == null || intent.getStringExtra("url") == null){
             if (callback != null) {
                 callback.dealError(URLNULLError);
@@ -35,13 +35,24 @@ public class HttpService extends Service {
             @Override
             public void run() {
                 super.run();
-                String result = HttpUtil.sendGet(url, null);
-                if (!result.isEmpty()) {
-                    if (callback != null) {
-                        callback.onDataChange(result);
+                if (intent.getStringExtra("type").equals("routeInfo")) {
+                    String result = HttpUtil.sendGet(url, null);
+                    if (!result.isEmpty()) {
+                        if (callback != null) {
+                            callback.onGetRouteData(result);
+                        }
+                    } else {
+                        //TODO: Error
                     }
-                } else {
-                    //TODO: Error
+                }else if (intent.getStringExtra("type").equals("gps")) {
+                    String result = HttpUtil.sendGet(url, null);
+                    if (!result.isEmpty()) {
+                        if (callback != null) {
+                            callback.onGetGPSData(result);
+                        }
+                    } else {
+                        //TODO: Error
+                    }
                 }
             }
         }.start();
@@ -80,7 +91,8 @@ public class HttpService extends Service {
     }
 
     public static interface Callback{
-        void onDataChange(String data);
+        void onGetGPSData(String data);
+        void onGetRouteData(String data);
         void dealError(short errorCode);
     }
 }

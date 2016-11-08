@@ -500,6 +500,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 //        final String cityName = city;
         Log.e(TAG, "city" + city);
         HttpUtils http = new HttpUtils();
+        Log.e(TAG,"http://wthrcdn.etouch.cn/weather_mini?city=" + city);
         http.send(HttpRequest.HttpMethod.GET,
                 "http://wthrcdn.etouch.cn/weather_mini?city=" + city,
                 new RequestCallBack<String>() {
