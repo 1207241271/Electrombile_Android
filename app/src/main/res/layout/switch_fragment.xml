@@ -47,7 +47,7 @@
                 android:id="@+id/img_test"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/switch_background" />
+                android:background="#1dcf96"/>
 
             <com.xunce.electrombile.activity.CircleImageView
                 android:id="@+id/img_headImage"

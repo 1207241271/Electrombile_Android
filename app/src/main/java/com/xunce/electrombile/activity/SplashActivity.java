@@ -47,7 +47,6 @@ public class SplashActivity extends InstrumentedActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         setManager = SettingManager.getInstance();
-        ServiceConstants.MQTT_HOST = setManager.getServer();
     }
 
     @Override

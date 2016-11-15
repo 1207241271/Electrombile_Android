@@ -212,7 +212,7 @@ public class TracksManager implements Serializable{
                 TrackPoint trackPoint = new TrackPoint(new Date((long) timestamp*1000),bdPoint,(int)speed);
                 trackPoints.add(trackPoint);
             }
-        return trackPoints;
+         return trackPoints;
     }
 
     public void initTracks(int size){

@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +22,8 @@ public class AboutActivity extends Activity{
     Button feedbackBtn;
     TextView tv_appInfo;
     String versionName;
+    private ImageView imageView;
+    private int       clickCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +60,28 @@ public class AboutActivity extends Activity{
         });
         tv_appInfo = (TextView)findViewById(R.id.tv_appInfo);
         tv_appInfo.setText("小安宝 V" + versionName);
+
+
+        clickCount = 0;
+        imageView = (ImageView) findViewById(R.id.iv_logo);
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clickCount ++;
+                if (clickCount >= 10){
+                    Intent intent = new Intent(AboutActivity.this,SetServiceActivity.class);
+                    startActivity(intent);
+
+            }
+        }
+    });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
     }
+
+
+
 }

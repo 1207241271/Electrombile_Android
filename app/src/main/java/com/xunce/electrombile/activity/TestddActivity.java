@@ -277,7 +277,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 DBManage dbManage = new DBManage(TestddActivity.this,IMEI,0);
                 dbManage.insertPoint(0,0,0,0,0);
                 List<Map<String,Double>> list = dbManage.queryWithGroup((long) start);
-                if (list == null){
+                if (list == null || list.size() < 2){
                     findCloud(start,end);
                 }else {
                     dealWithMapList(list);
@@ -337,7 +337,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
             return;
         }
 
-        String baseURL = "http://api.xiaoan110.com:80/v1/history/";
+        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/history/";
 //        String url = "http://test.xiaoan110.com:8081/v1/history/865067021652600?start=146000001&end=146000006";
         String url = String.format("%s%s?start=%.0f&end=%.0f",baseURL,IMEI,startTime,endTime);
 //        baseURL+IMEI+"?start="+startTime+"&end="+endTime;
@@ -543,7 +543,23 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 if (errorCode == HttpService.URLNULLError){
                     dialog.setTitle("数据查询异常，请稍后再试");
                     dialog.show();
+                    watiDialog.cancel();
                 }
+            }
+
+            @Override
+            public void onDeletePhoneAlarm(String data) {
+
+            }
+
+            @Override
+            public void onPostPhoneAlarm(String data) {
+
+            }
+
+            @Override
+            public void onPostTestAlarm(String data) {
+
             }
         });
     }
@@ -803,7 +819,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
 
         Date endTime = gcEnd.getTime();
 
-        String baseURL = "http://api.xiaoan110.com:80/v1/itinerary/";
+        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/itinerary/";
         String url = baseURL + IMEI + "?start=" + startTime.getTime() / 1000 + "&end=" + endTime.getTime() / 1000;
         watiDialog.setMessage("正在查询数据，请稍后…");
         watiDialog.show();
@@ -871,7 +887,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 int index = (int)(zeroTimeStamp - startTimestamp)/86400;
                 if (index != preIndex){
                     currentChildIndex = 0;
-                    currentChildItinerary = 0;
+                    currentChildItinerary = itinerary.getInt("miles");
                     preIndex = index;
                 }else {
                     currentChildIndex ++;

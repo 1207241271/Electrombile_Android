@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,14 @@ public class BatteryTypeActivity extends BaseActivity{
         if (SettingManager.getInstance().getBatteryType() != 0){
             textView.setText("您的电池为"+SettingManager.getInstance().getBatteryType()+"V");
         }
+
+        RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
         radioGroup = (RadioGroup)this.findViewById(R.id.radioGroup_chooseType);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override

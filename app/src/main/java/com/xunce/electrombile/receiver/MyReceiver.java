@@ -250,7 +250,7 @@ public class MyReceiver extends BroadcastReceiver {
                     break;
 
                 case ProtocolConstants.APP_CMD_SET_BATTERY_TYPE:
-
+                    caseBatteryType(code);
                 default:
                     break;
             }

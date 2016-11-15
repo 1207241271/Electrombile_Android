@@ -31,7 +31,7 @@ public class TestActivity extends Activity {
     public void setServer(View view) {
         ToastUtils.showShort(this, "请重新打开");
         String server = etServer.getText().toString().trim();
-        settingManager.setServer(server);
+//        settingManager.setServer(server);
         Historys.exit();
     }
 }
