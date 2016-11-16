@@ -18,7 +18,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,6 +29,7 @@ import java.util.Set;
 public class DBManage {
     private SQLiteDatabase sqldb;
     private SQLiteDatabase sqldb2;
+    private SQLiteDatabase sqldb3;
     private MyDatabaseHelper dbHelper;
     private Context mcontext;
     private ContentValues cv;
@@ -50,6 +53,60 @@ public class DBManage {
         sqldb2 = dbHelper.getWritableDatabase();
         cv = new ContentValues();
     }
+
+    public DBManage(Context context,String IMEI,int type){
+        mcontext = context;
+        String TableName= IMEI+".db";
+        dbHelper = new MyDatabaseHelper(mcontext,TableName,null,5);
+        sqldb3 = dbHelper.getWritableDatabase();
+        cv = new ContentValues();
+    }
+
+    public void insertPoint(long group,long timestamp,double lat,double lon,int speed){
+        cv.put("timestamp",timestamp);
+        cv.put("groupId",group);
+        cv.put("lat",lat);
+        cv.put("lon",lon);
+        cv.put("speed",speed);
+        long isSuccess =  sqldb3.insert("points",null,cv);
+
+    }
+
+    public List<Map<String,Double>> queryWithGroup(long group){
+
+        String filter = "groupId="+group;
+        Cursor mCursor = null;
+        try {
+             mCursor = sqldb3.query("points", null, filter, null, null, null, null);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        int resultCount = mCursor.getCount();
+        if(0 == resultCount){
+            return null;
+        }
+
+        List<Map<String,Double>> list = new ArrayList<>();
+        Map<String,Double> map;
+
+        if (mCursor.moveToFirst()) {
+            do {
+                map = new HashMap<>();
+                map.put("timestamp",mCursor.getDouble(mCursor.getColumnIndex("timestamp")));
+                map.put("lat",mCursor.getDouble(mCursor.getColumnIndex("lat")));
+                map.put("lon",mCursor.getDouble(mCursor.getColumnIndex("lon")));
+                map.put("speed",mCursor.getDouble(mCursor.getColumnIndex("speed")));
+                list.add(map);
+            } while (mCursor.moveToNext());
+            return list;
+        }
+        if (mCursor != null && !mCursor.isClosed()){
+            mCursor.close();
+        }
+        return null;
+    }
+
 
     public void insert(long timestamp,int trackNumber,String StartPoint,String EndPoint,String time,int OneTrackMile){
         cv.put("timestamp",timestamp);

@@ -20,11 +20,13 @@ import com.avos.avoscloud.AVUser;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.AboutActivity;
 import com.xunce.electrombile.activity.Autolock;
+import com.xunce.electrombile.activity.BatteryTypeActivity;
 import com.xunce.electrombile.activity.CarManageActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.HelpActivity;
 import com.xunce.electrombile.activity.MapOfflineActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.activity.PhoneAlarmActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -40,6 +42,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     //缓存view
     private View rootView;
     private TextView tv_autolockstatus;
+    private TextView tv_batteryType;
     private MqttConnectManager mqttConnectManager;
 
     @Override
@@ -114,10 +117,10 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         int id = view.getId();
         switch (id) {
             //帮助条目
-            case R.id.layout_help:
-                Intent intentHelp = new Intent(m_context, HelpActivity.class);
-                startActivity(intentHelp);
-                break;
+//            case R.id.layout_help:
+//                Intent intentHelp = new Intent(m_context, HelpActivity.class);
+//                startActivity(intentHelp);
+//                break;
             //退出登录条目
             case R.id.btn_logout:
                 if (!NetworkUtils.isNetworkConnected(m_context)) {
@@ -162,7 +165,12 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             case R.id.layout_map_offline:
                 goToMapOffline();
                 break;
-
+            case R.id.layout_battery:
+                gotoBattery();
+                break;
+            case R.id.layout_phoneAlarm:
+                gotoPhoneAlarm();
+                break;
             default:
                 break;
         }
@@ -181,6 +189,11 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             return false;
         }
         return true;
+    }
+
+    private void gotoPhoneAlarm(){
+        Intent intent = new Intent(m_context, PhoneAlarmActivity.class);
+        startActivity(intent);
     }
 
     /**
@@ -212,6 +225,10 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         startActivity(intent);
     }
 
+    private void gotoBattery(){
+        Intent intent = new Intent(m_context, BatteryTypeActivity.class);
+        startActivity(intent);
+    }
     /**
      * 退出登录
      */
@@ -277,13 +294,16 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
      */
     private void initView(View view) {
         tv_autolockstatus = (TextView)view.findViewById(R.id.tv_autolockstatus);
+        tv_batteryType = (TextView)view.findViewById(R.id.tv_batteryType);
         view.findViewById(R.id.layout_about).setOnClickListener(this);
-        view.findViewById(R.id.layout_help).setOnClickListener(this);
+//        view.findViewById(R.id.layout_help).setOnClickListener(this);
         view.findViewById(R.id.btn_logout).setOnClickListener(this);
         view.findViewById(R.id.layout_person_center).setOnClickListener(this);
         view.findViewById(R.id.rl_1).setOnClickListener(this);
         view.findViewById(R.id.layout_autolock).setOnClickListener(this);
         view.findViewById(R.id.layout_map_offline).setOnClickListener(this);
+        view.findViewById(R.id.layout_battery).setOnClickListener(this);
+        view.findViewById(R.id.layout_phoneAlarm).setOnClickListener(this);
 
         View titleView = view.findViewById(R.id.ll_button) ;
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
@@ -292,6 +312,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         btn_back.setVisibility(View.INVISIBLE);
 
         refreshAutolockStatus();
+        refreshBatteryStatus();
     }
 
     public void refreshAutolockStatus(){
@@ -304,6 +325,13 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
         else{
              tv_autolockstatus.setText("状态关闭");
+        }
+    }
+    public void refreshBatteryStatus(){
+        if (setManager.getBatteryType()!=0){
+            tv_batteryType.setText(setManager.getBatteryType()+"V");
+        }else {
+            tv_batteryType.setText("未设置");
         }
     }
 }

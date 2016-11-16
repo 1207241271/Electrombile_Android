@@ -28,6 +28,7 @@ import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.okhttp.internal.framed.Http2;
 import com.avos.avoscloud.okhttp.internal.http.HttpMethod;
 import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.model.LatLng;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.bean.TracksBean;
 import com.xunce.electrombile.database.DBManage;
@@ -86,6 +87,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
     private ProgressDialog watiDialog;
 
     static int GroupPosition = 0;
+    static int ChildPositon = 0;
     private ExpandableListView expandableListView;
 
     private RefreshableView refreshableView;
@@ -133,7 +135,9 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 case 110:
                     dealwithPointArray(msg.getData().getString("data"));
                     break;
-
+                case 111:
+                    dealwithRouteInfo(msg.getData().getString("data"));
+                    break;
             }
         }
     };
@@ -264,28 +268,44 @@ public class TestddActivity extends Activity implements ServiceConnection{
             public boolean onChildClick(ExpandableListView parent, View v,
                                         int groupPosition, int childPosition, long id) {
                 closeDatabaseCollect();
-                SpecificHistoryTrackActivity.trackDataList = tracksManager.getMapTrack().
-                        get(String.valueOf(groupPosition)).get(childPosition);
+                Map<String,String> map = childData.get(groupPosition).get(childPosition);
+                GroupPosition = groupPosition;
+                ChildPositon = childPosition;
+                double start = Double.valueOf(map.get("startTimestamp"));
+                double end = Double.valueOf(map.get("endTimestamp"));
 
-                if(SpecificHistoryTrackActivity.trackDataList.size() == 0){
-                    ToastUtils.showShort(TestddActivity.this,"该段轨迹没有点,不跳转");
-                    return true;
+                DBManage dbManage = new DBManage(TestddActivity.this,IMEI,0);
+                dbManage.insertPoint(0,0,0,0,0);
+                List<Map<String,Double>> list = dbManage.queryWithGroup((long) start);
+                if (list == null || list.size() < 2){
+                    findCloud(start,end);
+                }else {
+                    dealWithMapList(list);
                 }
-                else if(SpecificHistoryTrackActivity.trackDataList.size() == 1){
-                    ToastUtils.showShort(TestddActivity.this,"该段轨迹只有一个点,不跳转");
-                    return true;
-                }
-
-                Intent intent = new Intent(TestddActivity.this,SpecificHistoryTrackActivity.class);
-                Bundle extras = new Bundle();
-                extras.putString("startPoint", childData.get(groupPosition).get(childPosition).get(STARTPOINT));
-                extras.putString("endPoint", childData.get(groupPosition).get(childPosition).get(ENDPOINT));
-                extras.putString("miles", childData.get(groupPosition).get(childPosition).get(MILES));
-                intent.putExtras(extras);
-
-                //这个地方传数据总是有问题啊
-                startActivity(intent);
                 return true;
+//                return false;
+//                SpecificHistoryTrackActivity.trackDataList = tracksManager.getMapTrack().
+//                        get(String.valueOf(groupPosition)).get(childPosition);
+//
+//                if(SpecificHistoryTrackActivity.trackDataList.size() == 0){
+//                    ToastUtils.showShort(TestddActivity.this,"该段轨迹没有点,不跳转");
+//                    return true;
+//                }
+//                else if(SpecificHistoryTrackActivity.trackDataList.size() == 1){
+//                    ToastUtils.showShort(TestddActivity.this,"该段轨迹只有一个点,不跳转");
+//                    return true;
+//                }
+//
+//                Intent intent = new Intent(TestddActivity.this,SpecificHistoryTrackActivity.class);
+//                Bundle extras = new Bundle();
+//                extras.putString("startPoint", childData.get(groupPosition).get(childPosition).get(STARTPOINT));
+//                extras.putString("endPoint", childData.get(groupPosition).get(childPosition).get(ENDPOINT));
+//                extras.putString("miles", childData.get(groupPosition).get(childPosition).get(MILES));
+//                intent.putExtras(extras);
+//
+//                //这个地方传数据总是有问题啊
+//                startActivity(intent);
+//                return true;
             }
         });
 
@@ -299,10 +319,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
             }
         }, 1);
 
-        for(int i = 0;i<6;i++){
-            findMilesOnedayFromCloud(i);
-        }
-
+        findMilesOnedayFromCloud(0);
     }
 
     @Override
@@ -312,19 +329,24 @@ public class TestddActivity extends Activity implements ServiceConnection{
         System.gc();
     }
 
-    private void findCloud(int skip){
+    private void findCloud(double startTime,double endTime){
+
+
+
         if(NetworkUtils.checkNetwork(this)){
             return;
         }
 
-        String baseURL = "http://api.xiaoan110.com:80/v1/history/";
+        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/history/";
 //        String url = "http://test.xiaoan110.com:8081/v1/history/865067021652600?start=146000001&end=146000006";
-        String url = baseURL+IMEI+"?start="+startT.getTime()/1000+"&end="+endT.getTime()/1000;
+        String url = String.format("%s%s?start=%.0f&end=%.0f",baseURL,IMEI,startTime,endTime);
+//        baseURL+IMEI+"?start="+startTime+"&end="+endTime;
         watiDialog.setMessage("正在查询数据，请稍后…");
         watiDialog.show();
 
         Intent intent = new Intent(TestddActivity.this, HttpService.class);
         intent.putExtra("url",url);
+        intent.putExtra("type","gps");
         bindService(intent, this, Context.BIND_AUTO_CREATE);
         startService(intent);
 //        String result = HttpUtil.sendGet(url,null);
@@ -415,6 +437,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
     }
     public void dealwithPointArray(String results){
         try{
+            watiDialog.cancel();
             JSONObject jsonObject = new JSONObject(results);
             if (jsonObject.has("code")){
                 int code = jsonObject.getInt("code");
@@ -425,30 +448,66 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 }
             }
             org.json.JSONArray GPSArray = jsonObject.getJSONArray("gps");
-            if (startT.equals(todayDate) && GPSArray.length() == 1){
-                List<Map<String,String>> listMap = new ArrayList<>();
-                childData.set(GroupPosition,listMap);
-                adapter.notifyDataSetChanged();
-                dialog.setTitle("此时间段内没有数据");
-                dialog.show();
-                return;
-            }
-            if (!startT.equals(todayDate) && FlagRecentDate){
-                if(dbManage == null){
-                    dbManage = new DBManage(TestddActivity.this, IMEI);
-                }
-                String date = sdf.format(endT);
-                dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
-            }
-            tracksManager.setTracks(GroupPosition , GPSArray);
-            TracksBean.getInstance().setTracksData(tracksManager.getTracks());
-            updateListView();
-            watiDialog.dismiss();
+//            if (startT.equals(todayDate) && GPSArray.length() == 1){
+//                List<Map<String,String>> listMap = new ArrayList<>();
+//                childData.set(GroupPosition,listMap);
+//                adapter.notifyDataSetChanged();
+//                dialog.setTitle("此时间段内没有数据");
+//                dialog.show();
+//                return;
+//            }
+
+            SpecificHistoryTrackActivity.trackDataList = tracksManager.getTrackWithJSON(GPSArray);
+            savePoints(GPSArray);
+            Intent intent = new Intent(TestddActivity.this,SpecificHistoryTrackActivity.class);
+            Bundle extras = new Bundle();
+            extras.putString("startPoint", childData.get(GroupPosition).get(ChildPositon).get(STARTPOINT));
+            extras.putString("endPoint", childData.get(GroupPosition).get(ChildPositon).get(ENDPOINT));
+            extras.putString("miles", childData.get(GroupPosition).get(ChildPositon).get(MILES));
+            intent.putExtras(extras);
+//
+//                //这个地方传数据总是有问题啊
+            startActivity(intent);
+//            if (!startT.equals(todayDate) && FlagRecentDate){
+//                if(dbManage == null){
+//                    dbManage = new DBManage(TestddActivity.this, IMEI);
+//                }
+//                String date = sdf.format(endT);
+//                dbManageSecond = new DBManage(TestddActivity.this, IMEI, date);
+//            }
+//            tracksManager.setTracks(GroupPosition , GPSArray);
+//            TracksBean.getInstance().setTracksData(tracksManager.getTracks());
+//            updateListView();
+//            watiDialog.dismiss();
 
         }catch (Exception e){
             e.printStackTrace();
         }
     }
+
+    void savePoints(org.json.JSONArray array){
+        DBManage dbManage2 = new DBManage(TestddActivity.this,IMEI,5);
+        try{
+            long group = array.getJSONObject(0).getLong("timestamp");
+            for (int i = 0;i<array.length();i++){
+                JSONObject jsonObject = array.getJSONObject(i);
+                dbManage2.insertPoint(group,jsonObject.getLong("timestamp"),jsonObject.getDouble("lat"),jsonObject.getDouble("lon"),jsonObject.getInt("speed"));
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    void dealWithMapList(List<Map<String,Double>> list){
+        SpecificHistoryTrackActivity.trackDataList = tracksManager.getTrackWithList(list);
+        Intent intent = new Intent(TestddActivity.this,SpecificHistoryTrackActivity.class);
+        Bundle extras = new Bundle();
+        extras.putString("startPoint", childData.get(GroupPosition).get(ChildPositon).get(STARTPOINT));
+        extras.putString("endPoint", childData.get(GroupPosition).get(ChildPositon).get(ENDPOINT));
+        extras.putString("miles", childData.get(GroupPosition).get(ChildPositon).get(MILES));
+        intent.putExtras(extras);
+
+        startActivity(intent);    }
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
@@ -460,7 +519,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
         httpBinder = (HttpService.Binder) iBinder;
         httpBinder.getHttpService().setCallback(new HttpService.Callback(){
             @Override
-            public void onDataChange(String data){
+            public void onGetGPSData(String data){
                 Message message = new Message();
                 Bundle bundle = new Bundle();
                 bundle.putString("data",data);
@@ -470,11 +529,37 @@ public class TestddActivity extends Activity implements ServiceConnection{
             }
 
             @Override
+            public void onGetRouteData(String data){
+                Message message = new Message();
+                Bundle bundle = new Bundle();
+                bundle.putString("data",data);
+                message.setData(bundle);
+                message.what = 111;
+                mhandler.sendMessage(message);
+            }
+
+            @Override
             public void dealError(short errorCode) {
                 if (errorCode == HttpService.URLNULLError){
                     dialog.setTitle("数据查询异常，请稍后再试");
                     dialog.show();
+                    watiDialog.cancel();
                 }
+            }
+
+            @Override
+            public void onDeletePhoneAlarm(String data) {
+
+            }
+
+            @Override
+            public void onPostPhoneAlarm(String data) {
+
+            }
+
+            @Override
+            public void onPostTestAlarm(String data) {
+
             }
         });
     }
@@ -517,107 +602,125 @@ public class TestddActivity extends Activity implements ServiceConnection{
 
     void GetHistoryTrack(int groupPosition)
     {
+        Map<String, String> map;
         GroupPosition = groupPosition;
-        //由groupPosition得到对应的日期
-        GregorianCalendar gcStart = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
-        gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH), can.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-        startT= gcStart.getTime();
-        todayDate = startT;
-
-        GregorianCalendar gcEnd = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
-        gcEnd.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH), can.get(Calendar.DAY_OF_MONTH) + 1, 0, 0, 0);
-        endT = gcEnd.getTime();
-        totalSkip = 0;
-        if(totalAVObjects != null)
-            totalAVObjects.clear();
-
-        gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
-                can.get(Calendar.DAY_OF_MONTH)-groupPosition, 0, 0, 0);
-
-        startT= gcStart.getTime();
-        gcEnd.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
-                can.get(Calendar.DAY_OF_MONTH)-groupPosition+1, 0, 0, 0);
-
-        endT = gcEnd.getTime();
-
-        //如果查询的数据是30天之外的  就直接和leancloud交互,不要存取数据库
-        if(groupPosition>30){
-            FlagRecentDate = false;
-            findCloud(0);
-            return;
+        List<Map<String,String>> list = childData.get(groupPosition);
+        if (list.size() == 0){
+            dialog.setTitle("此时间段内没有数据");
+        }
+        for(int i=0;i < list.size();i++)
+        {
+            map = list.get(i);
+            //获取当前路线段的开始和结束点
+            LatLng latLng = new LatLng(Double.valueOf(map.get("startlat")),Double.valueOf(map.get("startlon")));
+            GeoCodering geoCoder1 = new GeoCodering(this,latLng,i,0);
+            geoCoder1.init();
+            latLng = new LatLng(Double.valueOf(map.get("endlat")),Double.valueOf(map.get("endlon")));
+            GeoCodering geoCoder2 = new GeoCodering(this,latLng,i,1);
+            geoCoder2.init();
         }
 
-        FlagRecentDate = true;
-
-        if(startT.equals(todayDate)){
-            //直接从leancloud上获取数据
-            findCloud(0);
-            return;
-
-        }
-        else{
-            IfDatabaseExist();
-            if(DatabaseExistFlag){
-                dbManage = new DBManage(TestddActivity.this,IMEI);
-
-                //由毫秒转换成秒
-                long timeStamp = endT.getTime()/1000;
-
-                String filter = "timestamp="+timeStamp;
-                int resultCount = dbManage.query(filter);
-                if(0 == resultCount){
-                    //之前没有查过,数据库里没有相关的数据
-                    findCloud(0);
-                    return;
-                }
-                else if(1 == resultCount){
-                    //判断是只有一条数据还是空数据
-                    if(dbManage.dateTrackList.get(0).trackNumber == -1){
-                        //为空数据
-                        List<Map<String, String>> listMap = new ArrayList<>();
-                        childData.set(groupPosition,listMap);
-                        adapter.notifyDataSetChanged();
-                        dialog.setTitle("此时间段内没有数据");
-                        dialog.show();
-                        return;
-                    }
-                    else{
-                        //有一条轨迹
-                        Map<String,String> map = new HashMap<>();
-                        map.put(STARTPOINT,dbManage.dateTrackList.get(0).StartPoint);
-                        map.put(ENDPOINT,dbManage.dateTrackList.get(0).EndPoint);
-                        map.put(MILES,String.valueOf(dbManage.dateTrackList.get(0).miles));
-
-                        List<Map<String, String>> listMap = new ArrayList<>();
-                        listMap.add(map);
-                        childData.set(groupPosition, listMap);
-
-                        adapter.notifyDataSetChanged();
-                        getSecondTableData();
-                        return;
-                    }
-                }
-                else{
-                    Map<String,String> map;
-                    List<Map<String, String>> listMap = new ArrayList<>();
-                    for(int i = 0;i<dbManage.dateTrackList.size();i++){
-                        map = new HashMap<>();
-                        map.put(STARTPOINT,dbManage.dateTrackList.get(i).StartPoint);
-                        map.put(ENDPOINT, dbManage.dateTrackList.get(i).EndPoint);
-                        map.put(MILES, String.valueOf(dbManage.dateTrackList.get(i).miles));
-
-                        listMap.add(map);
-                    }
-                    childData.set(groupPosition, listMap);
-                    adapter.notifyDataSetChanged();
-                    getSecondTableData();
-                    return;
-                }
-            }
-            else{
-                findCloud(0);
-            }
-        }
+//        GroupPosition = groupPosition;
+//        //由groupPosition得到对应的日期
+//        GregorianCalendar gcStart = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
+//        gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH), can.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+//        startT= gcStart.getTime();
+//        todayDate = startT;
+//
+//        GregorianCalendar gcEnd = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
+//        gcEnd.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH), can.get(Calendar.DAY_OF_MONTH) + 1, 0, 0, 0);
+//        endT = gcEnd.getTime();
+//        totalSkip = 0;
+//        if(totalAVObjects != null)
+//            totalAVObjects.clear();
+//
+//        gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
+//                can.get(Calendar.DAY_OF_MONTH)-groupPosition, 0, 0, 0);
+//
+//        startT= gcStart.getTime();
+//        gcEnd.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
+//                can.get(Calendar.DAY_OF_MONTH)-groupPosition+1, 0, 0, 0);
+//
+//        endT = gcEnd.getTime();
+//
+//        //如果查询的数据是30天之外的  就直接和leancloud交互,不要存取数据库
+//        if(groupPosition>30){
+//            FlagRecentDate = false;
+//            findCloud(0);
+//            return;
+//        }
+//
+//        FlagRecentDate = true;
+//
+//        if(startT.equals(todayDate)){
+//            //直接从leancloud上获取数据
+//            findCloud(0);
+//            return;
+//
+//        }
+//        else{
+//            IfDatabaseExist();
+//            if(DatabaseExistFlag){
+//                dbManage = new DBManage(TestddActivity.this,IMEI);
+//
+//                //由毫秒转换成秒
+//                long timeStamp = endT.getTime()/1000;
+//
+//                String filter = "timestamp="+timeStamp;
+//                int resultCount = dbManage.query(filter);
+//                if(0 == resultCount){
+//                    //之前没有查过,数据库里没有相关的数据
+//                    findCloud(0);
+//                    return;
+//                }
+//                else if(1 == resultCount){
+//                    //判断是只有一条数据还是空数据
+//                    if(dbManage.dateTrackList.get(0).trackNumber == -1){
+//                        //为空数据
+//                        List<Map<String, String>> listMap = new ArrayList<>();
+//                        childData.set(groupPosition,listMap);
+//                        adapter.notifyDataSetChanged();
+//                        dialog.setTitle("此时间段内没有数据");
+//                        dialog.show();
+//                        return;
+//                    }
+//                    else{
+//                        //有一条轨迹
+//                        Map<String,String> map = new HashMap<>();
+//                        map.put(STARTPOINT,dbManage.dateTrackList.get(0).StartPoint);
+//                        map.put(ENDPOINT,dbManage.dateTrackList.get(0).EndPoint);
+//                        map.put(MILES,String.valueOf(dbManage.dateTrackList.get(0).miles));
+//
+//                        List<Map<String, String>> listMap = new ArrayList<>();
+//                        listMap.add(map);
+//                        childData.set(groupPosition, listMap);
+//
+//                        adapter.notifyDataSetChanged();
+//                        getSecondTableData();
+//                        return;
+//                    }
+//                }
+//                else{
+//                    Map<String,String> map;
+//                    List<Map<String, String>> listMap = new ArrayList<>();
+//                    for(int i = 0;i<dbManage.dateTrackList.size();i++){
+//                        map = new HashMap<>();
+//                        map.put(STARTPOINT,dbManage.dateTrackList.get(i).StartPoint);
+//                        map.put(ENDPOINT, dbManage.dateTrackList.get(i).EndPoint);
+//                        map.put(MILES, String.valueOf(dbManage.dateTrackList.get(i).miles));
+//
+//                        listMap.add(map);
+//                    }
+//                    childData.set(groupPosition, listMap);
+//                    adapter.notifyDataSetChanged();
+//                    getSecondTableData();
+//                    return;
+//                }
+//            }
+//            else{
+//                findCloud(0);
+//            }
+//        }
     }
 
     private void getSecondTableData(){
@@ -648,15 +751,15 @@ public class TestddActivity extends Activity implements ServiceConnection{
 
         adapter.notifyDataSetChanged();
 
-        if(ReverseNumber == totalTrackNumber*2){
-            watiDialog.dismiss();
-            if(!startT.equals(todayDate)&&(FlagRecentDate)){
-                //确实是近期的数据才会插入到数据库
-                android.os.Message msg = android.os.Message.obtain();
-                msg.what = 1;
-                mhandler.sendMessage(msg);
-            }
-        }
+//        if(ReverseNumber == totalTrackNumber*2){
+//            watiDialog.dismiss();
+//            if(!startT.equals(todayDate)&&(FlagRecentDate)){
+//                //确实是近期的数据才会插入到数据库
+//                android.os.Message msg = android.os.Message.obtain();
+//                msg.what = 1;
+//                mhandler.sendMessage(msg);
+//            }
+//        }
     }
 
    //更新ItemList
@@ -700,44 +803,110 @@ public class TestddActivity extends Activity implements ServiceConnection{
     }
 
 
-    //去leancloud查询每天的总公里数
-    private void findMilesOnedayFromCloud(final int groupPosition){
+    //去leancloud查询7天的总公里数
+    private void findMilesOnedayFromCloud(final int groupPosition) {
         //一次需要获取到7天的里程
         GregorianCalendar gcStart = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
         gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
-                can.get(Calendar.DAY_OF_MONTH)-groupPosition, 0, 0, 0);
+                can.get(Calendar.DAY_OF_MONTH) - groupPosition - 6, 0, 0, 0);
 
-        Date startTime= gcStart.getTime();
+        Date startTime = gcStart.getTime();
+
 
         GregorianCalendar gcEnd = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
         gcEnd.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
-                can.get(Calendar.DAY_OF_MONTH)-groupPosition+1, 0, 0, 0);
+                can.get(Calendar.DAY_OF_MONTH) - groupPosition + 1, 0, 0, 0);
 
         Date endTime = gcEnd.getTime();
 
-        String ItineraryTableName = "Itinerary_"+IMEI;
-        //查出当天的总里程
-        AVQuery<AVObject> query = new AVQuery<AVObject>(ItineraryTableName);
-        query.whereGreaterThanOrEqualTo("createdAt", startTime);
-        query.whereLessThan("createdAt", endTime);
+        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/itinerary/";
+        String url = baseURL + IMEI + "?start=" + startTime.getTime() / 1000 + "&end=" + endTime.getTime() / 1000;
+        watiDialog.setMessage("正在查询数据，请稍后…");
+        watiDialog.show();
+//
+        Intent intent = new Intent(TestddActivity.this, HttpService.class);
+        intent.putExtra("url", url);
+        intent.putExtra("type", "routeInfo");
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
 
-        query.findInBackground(new FindCallback<AVObject>() {
-            @Override
-            public void done(List<AVObject> list, AVException e) {
-                if(e == null){
-                    if(list.size() > 0){
-                        int milesOneDay = 0;
-                        for(AVObject avObject:list){
-                           int milesOneTrack = (int)avObject.get("miles");
-                            milesOneDay+=milesOneTrack;
-                        }
-                        groupData.get(groupPosition).put(DISTANCEPERDAY,milesOneDay/1000.0+"km");
-                        adapter.notifyDataSetChanged();
-                    }
-                }else{
-                    e.printStackTrace();
+//        String ItineraryTableName = "Itinerary_"+IMEI;
+        //查出当天的总里程
+//        AVQuery<AVObject> query = new AVQuery<AVObject>(ItineraryTableName);
+//        query.whereGreaterThanOrEqualTo("createdAt", startTime);
+//        query.whereLessThan("createdAt", endTime);
+//
+//        query.findInBackground(new FindCallback<AVObject>() {
+//            @Override
+//            public void done(List<AVObject> list, AVException e) {
+//                if(e == null){
+//                    if(list.size() > 0){
+//                        int milesOneDay = 0;
+//                        for(AVObject avObject:list){
+//                           int milesOneTrack = (int)avObject.get("miles");
+//                            milesOneDay+=milesOneTrack;
+//                        }
+//                        groupData.get(groupPosition).put(DISTANCEPERDAY,milesOneDay/1000.0+"km");
+//                        adapter.notifyDataSetChanged();
+//                    }
+//                }else{
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//    }
+    }
+    private void dealwithRouteInfo(String data){
+        try{
+            JSONObject jsonObject = new JSONObject(data);
+            if (jsonObject.has("code")){
+                int code = jsonObject.getInt("code");
+                if (code == 102 || code == 101){
+                    dialog.setTitle("此时间段内没有数据");
+                    dialog.show();
+                    return;
                 }
             }
-        });
+            org.json.JSONArray itineraryArray = jsonObject.getJSONArray("itinerary");
+            GregorianCalendar gcStart = new GregorianCalendar(TimeZone.getTimeZone("GMT+08:00"));
+            gcStart.set(can.get(Calendar.YEAR), can.get(Calendar.MONTH),
+                    can.get(Calendar.DAY_OF_MONTH) + 1, 0, 0, 0);
+            long zeroTimeStamp = gcStart.getTime().getTime()/1000;
+            int preIndex = -1;
+            int currentChildIndex = 0;
+            int currentChildItinerary = 0;
+            for (int i = 0; i < itineraryArray.length();i++){
+                JSONObject itinerary = itineraryArray.getJSONObject(i);
+                JSONObject start = itinerary.getJSONObject("start");
+                JSONObject end = itinerary.getJSONObject("end");
+                long startTimestamp = start.getLong("timestamp");
+                long endTimestamp = end.getLong("timestamp");
+                if (startTimestamp == endTimestamp){
+                    continue;
+                }
+                int index = (int)(zeroTimeStamp - startTimestamp)/86400;
+                if (index != preIndex){
+                    currentChildIndex = 0;
+                    currentChildItinerary = itinerary.getInt("miles");
+                    preIndex = index;
+                }else {
+                    currentChildIndex ++;
+                    currentChildItinerary += itinerary.getInt("miles");
+                }
+                Map<String,String> map = new HashMap<>();
+                map.put("startTimestamp",start.getString("timestamp"));
+                map.put("startlat",start.getString("lat"));
+                map.put("startlon",start.getString("lon"));
+                map.put("endTimestamp",end.getString("timestamp"));
+                map.put("endlat",end.getString("lat"));
+                map.put("endlon",end.getString("lon"));
+                childData.get(index).add(map);
+                groupData.get(index).put(DISTANCEPERDAY,currentChildItinerary/1000.0+"km");
+            }
+            adapter.notifyDataSetChanged();
+            watiDialog.cancel();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

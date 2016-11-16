@@ -11,9 +11,10 @@ public class EventbusConstants {
         EventType_AutoLockSet,              //设置自动落锁
         EventType_AutoLockGet,              //获取自动落锁
         EventType_AutoPeriodSet,            //设置落锁时间
-        EventType_AutoPeriodGet,            //获取落锁时间
+        EventType_AutoPeriodGet,            //获取落锁时
         EventType_AutoStatusGet,            //自动落锁状态获取
-        EventType_CMDGPSGET                 //CMDGPS数据获得
+        EventType_CMDGPSGET,                 //CMDGPS数据获得
+        EventType_CMDBATTERYSET
     }
 
     public enum carSituationType{

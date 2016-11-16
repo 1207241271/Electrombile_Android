@@ -30,6 +30,15 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
             +"latitude REAL,"
             +"speed integer)";
 
+    public static final String CREATE_DATAPOINTS = "create table points("
+            +"id integer primary key autoincrement,"
+            +"timestamp integer,"
+            +"groupId integer,"
+            +"lat REAL,"
+            +"lon REAL,"
+            +"speed integer)";
+
+
     private Context mContext;
     public MyDatabaseHelper(Context context,String name,SQLiteDatabase.CursorFactory factory,int version){
         super(context,name,factory,version);
@@ -40,7 +49,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db){
         db.execSQL(CREATE_DATETRACK);
         db.execSQL(CREATE_DATETRACKSECOND);
-
+        db.execSQL(CREATE_DATAPOINTS);
 //        Toast.makeText(mContext, "created succeeded", Toast.LENGTH_SHORT).show();
     }
 

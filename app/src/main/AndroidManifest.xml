@@ -47,6 +47,7 @@
     <!-- 云巴权限 -->
     <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/><!-- 写入通讯录权限 -->
 
 
     <permission
@@ -116,7 +117,14 @@
         <activity
             android:name=".activity.MapOfflineActivity"
             android:label="MapOffline" />
-
+        <activity android:name=".activity.BatteryTypeActivity"
+            android:label="BatteryType"/>
+        <activity android:name=".activity.PhoneAlarmActivity"
+            android:label="PhoneAlarmActivity"/>
+        <activity android:name=".activity.PhoneAlarmTestActivity"
+            android:label="PhoneAlarmTestActivity"/>
+        <activity android:name=".activity.SetServiceActivity"
+            android:label="SetServiceActivity"/>
         <!-- jpush-->
         <activity
             android:name="cn.jpush.android.ui.PushActivity"

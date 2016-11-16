@@ -198,6 +198,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         mSearch = GeoCoder.newInstance();
         mSearch.setOnGetGeoCodeResultListener(this);
 
+
         MyBroadcastReceiver = new MyBroadcastReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.app.bc.test");
@@ -219,7 +220,8 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-//        log.info("onViewCreated");
+
+
     }
 
 
@@ -243,7 +245,8 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onStart() {
         com.orhanobut.logger.Logger.i(TAG, "onStart");
         super.onStart();
-//        mqttConnectManager.subscribeGPS(setManager.getIMEI());
+//        getCarPosition(true);
+//        mqttConnectManager.subscribe(setManager.getIMEI());
     }
 
     @Override
@@ -263,8 +266,19 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onPause() {
         com.orhanobut.logger.Logger.i(TAG, "onPause");
         //在activity执行onPause时执行mMapView. onPause ()，实现地图生命周期管理
+//        mqttConnectManager.sendMessage();
         mMapView.onPause();
         super.onPause();
+    }
+
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+// TODO Auto-generated method stub
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser){
+            getCarPosition(true);
+        }
     }
 
     @Override

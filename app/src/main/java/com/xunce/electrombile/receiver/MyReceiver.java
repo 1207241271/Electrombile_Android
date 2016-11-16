@@ -17,6 +17,7 @@ import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.BatteryInfoEvent;
+import com.xunce.electrombile.eventbus.BatteryTypeEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.GPSEvent;
@@ -248,9 +249,21 @@ public class MyReceiver extends BroadcastReceiver {
                     caseGetInitialStatus(code, protocol);
                     break;
 
+                case ProtocolConstants.APP_CMD_SET_BATTERY_TYPE:
+                    caseBatteryType(code);
                 default:
                     break;
             }
+    }
+
+    private void caseBatteryType(int code){
+        if(code == 0){
+            //自动落锁时间成功设置之后  把时间写到本地
+            ToastUtils.showShort(mContext, "电池类型设置成功");
+            EventBus.getDefault().post(new BatteryTypeEvent());
+            return;
+        }
+        dealErr(code);
     }
 
     //这个函数是主动查询gps的时候执行的函数 后面那个服务器主动上报用的
