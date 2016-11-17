@@ -12,10 +12,13 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.avos.avoscloud.AVOSCloud;
 import com.avos.avoscloud.AVUser;
@@ -39,8 +42,24 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     private Button btn_agree;
     private ProgressDialog watiDialog;
     private HttpService.Binder httpBinder;
-    private AlertDialog         dialog;
 
+
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            if (msg.what == 0){
+                watiDialog.cancel();
+                Toast.makeText(PhoneAlarmActivity.this,"设置成功",Toast.LENGTH_SHORT).show();
+                if (!SettingManager.getInstance().getHasContracter()){
+                    addContract();
+                    SettingManager.getInstance().setHasContracter(true);
+                }
+                Intent intent = new Intent(PhoneAlarmActivity.this,PhoneAlarmTestActivity.class);
+                startActivity(intent);
+            }
+        }
+
+    };
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_phonealarm);
         super.onCreate(savedInstanceState);
@@ -48,16 +67,16 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
 
     @Override
     public void initViews() {
+        View titleView = findViewById(R.id.ll_button);
+
+        RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
         watiDialog = new ProgressDialog(this);
-        dialog = new AlertDialog.Builder(this)
-                .setPositiveButton("稍后再查",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                watiDialog.dismiss();
-                            }
-                        }).create();
 
         btn_agree = (Button) findViewById(R.id.phoneAlarm_agree);
         btn_agree.setOnClickListener(new View.OnClickListener() {
@@ -81,6 +100,13 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         startService(intent);
     }
 
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        setResult(RESULT_OK, intent);
+        finish();
+        super.onBackPressed();
+    }
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
 
@@ -110,22 +136,9 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
             @Override
             public void onPostPhoneAlarm(String data) {
                 try{
-                    watiDialog.cancel();
-                    JSONObject jsonObject = new JSONObject(data);
-                    if (jsonObject.has("code")){
-                        int code = jsonObject.getInt("code");
-                        if (code == 102 || code == 101){
-                            dialog.setTitle("此时间段内没有数据");
-                            dialog.show();
-                        }else if (code == 0){
-                            dialog.setTitle("设置成功");
-                            dialog.show();
-
-                            Intent intent = new Intent(PhoneAlarmActivity.this,PhoneAlarmTestActivity.class);
-                            startActivity(intent);
-                        }
-                    }
-
+                    Message message = new Message();
+                    message.what = 0;
+                    handler.sendMessage(message);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -149,7 +162,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         uri = Uri.parse("content://com.android.contacts/data");
         values.put("raw_contact_id", contactId);
         values.put("mimetype", "vnd.android.cursor.item/name");
-        values.put("data2", "小安宝");
+        values.put("data2", "小安宝报警");
         resolver.insert(uri, values);
 
         // 添加电话

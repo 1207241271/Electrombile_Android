@@ -229,6 +229,17 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         Intent intent = new Intent(m_context, BatteryTypeActivity.class);
         startActivity(intent);
     }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+// TODO Auto-generated method stub
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser){
+            refreshAutolockStatus();
+            refreshBatteryStatus();
+        }
+    }
+
     /**
      * 退出登录
      */
@@ -317,21 +328,23 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
     public void refreshAutolockStatus(){
         //设置自动落锁的开关状态
-        if(setManager.getAutoLockStatus()){
-            int period = setManager.getAutoLockTime();
-            String s = period+"分钟状态开启";
-            tv_autolockstatus.setText(s);
-        }
-
-        else{
-             tv_autolockstatus.setText("状态关闭");
+        if (null != tv_autolockstatus) {
+            if (setManager.getAutoLockStatus()) {
+                int period = setManager.getAutoLockTime();
+                String s = period + "分钟状态开启";
+                tv_autolockstatus.setText(s);
+            } else {
+                tv_autolockstatus.setText("状态关闭");
+            }
         }
     }
     public void refreshBatteryStatus(){
-        if (setManager.getBatteryType()!=0){
-            tv_batteryType.setText(setManager.getBatteryType()+"V");
-        }else {
-            tv_batteryType.setText("未设置");
+        if (null != tv_batteryType) {
+            if (setManager.getBatteryType() != 0) {
+                tv_batteryType.setText(setManager.getBatteryType() + "V");
+            } else {
+                tv_batteryType.setText("未设置");
+            }
         }
     }
 }

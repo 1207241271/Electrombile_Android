@@ -27,37 +27,71 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="30dp"
+                android:layout_marginTop="10dp"
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
-                android:text="1.如何绑定设备？
-        \n按返回键返回主界面，点击屏幕下方第三个按钮，然后点击页面最上方的“绑定设备”按钮，在弹出的界面中，点击扫码绑定设备，扫描产品盒上的二维码即可。如果您没有二维码，请联系客服人员。"
+                android:text="1. 电话报警属于试用阶段，可能存在延时、遗漏或者无法送达情况，若发生以上情况，请及时与客服反馈。"
                 android:textColor="@color/black"
-                android:textSize="25sp" />
-            <!--<TextView-->
-                <!--android:id="@+id/tv_help2"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_centerHorizontal="true"-->
-                <!--android:layout_marginTop="30dp"-->
-                <!--android:paddingLeft="30dp"-->
-                <!--android:paddingRight="30dp"-->
-                <!--android:text="2.如何解除绑定？-->
-        <!--\n按返回键返回主界面，点击屏幕下方第三个按钮，然后点击页面最下方的“退出登录”按钮，再重新登录并绑定设备即可。"-->
-                <!--android:textColor="@color/black"-->
-                <!--android:textSize="25sp" />-->
-            <!--<TextView-->
-                <!--android:id="@+id/tv_help3"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_centerHorizontal="true"-->
-                <!--android:layout_marginTop="30dp"-->
-                <!--android:paddingLeft="30dp"-->
-                <!--android:paddingRight="30dp"-->
-                <!--android:text="3.安全系统说明-->
-        <!--\n安全按钮亮时，安全系统为打开状态，如果此期间，您的电动车被移动超过500米，则会触发报警，此时，您的手机会发出报警声并震动。当安全按钮为灰色时，安全系统关闭，即使您的电动车被他人移动，手机端也不会报警！"-->
-                <!--android:textColor="@color/black"-->
-                <!--android:textSize="25sp" />-->
+                android:textSize="19sp" />
+            <TextView
+                android:id="@+id/tv_help2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="2. 电话报警会将报警信息通过电话方式告知，请您保持手机通信通畅，以免因欠费、自动拦截来电、无服务等情况造成无法接收报警。"
+                android:textColor="@color/black"
+                android:textSize="19sp" />
+            <TextView
+                android:id="@+id/tv_help3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="3. 电话报警服务的最终解释权归属武汉小安科技有限公司。"
+                android:textColor="@color/black"
+                android:textSize="19sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="-试用阶段，每月有5次免费电话报警服务。"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="-您可以不接听报警来电，未接听的报警不会扣除免费接听次数。"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="-每月接听超过5次后，本月将无法接收电话报警，次月将自动恢复服务。"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="为保证您能接到报警电话，而不被手机或安全软件拦截，我们需要获取访问您的通讯录的权利，以便将报警来电添加至您的通讯录中。"
+                android:textColor="@color/black"
+                android:textSize="19sp" />
             <Button
                 android:id="@+id/phoneAlarm_agree"
                 android:layout_width="match_parent"

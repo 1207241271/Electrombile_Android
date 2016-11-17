@@ -139,7 +139,7 @@ public class HttpService extends Service {
 
     private void dealWithHttpPost(String url,String type,String body){
         String result = HttpUtil.sendPost(url,body);
-        if (result == null || result.isEmpty()){
+        if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
         if (type.equals("setPhoneAlarm")){
@@ -151,7 +151,7 @@ public class HttpService extends Service {
 
     private void dealWithHttpDelete(String url,String type){
         String result = HttpUtil.sendDelete(url,null);
-        if (result == null || result.isEmpty()){
+        if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
         if (type.equals("deletePhoneAlarm")){

@@ -488,6 +488,13 @@ public class SettingManager {
         return spf.getString(HttpPort,releaseHttpPort);
     }
 
+    public void setHasContracter(Boolean isHave){
+        spf.edit().putBoolean("contract",true).apply();
+    }
+
+    public boolean getHasContracter(){
+       return spf.getBoolean("contract",false);
+    }
 
 
     @Subscribe

@@ -11,9 +11,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.avos.avoscloud.AVUser;
 import com.xunce.electrombile.R;
@@ -33,7 +35,6 @@ import java.util.TimerTask;
 public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConnection{
     private ProgressDialog watiDialog;
     private HttpService.Binder httpBinder;
-    private AlertDialog         dialog;
     private Button              btn_alarmTest;
     private Button              btn_unreceived;
     private Button              btn_alarmDelete;
@@ -44,15 +45,33 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     Handler handler = new Handler() {
         @Override
         public void handleMessage(android.os.Message msg) {
-            secondleft--;
-            if (secondleft <= 0) {
-                timer.cancel();
+            if (msg.what == 0) {
+                secondleft--;
+                if (secondleft <= 0) {
+                    timer.cancel();
 //                        btn_ResendSysCode.setEnabled(true);
 //                        btn_ResendSysCode.setTextColor(Color.parseColor("#1dcf94"));
-                changeButtonState(true);
-                txtView_time.setText("60秒");
-            } else {
-                txtView_time.setText(secondleft + "秒");
+                    changeButtonState(true);
+                    txtView_time.setText("60秒");
+                } else {
+                    txtView_time.setText(secondleft + "秒");
+                }
+            }else if (msg.what == 1){
+                watiDialog.cancel();
+                Toast.makeText(PhoneAlarmTestActivity.this,"发送成功",Toast.LENGTH_SHORT).show();
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Message message = new Message();
+                        message.what = 0;
+                        handler.sendMessage(message);
+                    }
+                }, 1000, 1000);
+                changeButtonState(false);
+            }else if (msg.what == 2){
+                watiDialog.cancel();
+                Toast.makeText(PhoneAlarmTestActivity.this,"关闭成功",Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -64,21 +83,18 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 
     @Override
     public void initViews() {
-        dialog = new AlertDialog.Builder(this)
-                .setPositiveButton("稍后再查",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                watiDialog.dismiss();
-                            }
-                        }).create();
+
         watiDialog = new ProgressDialog(this);
         btn_alarmTest = (Button)findViewById(R.id.btn_alarmtest);
-        btn_unreceived = (Button)findViewById(R.id.btn_havereveived);
         btn_alarmDelete = (Button)findViewById(R.id.btn_alarmdelete);
+        btn_alarmTest.setOnClickListener(new myOnClickListener());
+        btn_alarmDelete.setOnClickListener(new myOnClickListener());
+//        btn_unreceived = (Button)findViewById(R.id.btn_havereveived);
         txtView_time = (TextView) findViewById(R.id.textView_timer);
+        TextView textViewPhone = (TextView) findViewById(R.id.textView_phone);
+        textViewPhone.setText("报警授权手机号："+AVUser.getCurrentUser().getUsername());
         super.initViews();
+
     }
 
 
@@ -102,6 +118,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     }
 
     private void sendPostTest(){
+        secondleft = 60;
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+AVUser.getCurrentUser().getUsername();
         watiDialog.setMessage("正在设置");
         watiDialog.show();
@@ -149,19 +166,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             @Override
             public void onDeletePhoneAlarm(String data) {
                 try{
-                    watiDialog.cancel();
-                    JSONObject jsonObject = new JSONObject(data);
-                    if (jsonObject.has("code")){
-                        int code = jsonObject.getInt("code");
-                        if (code == 102 || code == 101){
-                            dialog.setTitle("解除电话报警成功");
-                            dialog.show();
-                        }else if (code == 0){
-                            dialog.setTitle("解除电话报警成功");
-                            dialog.show();
-                        }
-                    }
-
+                    Message message = new Message();
+                    message.what = 2;
+                    handler.sendMessage(message);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -174,27 +181,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             @Override
             public void onPostTestAlarm(String data) {
                 try{
-                    watiDialog.cancel();
-                    JSONObject jsonObject = new JSONObject(data);
-                    if (jsonObject.has("code")){
-                        int code = jsonObject.getInt("code");
-                        if (code == 102 || code == 101){
-                            dialog.setTitle("报警测试失败");
-                            dialog.show();
-                        }else if (code == 0){
-                            dialog.setTitle("报警发送成功");
-                            dialog.show();
-                            timer = new Timer();
-                            timer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    handler.sendEmptyMessage(0);
-                                }
-                            }, 1000, 1000);
-                            changeButtonState(true);
-                        }
-                    }
-
+                    Message message = new Message();
+                    message.what = 1;
+                    handler.sendMessage(message);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -203,14 +192,14 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     }
     private void changeButtonState(Boolean isTapped){
         if (isTapped){
-            btn_unreceived.isEnabled();
-            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.green));
-            btn_alarmTest.isEnabled();
+//            btn_unreceived.isEnabled();
+//            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.green));
+            btn_alarmTest.setEnabled(true);
             btn_alarmTest.setBackgroundColor(getResources().getColor(R.color.green));
         }else {
-            btn_unreceived.isEnabled();
-            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.gray));
-            btn_alarmTest.isEnabled();
+//            btn_unreceived.isEnabled();
+//            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.gray));
+            btn_alarmTest.setEnabled(false);
             btn_alarmTest.setBackgroundColor(getResources().getColor(R.color.gray));
         }
     }
