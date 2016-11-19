@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -111,6 +112,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
 
 
     private HttpService.Binder httpBinder = null;
+    private HttpService         httpService;
 
     private Handler mhandler = new Handler(){
         @Override
@@ -319,7 +321,20 @@ public class TestddActivity extends Activity implements ServiceConnection{
             }
         }, 1);
 
-        findMilesOnedayFromCloud(0);
+        Intent intent = new Intent(TestddActivity.this, HttpService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
+    }
+
+
+    @Override
+    public void onResume(){
+        super.onResume();
+
+    }
+    @Override
+    public void onPause(){
+        super.onPause();
     }
 
     @Override
@@ -327,6 +342,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
         super.onDestroy();
         TracksManager.clearTracks();
         System.gc();
+        unbindService(this);
     }
 
     private void findCloud(double startTime,double endTime){
@@ -336,19 +352,16 @@ public class TestddActivity extends Activity implements ServiceConnection{
         if(NetworkUtils.checkNetwork(this)){
             return;
         }
+        if (httpService != null) {
+            String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/history/";
+            String url = String.format("%s%s?start=%.0f&end=%.0f", baseURL, IMEI, startTime, endTime);
+            watiDialog.setMessage("正在查询数据，请稍后…");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,0,"gps",null);
+        }else {
+            Toast.makeText(TestddActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+        }
 
-        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/history/";
-//        String url = "http://test.xiaoan110.com:8081/v1/history/865067021652600?start=146000001&end=146000006";
-        String url = String.format("%s%s?start=%.0f&end=%.0f",baseURL,IMEI,startTime,endTime);
-//        baseURL+IMEI+"?start="+startTime+"&end="+endTime;
-        watiDialog.setMessage("正在查询数据，请稍后…");
-        watiDialog.show();
-
-        Intent intent = new Intent(TestddActivity.this, HttpService.class);
-        intent.putExtra("url",url);
-        intent.putExtra("type","gps");
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
-        startService(intent);
 //        String result = HttpUtil.sendGet(url,null);
 //        Log.d("Array",result);
 ////        String ItineraryTableName = "Itinerary_"+IMEI;
@@ -562,6 +575,9 @@ public class TestddActivity extends Activity implements ServiceConnection{
 
             }
         });
+        httpService = httpBinder.getHttpService();
+        //连接完成后查询数据
+        findMilesOnedayFromCloud(0);
     }
 
     private void updateListView(){
@@ -818,18 +834,16 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 can.get(Calendar.DAY_OF_MONTH) - groupPosition + 1, 0, 0, 0);
 
         Date endTime = gcEnd.getTime();
+        if (httpService !=null) {
+            String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/itinerary/";
+            String url = baseURL + IMEI + "?start=" + startTime.getTime() / 1000 + "&end=" + endTime.getTime() / 1000;
+            watiDialog.setMessage("正在查询数据，请稍后…");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,0,"routeInfo",null);
+        }else {
+            Toast.makeText(TestddActivity.this, "连接服务开启失败", Toast.LENGTH_SHORT).show();
 
-        String baseURL = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/itinerary/";
-        String url = baseURL + IMEI + "?start=" + startTime.getTime() / 1000 + "&end=" + endTime.getTime() / 1000;
-        watiDialog.setMessage("正在查询数据，请稍后…");
-        watiDialog.show();
-//
-        Intent intent = new Intent(TestddActivity.this, HttpService.class);
-        intent.putExtra("url", url);
-        intent.putExtra("type", "routeInfo");
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
-        startService(intent);
-
+        }
 //        String ItineraryTableName = "Itinerary_"+IMEI;
         //查出当天的总里程
 //        AVQuery<AVObject> query = new AVQuery<AVObject>(ItineraryTableName);

@@ -18,6 +18,7 @@ import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.avos.avoscloud.AVOSCloud;
@@ -42,7 +43,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     private Button btn_agree;
     private ProgressDialog watiDialog;
     private HttpService.Binder httpBinder;
-
+    private HttpService httpService;
 
     Handler handler = new Handler() {
         @Override
@@ -68,7 +69,8 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     @Override
     public void initViews() {
         View titleView = findViewById(R.id.ll_button);
-
+        TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
+        titleTextView.setText("电话报警设置");
         RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,16 +91,31 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     }
 
     private void sendPost() {
-        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
-        watiDialog.setMessage("正在设置");
-        watiDialog.show();
+        if (httpService !=null) {
+            String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
+            watiDialog.setMessage("正在设置");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,1,"setPhoneAlarm",null);
+        }else {
+            Toast.makeText(PhoneAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+
+        }
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
         Intent intent = new Intent(PhoneAlarmActivity.this, HttpService.class);
-        intent.putExtra("url", url);
-        intent.putExtra("httpMethod", 1);
-        intent.putExtra("type", "setPhoneAlarm");
         bindService(intent, this, Context.BIND_AUTO_CREATE);
         startService(intent);
     }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        unbindService(this);
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -149,6 +166,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
 
             }
         });
+        httpService = httpBinder.getHttpService();
     }
 
     private void addContract(){

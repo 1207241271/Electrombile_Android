@@ -17,6 +17,7 @@ import com.xunce.electrombile.eventbus.BatteryTypeEvent;
 import com.xunce.electrombile.manager.SettingManager;
 
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -145,11 +146,12 @@ public class BatteryTypeActivity extends BaseActivity{
         super.onBackPressed();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
     public void onBatteryTypeEvent(BatteryTypeEvent event){
-        Toast.makeText(BatteryTypeActivity.this,"电池类型设置成功",Toast.LENGTH_SHORT);
-        progressDialog.cancel();
         SettingManager.getInstance().setBatteryType(type);
+        Toast.makeText(BatteryTypeActivity.this,"电池类型设置成功",Toast.LENGTH_SHORT);
+        textView.setText("您的电池为"+type+"V");
+        progressDialog.cancel();
         timer.cancel();
     }
 }

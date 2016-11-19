@@ -29,10 +29,12 @@ import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.PhoneAlarmActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
+import com.xunce.electrombile.eventbus.BatteryTypeEvent;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 
 public class SettingsFragment extends BaseFragment implements View.OnClickListener {
@@ -346,5 +348,10 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
                 tv_batteryType.setText("未设置");
             }
         }
+    }
+
+    @Subscribe(priority = 0)
+    public void onBatteryTypeEvent(BatteryTypeEvent event){
+        refreshBatteryStatus();
     }
 }

@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +42,48 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     private TextView            txtView_time;
     private int                 secondleft;
     private Timer               timer;
+    private TextView            textViewPhone;
+    private HttpService         httpService;
+
+    HttpService.Callback callback = new HttpService.Callback(){
+        @Override
+        public void onGetGPSData(String data){
+        }
+
+        @Override
+        public void onGetRouteData(String data){
+        }
+
+        @Override
+        public void dealError(short errorCode) {
+        }
+
+        @Override
+        public void onDeletePhoneAlarm(String data) {
+            try{
+                Message message = new Message();
+                message.what = 2;
+                handler.sendMessage(message);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onPostPhoneAlarm(String data) {
+        }
+
+        @Override
+        public void onPostTestAlarm(String data) {
+            try{
+                Message message = new Message();
+                message.what = 1;
+                handler.sendMessage(message);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    };
 
     Handler handler = new Handler() {
         @Override
@@ -72,6 +115,8 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             }else if (msg.what == 2){
                 watiDialog.cancel();
                 Toast.makeText(PhoneAlarmTestActivity.this,"关闭成功",Toast.LENGTH_SHORT).show();
+                textViewPhone.setText("报警授权手机号为空");
+                changeButtonState(false);
             }
         }
 
@@ -83,6 +128,16 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 
     @Override
     public void initViews() {
+        View titleView = findViewById(R.id.ll_button);
+        TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
+        titleTextView.setText("电话报警测试");
+        RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         watiDialog = new ProgressDialog(this);
         btn_alarmTest = (Button)findViewById(R.id.btn_alarmtest);
@@ -91,7 +146,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         btn_alarmDelete.setOnClickListener(new myOnClickListener());
 //        btn_unreceived = (Button)findViewById(R.id.btn_havereveived);
         txtView_time = (TextView) findViewById(R.id.textView_timer);
-        TextView textViewPhone = (TextView) findViewById(R.id.textView_phone);
+        textViewPhone = (TextView) findViewById(R.id.textView_phone);
         textViewPhone.setText("报警授权手机号："+AVUser.getCurrentUser().getUsername());
         super.initViews();
 
@@ -116,30 +171,50 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 
         }
     }
+    @Override
+    public void onResume(){
+        super.onResume();
+        Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
+    }
+    @Override
+    public void onPause(){
+        super.onPause();
+        unbindService(this);
+    }
 
     private void sendPostTest(){
         secondleft = 60;
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+AVUser.getCurrentUser().getUsername();
-        watiDialog.setMessage("正在设置");
-        watiDialog.show();
-        Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
-        intent.putExtra("url", url);
-        intent.putExtra("httpMethod", 1);
-        intent.putExtra("type", "phoneAlarmTest");
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
-        startService(intent);
+
+        if (httpService!=null){
+            watiDialog.setMessage("正在设置");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",null);
+        }else {
+            Toast.makeText(PhoneAlarmTestActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+        }
+    }
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        setResult(RESULT_OK, intent);
+        finish();
+        super.onBackPressed();
     }
 
     private void sendDelete(){
-        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance()+"/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
-        watiDialog.setMessage("正在设置");
-        watiDialog.show();
-        Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
-        intent.putExtra("url", url);
-        intent.putExtra("httpMethod", 2);
-        intent.putExtra("type", "setPhoneAlarm");
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
-        startService(intent);
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI();
+        if(httpService != null){
+            watiDialog.setMessage("正在设置");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,2,"deletePhoneAlarm",null);
+        }else {
+            Toast.makeText(PhoneAlarmTestActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+
+        }
+
     }
 
     @Override
@@ -150,46 +225,11 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         httpBinder = (HttpService.Binder) iBinder;
-        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
-            @Override
-            public void onGetGPSData(String data){
-            }
-
-            @Override
-            public void onGetRouteData(String data){
-            }
-
-            @Override
-            public void dealError(short errorCode) {
-            }
-
-            @Override
-            public void onDeletePhoneAlarm(String data) {
-                try{
-                    Message message = new Message();
-                    message.what = 2;
-                    handler.sendMessage(message);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onPostPhoneAlarm(String data) {
-            }
-
-            @Override
-            public void onPostTestAlarm(String data) {
-                try{
-                    Message message = new Message();
-                    message.what = 1;
-                    handler.sendMessage(message);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
+        httpBinder.getHttpService().setCallback(callback);
+        httpService = httpBinder.getHttpService();
     }
+
+
     private void changeButtonState(Boolean isTapped){
         if (isTapped){
 //            btn_unreceived.isEnabled();

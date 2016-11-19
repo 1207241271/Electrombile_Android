@@ -388,28 +388,24 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(Activity.RESULT_OK != resultCode){
+            return;
+        }
         switch (requestCode){
             case TAKE_PHOTE:
-                if(resultCode == Activity.RESULT_OK) {
-                    Intent intent = new Intent(m_context,CropActivity.class);
-                    intent.setData(imageUri);
-                    intent.putExtra("IMEI", setManager.getIMEI());
-                    startActivityForResult(intent, CROP_PHOTO);
-                }
+                    Intent intentTake = new Intent(m_context,CropActivity.class);
+                    intentTake.setData(imageUri);
+                    intentTake.putExtra("IMEI", setManager.getIMEI());
+                    startActivityForResult(intentTake, CROP_PHOTO);
                 break;
-
             case CHOOSE_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     imageUri = data.getData();
                     Intent intent = new Intent(m_context,CropActivity.class);
                     intent.setData(imageUri);
                     intent.putExtra("IMEI",setManager.getIMEI());
                     startActivityForResult(intent, CROP_PHOTO);
-                }
                 break;
-
             case CROP_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     headImage.setImageBitmap(null);
                     bitmapRelease();
                     bitmap = BitmapUtils.compressImageFromFile(setManager.getIMEI());
@@ -417,7 +413,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         headImage.setImageBitmap(bitmap);
                         m_context.setLeftMenuCarImage(bitmap);
                     }
-                }
                 break;
             default:
                 break;
