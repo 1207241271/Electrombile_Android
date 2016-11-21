@@ -496,6 +496,13 @@ public class SettingManager {
        return spf.getBoolean("contract",false);
     }
 
+    public void setPhoneIsAgree(Boolean isAgree){
+        spf.edit().putBoolean("phoneAlarm",isAgree).apply();
+    }
+
+    public boolean getPhoneIsAlarm(){
+        return spf.getBoolean("phoneAlarm",false);
+    }
 
     @Subscribe
     public void onSetManagerEvent(SetManagerEvent event){

@@ -11,7 +11,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/app_style">
+        android:background="@color/white">
 
     <ScrollView
         android:layout_width="fill_parent"
@@ -30,9 +30,9 @@
                 android:layout_marginTop="10dp"
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
-                android:text="1. 电话报警属于试用阶段，可能存在延时、遗漏或者无法送达情况，若发生以上情况，请及时与客服反馈。"
+                android:text="1. 电话报警属于试用阶段，可能存在延时、遗漏或者无法送达情况。"
                 android:textColor="@color/black"
-                android:textSize="19sp" />
+                android:textSize="16sp" />
             <TextView
                 android:id="@+id/tv_help2"
                 android:layout_width="wrap_content"
@@ -43,7 +43,19 @@
                 android:paddingRight="30dp"
                 android:text="2. 电话报警会将报警信息通过电话方式告知，请您保持手机通信通畅，以免因欠费、自动拦截来电、无服务等情况造成无法接收报警。"
                 android:textColor="@color/black"
-                android:textSize="19sp" />
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/tv_help4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_centerHorizontal="true"
+                android:paddingLeft="30dp"
+                android:paddingRight="30dp"
+                android:text="3. 开通电话报警只针对当前账号的当前设备，多设备开通或者同一设备多用户开通，都需要单独进行开通设置。"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+
             <TextView
                 android:id="@+id/tv_help3"
                 android:layout_width="wrap_content"
@@ -52,12 +64,13 @@
                 android:layout_centerHorizontal="true"
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
-                android:text="3. 电话报警服务的最终解释权归属武汉小安科技有限公司。"
+                android:text="4. 电话报警服务的最终解释权归属武汉小安科技有限公司。"
                 android:textColor="@color/black"
-                android:textSize="19sp" />
+                android:textSize="16sp" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:layout_centerHorizontal="true"
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
@@ -70,7 +83,7 @@
                 android:layout_centerHorizontal="true"
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
-                android:text="-您可以不接听报警来电，未接听的报警不会扣除免费接听次数。"
+                android:text="-不接听报警，则不算入报警测试。"
                 android:textColor="@color/black"
                 android:textSize="15sp" />
             <TextView
@@ -90,12 +103,16 @@
                 android:paddingLeft="30dp"
                 android:paddingRight="30dp"
                 android:text="为保证您能接到报警电话，而不被手机或安全软件拦截，我们需要获取访问您的通讯录的权利，以便将报警来电添加至您的通讯录中。"
-                android:textColor="@color/black"
-                android:textSize="19sp" />
+                android:textColor="@color/app_style"
+                android:textSize="16sp" />
             <Button
+                android:background="@drawable/btn_greenrect"
+                android:layout_marginTop="20dp"
                 android:id="@+id/phoneAlarm_agree"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="250dp"
+                android:layout_height="35dp"
+                android:textColor="@color/white"
                 android:text="同意协议"/>
         </LinearLayout>
 

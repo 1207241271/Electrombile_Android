@@ -1,5 +1,6 @@
 package com.xunce.electrombile.activity;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -8,6 +9,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,9 +24,11 @@ import android.widget.Toast;
 import com.avos.avoscloud.AVUser;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.account.SMSandPasswordActivity;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
 
 import java.util.Timer;
@@ -45,45 +50,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     private TextView            textViewPhone;
     private HttpService         httpService;
 
-    HttpService.Callback callback = new HttpService.Callback(){
-        @Override
-        public void onGetGPSData(String data){
-        }
 
-        @Override
-        public void onGetRouteData(String data){
-        }
-
-        @Override
-        public void dealError(short errorCode) {
-        }
-
-        @Override
-        public void onDeletePhoneAlarm(String data) {
-            try{
-                Message message = new Message();
-                message.what = 2;
-                handler.sendMessage(message);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onPostPhoneAlarm(String data) {
-        }
-
-        @Override
-        public void onPostTestAlarm(String data) {
-            try{
-                Message message = new Message();
-                message.what = 1;
-                handler.sendMessage(message);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-    };
 
     Handler handler = new Handler() {
         @Override
@@ -95,9 +62,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 //                        btn_ResendSysCode.setEnabled(true);
 //                        btn_ResendSysCode.setTextColor(Color.parseColor("#1dcf94"));
                     changeButtonState(true);
-                    txtView_time.setText("60秒");
+                    txtView_time.setText("60");
                 } else {
-                    txtView_time.setText(secondleft + "秒");
+                    txtView_time.setText(secondleft + "");
                 }
             }else if (msg.what == 1){
                 watiDialog.cancel();
@@ -114,9 +81,12 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
                 changeButtonState(false);
             }else if (msg.what == 2){
                 watiDialog.cancel();
-                Toast.makeText(PhoneAlarmTestActivity.this,"关闭成功",Toast.LENGTH_SHORT).show();
+                SettingManager.getInstance().setPhoneIsAgree(false);
                 textViewPhone.setText("报警授权手机号为空");
-                changeButtonState(false);
+                EventBus.getDefault().post(new PhoneAlarmEvent(false));
+                Toast.makeText(PhoneAlarmTestActivity.this,"电话报警已关闭",Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(PhoneAlarmTestActivity.this,FragmentActivity.class);
+                startActivity(intent);
             }
         }
 
@@ -225,22 +195,40 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         httpBinder = (HttpService.Binder) iBinder;
-        httpBinder.getHttpService().setCallback(callback);
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onGetResponse(String data,String type){
+                if (type.equals("deletePhoneAlarm")){
+                    Message message = new Message();
+                    message.what = 2;
+                    handler.sendMessage(message);
+                }else if (type.equals("phoneAlarmTest")){
+                    Message message = new Message();
+                    message.what = 1;
+                    handler.sendMessage(message);
+                }
+            }
+            @Override
+            public void dealError(short errorCode) {
+            }
+
+        });
         httpService = httpBinder.getHttpService();
     }
 
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void changeButtonState(Boolean isTapped){
         if (isTapped){
 //            btn_unreceived.isEnabled();
 //            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.green));
             btn_alarmTest.setEnabled(true);
-            btn_alarmTest.setBackgroundColor(getResources().getColor(R.color.green));
+            btn_alarmTest.setBackground(this.getDrawable(R.drawable.btn_greenrect));
         }else {
 //            btn_unreceived.isEnabled();
 //            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.gray));
             btn_alarmTest.setEnabled(false);
-            btn_alarmTest.setBackgroundColor(getResources().getColor(R.color.gray));
+            btn_alarmTest.setBackground(this.getDrawable(R.drawable.btn_grayrect));
         }
     }
 }

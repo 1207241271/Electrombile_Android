@@ -532,23 +532,22 @@ public class TestddActivity extends Activity implements ServiceConnection{
         httpBinder = (HttpService.Binder) iBinder;
         httpBinder.getHttpService().setCallback(new HttpService.Callback(){
             @Override
-            public void onGetGPSData(String data){
-                Message message = new Message();
-                Bundle bundle = new Bundle();
-                bundle.putString("data",data);
-                message.setData(bundle);
-                message.what = 110;
-                mhandler.sendMessage(message);
-            }
-
-            @Override
-            public void onGetRouteData(String data){
-                Message message = new Message();
-                Bundle bundle = new Bundle();
-                bundle.putString("data",data);
-                message.setData(bundle);
-                message.what = 111;
-                mhandler.sendMessage(message);
+            public void onGetResponse(String data,String type){
+                if (type.equals("gps")){
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("data",data);
+                    message.setData(bundle);
+                    message.what = 110;
+                    mhandler.sendMessage(message);
+                }else if (type.equals("routeInfo")){
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("data",data);
+                    message.setData(bundle);
+                    message.what = 111;
+                    mhandler.sendMessage(message);
+                }
             }
 
             @Override
@@ -560,20 +559,6 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 }
             }
 
-            @Override
-            public void onDeletePhoneAlarm(String data) {
-
-            }
-
-            @Override
-            public void onPostPhoneAlarm(String data) {
-
-            }
-
-            @Override
-            public void onPostTestAlarm(String data) {
-
-            }
         });
         httpService = httpBinder.getHttpService();
         //连接完成后查询数据

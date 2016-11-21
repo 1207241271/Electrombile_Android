@@ -27,9 +27,12 @@ import com.xunce.electrombile.activity.HelpActivity;
 import com.xunce.electrombile.activity.MapOfflineActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.PhoneAlarmActivity;
+import com.xunce.electrombile.activity.PhoneAlarmTestActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
 import com.xunce.electrombile.eventbus.BatteryTypeEvent;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
+import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
@@ -45,6 +48,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     private View rootView;
     private TextView tv_autolockstatus;
     private TextView tv_batteryType;
+    private TextView tv_phoneAlarm;
     private MqttConnectManager mqttConnectManager;
 
     @Override
@@ -194,8 +198,14 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     }
 
     private void gotoPhoneAlarm(){
-        Intent intent = new Intent(m_context, PhoneAlarmActivity.class);
-        startActivity(intent);
+        if (!SettingManager.getInstance().getPhoneIsAlarm()){
+            Intent intent = new Intent(m_context, PhoneAlarmActivity.class);
+            startActivity(intent);
+        }else {
+            Intent intent = new Intent(m_context, PhoneAlarmTestActivity.class);
+            startActivity(intent);
+        }
+
     }
 
     /**
@@ -308,6 +318,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     private void initView(View view) {
         tv_autolockstatus = (TextView)view.findViewById(R.id.tv_autolockstatus);
         tv_batteryType = (TextView)view.findViewById(R.id.tv_batteryType);
+        tv_phoneAlarm = (TextView)view.findViewById(R.id.tv_phoneAlarm);
         view.findViewById(R.id.layout_about).setOnClickListener(this);
 //        view.findViewById(R.id.layout_help).setOnClickListener(this);
         view.findViewById(R.id.btn_logout).setOnClickListener(this);
@@ -326,6 +337,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
         refreshAutolockStatus();
         refreshBatteryStatus();
+        refreshPhoneAlarm();
     }
 
     public void refreshAutolockStatus(){
@@ -350,8 +362,22 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         }
     }
 
+    public void refreshPhoneAlarm(){
+        if (null != tv_phoneAlarm) {
+            if (setManager.getPhoneIsAlarm()){
+                tv_phoneAlarm.setText("已开通");
+            }else {
+                tv_phoneAlarm.setText("未开通");
+            }
+        }
+    }
+
     @Subscribe(priority = 0)
     public void onBatteryTypeEvent(BatteryTypeEvent event){
         refreshBatteryStatus();
+    }
+    @Subscribe
+    public void onPhoneAlarmEvent(PhoneAlarmEvent event){
+        refreshPhoneAlarm();
     }
 }

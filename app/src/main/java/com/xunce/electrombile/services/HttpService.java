@@ -60,11 +60,7 @@ public class HttpService extends Service {
     }
 
     public static interface Callback{
-        void onGetGPSData(String data);
-        void onGetRouteData(String data);
-        void onPostPhoneAlarm(String data);
-        void onDeletePhoneAlarm(String data);
-        void onPostTestAlarm(String data);
+        void onGetResponse(String data,String type);
         void dealError(short errorCode);
     }
 
@@ -97,11 +93,7 @@ public class HttpService extends Service {
         if (result == null || result.isEmpty()){
             callback.dealError(URLNULLError);
         }
-        if (type.equals("routeInfo")){
-            callback.onGetRouteData(result);
-        }else if (type.equals("gps")){
-            callback.onGetGPSData(result);
-        }
+        callback.onGetResponse(result,type);
     }
 
     private void dealWithHttpPost(String url,String type,String body){
@@ -109,11 +101,7 @@ public class HttpService extends Service {
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
-        if (type.equals("setPhoneAlarm")){
-            callback.onPostPhoneAlarm(result);
-        }else if (type.equals("phoneAlarmTest")){
-            callback.onPostTestAlarm(result);
-        }
+        callback.onGetResponse(result,type);
     }
 
     private void dealWithHttpDelete(String url,String type){
@@ -121,9 +109,7 @@ public class HttpService extends Service {
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
-        if (type.equals("deletePhoneAlarm")){
-            callback.onDeletePhoneAlarm(result);
-        }
+        callback.onGetResponse(result,type);
     }
 
 

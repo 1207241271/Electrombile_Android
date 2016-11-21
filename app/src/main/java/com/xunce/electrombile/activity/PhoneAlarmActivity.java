@@ -24,9 +24,11 @@ import android.widget.Toast;
 import com.avos.avoscloud.AVOSCloud;
 import com.avos.avoscloud.AVUser;
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -55,12 +57,20 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                     addContract();
                     SettingManager.getInstance().setHasContracter(true);
                 }
+                SettingManager.getInstance().setPhoneIsAgree(true);
+                EventBus.getDefault().post(new PhoneAlarmEvent(true));
                 Intent intent = new Intent(PhoneAlarmActivity.this,PhoneAlarmTestActivity.class);
                 startActivity(intent);
+            }else if (msg.what == 1){
+                sendPost();
+            }else if (msg.what == 2){
+                watiDialog.cancel();
+                showDialog(msg.getData().getString("telephone"));
             }
         }
 
     };
+
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_phonealarm);
         super.onCreate(savedInstanceState);
@@ -84,10 +94,19 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         btn_agree.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendPost();
+                sendGetPhoneAlarmNumber();
             }
         });
         super.initViews();
+    }
+
+    private void sendGetPhoneAlarmNumber(){
+        if (httpService != null){
+            String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI();
+            watiDialog.setMessage("正在设置");
+            watiDialog.show();
+            httpService.dealWithHttpResponse(url,0,"getPhoneAlarm",null);
+        }
     }
 
     private void sendPost() {
@@ -98,8 +117,20 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
             httpService.dealWithHttpResponse(url,1,"setPhoneAlarm",null);
         }else {
             Toast.makeText(PhoneAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
-
         }
+    }
+
+    public void showDialog(String telephone){
+        AlertDialog.Builder builder = new AlertDialog.Builder(PhoneAlarmActivity.this);
+        builder.setMessage("该设备电话报警已被"+telephone+"绑定");
+        builder.setTitle("提示");
+        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
     }
 
     @Override
@@ -134,35 +165,42 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         httpBinder = (HttpService.Binder) iBinder;
         httpBinder.getHttpService().setCallback(new HttpService.Callback(){
             @Override
-            public void onGetGPSData(String data){
-            }
-
-            @Override
-            public void onGetRouteData(String data){
-            }
-
-            @Override
-            public void dealError(short errorCode) {
-
-            }
-
-            @Override
-            public void onDeletePhoneAlarm(String data) {
-            }
-
-            @Override
-            public void onPostPhoneAlarm(String data) {
-                try{
+            public void onGetResponse(String data,String type){
+                if (type.equals("setPhoneAlarm")){
                     Message message = new Message();
                     message.what = 0;
                     handler.sendMessage(message);
-                }catch (Exception e){
-                    e.printStackTrace();
+                }else if (type.equals("getPhoneAlarm")){
+                    try {
+                        JSONObject jsonObject = new JSONObject(data);
+                        int code = 0;
+                        if (jsonObject.has("code")){
+                            code = jsonObject.getInt("code");
+                        }
+                        String phoneNum = null;
+                        if (jsonObject.has("telephone")){
+                            phoneNum = jsonObject.getString("telephone");
+                        }
+                        if (AVUser.getCurrentUser().getUsername().equals(phoneNum)||code == 101){
+                            Message message = new Message();
+                            message.what = 1;
+                            handler.sendMessage(message);
+                        }else {
+                            Message message = new Message();
+                            Bundle bundle = new Bundle();
+                            bundle.putString("telephone",phoneNum);
+                            message.setData(bundle);
+                            message.what = 2;
+                            handler.sendMessage(message);
+                        }
+                    }catch (Exception e) {
+
+                    }
                 }
             }
 
             @Override
-            public void onPostTestAlarm(String data) {
+            public void dealError(short errorCode) {
 
             }
         });
