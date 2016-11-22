@@ -1,7 +1,9 @@
 package com.xunce.electrombile.activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -15,6 +17,10 @@ import com.xunce.electrombile.eventbus.BatteryTypeEvent;
 import com.xunce.electrombile.manager.SettingManager;
 
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by yangxu on 2016/11/8.
@@ -26,6 +32,20 @@ public class BatteryTypeActivity extends BaseActivity{
     private Button      button;
     private int         type;
     private TextView    textView;
+    private Timer       timer;
+    private ProgressDialog  progressDialog;
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+        if (msg.what == 0){
+            Toast.makeText(BatteryTypeActivity.this, "设置超时", Toast.LENGTH_SHORT).show();
+            progressDialog.cancel();
+            timer.cancel();
+        }
+        }
+
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_batterytype);
@@ -84,17 +104,26 @@ public class BatteryTypeActivity extends BaseActivity{
             }
         });
 
+        progressDialog =new ProgressDialog(this);
+
         button = (Button)findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                progressDialog.setMessage("正在设置，请稍后");
+                progressDialog.show();
                 Toast.makeText(BatteryTypeActivity.this, "正在设置电池类型", Toast.LENGTH_SHORT).show();
-
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        handler.sendEmptyMessage(0);
+                    }
+                }, 5000, 5000);
                 MqttConnectManager.getInstance().sendMessage(mCenter.cmdBatteryTypeSet(type), SettingManager.getInstance().getIMEI(), new MqttConnectManager.Callback() {
                     @Override
                     public void onSuccess() {
-//                        Toast.makeText(BatteryTypeActivity.this,"发送成功",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(BatteryTypeActivity.this,"发送成功",Toast.LENGTH_SHORT);
                     }
 
                     @Override
@@ -117,9 +146,12 @@ public class BatteryTypeActivity extends BaseActivity{
         super.onBackPressed();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1)
     public void onBatteryTypeEvent(BatteryTypeEvent event){
-        Toast.makeText(BatteryTypeActivity.this,"电池类型设置成功",Toast.LENGTH_SHORT).show();
         SettingManager.getInstance().setBatteryType(type);
+        Toast.makeText(BatteryTypeActivity.this,"电池类型设置成功",Toast.LENGTH_SHORT);
+        textView.setText("您的电池为"+type+"V");
+        progressDialog.cancel();
+        timer.cancel();
     }
 }

@@ -47,10 +47,10 @@ public class SetServiceActivity extends Activity{
         radioGroup_Http.setOnCheckedChangeListener(new myOnCheckedChangeListner());
 
         edt_Http_host = (EditText) findViewById(R.id.httpHost);
-        edt_Http_host.setText(SettingManager.getInstance().getMQTTHost());
+        edt_Http_host.setText(SettingManager.getInstance().getHttpHost());
 
         edt_Http_port = (EditText) findViewById(R.id.httpPort);
-        edt_Http_port.setText(SettingManager.getInstance().getMQTTPort()+"");
+        edt_Http_port.setText(SettingManager.getInstance().getHttpPort()+"");
 
         edt_Mqtt_host = (EditText) findViewById(R.id.mqttHost);
         edt_Mqtt_host.setText(SettingManager.getInstance().getMQTTHost());

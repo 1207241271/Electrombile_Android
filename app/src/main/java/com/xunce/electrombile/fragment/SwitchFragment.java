@@ -85,6 +85,7 @@ import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
@@ -160,6 +161,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 1:
                     refreshBatteryInfo();
                     break;
+
             }
         }
     };
@@ -388,28 +390,24 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(Activity.RESULT_OK != resultCode){
+            return;
+        }
         switch (requestCode){
             case TAKE_PHOTE:
-                if(resultCode == Activity.RESULT_OK) {
-                    Intent intent = new Intent(m_context,CropActivity.class);
-                    intent.setData(imageUri);
-                    intent.putExtra("IMEI", setManager.getIMEI());
-                    startActivityForResult(intent, CROP_PHOTO);
-                }
+                    Intent intentTake = new Intent(m_context,CropActivity.class);
+                    intentTake.setData(imageUri);
+                    intentTake.putExtra("IMEI", setManager.getIMEI());
+                    startActivityForResult(intentTake, CROP_PHOTO);
                 break;
-
             case CHOOSE_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     imageUri = data.getData();
                     Intent intent = new Intent(m_context,CropActivity.class);
                     intent.setData(imageUri);
                     intent.putExtra("IMEI",setManager.getIMEI());
                     startActivityForResult(intent, CROP_PHOTO);
-                }
                 break;
-
             case CROP_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     headImage.setImageBitmap(null);
                     bitmapRelease();
                     bitmap = BitmapUtils.compressImageFromFile(setManager.getIMEI());
@@ -417,7 +415,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         headImage.setImageBitmap(bitmap);
                         m_context.setLeftMenuCarImage(bitmap);
                     }
-                }
                 break;
             default:
                 break;
@@ -583,13 +580,13 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private void offlineMapAutoDownload() {
         if (WIFIUtil.isWIFI(getActivity())) {
             com.orhanobut.logger.Logger.d("没错，就是在WIFI环境下，我要开始下载离线地图了");
-            downloadOfflinemap();
+            downloadOfflinemap(m_context);
         } else {
             com.orhanobut.logger.Logger.d("没连WIFI，不敢下……");
         }
     }
 
-    private static void downloadOfflinemap() {
+    private static void downloadOfflinemap(Context context) {
         if (localcity != null) {
             com.orhanobut.logger.Logger.d("我获取到了城市的名字%s", localcity);
             MKOLUpdateElement element = LocalCityelement();
@@ -598,6 +595,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 if (element.status != MKOLUpdateElement.FINISHED) {
                     com.orhanobut.logger.Logger.d("没下完，我接着下");
                     mkOfflineMap.start(element.cityID);
+                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
+
                 }
             } else {
                 com.orhanobut.logger.Logger.d("以前没下过");
@@ -605,6 +604,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 for (MKOLSearchRecord record : records) {
                     com.orhanobut.logger.Logger.d("下载:%d", record.cityID);
                     mkOfflineMap.start(record.cityID);
+                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
                 }
             }
         }
@@ -781,7 +781,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             NetworkInfo wifiInfo = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if (wifiInfo != null && wifiInfo.isConnected()) {
                 com.orhanobut.logger.Logger.d("没错，就是在WIFI环境下，我要看看获取到城市名字了没");
-                downloadOfflinemap();
+                downloadOfflinemap(context);
             } else {
                 com.orhanobut.logger.Logger.d("没连WIFI");
             }
@@ -1276,4 +1276,5 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         this.openStateAlarmBtn();
         this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
     }
+
 }

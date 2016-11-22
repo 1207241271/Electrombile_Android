@@ -488,7 +488,21 @@ public class SettingManager {
         return spf.getString(HttpPort,releaseHttpPort);
     }
 
+    public void setHasContracter(Boolean isHave){
+        spf.edit().putBoolean("contract",true).apply();
+    }
 
+    public boolean getHasContracter(){
+       return spf.getBoolean("contract",false);
+    }
+
+    public void setPhoneIsAgree(Boolean isAgree){
+        spf.edit().putBoolean("phoneAlarm",isAgree).apply();
+    }
+
+    public boolean getPhoneIsAlarm(){
+        return spf.getBoolean("phoneAlarm",false);
+    }
 
     @Subscribe
     public void onSetManagerEvent(SetManagerEvent event){
