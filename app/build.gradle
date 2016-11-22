@@ -157,9 +157,6 @@ android {
     }
 
     productFlavors {
-        _360 {}
-        baidu {}
-        xiaomi {}
         tencent {}
         FIR {
             targetSdkVersion 22
