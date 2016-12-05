@@ -20,15 +20,26 @@ import com.avos.avoscloud.AVUser;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.AboutActivity;
 import com.xunce.electrombile.activity.Autolock;
+import com.xunce.electrombile.activity.BatteryTypeActivity;
 import com.xunce.electrombile.activity.CarManageActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.HelpActivity;
 import com.xunce.electrombile.activity.MapOfflineActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.activity.PhoneAlarmActivity;
+import com.xunce.electrombile.activity.PhoneAlarmTestActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
+import com.xunce.electrombile.eventbus.BatteryTypeEvent;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
+import com.xunce.electrombile.eventbus.SetManagerEvent;
+import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 
 public class SettingsFragment extends BaseFragment implements View.OnClickListener {
@@ -38,6 +49,8 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     //缓存view
     private View rootView;
     private TextView tv_autolockstatus;
+    private TextView tv_batteryType;
+    private TextView tv_phoneAlarm;
     private MqttConnectManager mqttConnectManager;
 
     @Override
@@ -112,10 +125,10 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         int id = view.getId();
         switch (id) {
             //帮助条目
-            case R.id.layout_help:
-                Intent intentHelp = new Intent(m_context, HelpActivity.class);
-                startActivity(intentHelp);
-                break;
+//            case R.id.layout_help:
+//                Intent intentHelp = new Intent(m_context, HelpActivity.class);
+//                startActivity(intentHelp);
+//                break;
             //退出登录条目
             case R.id.btn_logout:
                 if (!NetworkUtils.isNetworkConnected(m_context)) {
@@ -160,7 +173,12 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             case R.id.layout_map_offline:
                 goToMapOffline();
                 break;
-
+            case R.id.layout_battery:
+                gotoBattery();
+                break;
+            case R.id.layout_phoneAlarm:
+                gotoPhoneAlarm();
+                break;
             default:
                 break;
         }
@@ -179,6 +197,17 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             return false;
         }
         return true;
+    }
+
+    private void gotoPhoneAlarm(){
+        if (!SettingManager.getInstance().getPhoneIsAlarm()){
+            Intent intent = new Intent(m_context, PhoneAlarmActivity.class);
+            startActivity(intent);
+        }else {
+            Intent intent = new Intent(m_context, PhoneAlarmTestActivity.class);
+            startActivity(intent);
+        }
+
     }
 
     /**
@@ -208,6 +237,21 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     private void gotoAutolockAct(){
         Intent intent = new Intent(m_context, Autolock.class);
         startActivity(intent);
+    }
+
+    private void gotoBattery(){
+        Intent intent = new Intent(m_context, BatteryTypeActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+// TODO Auto-generated method stub
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser){
+            refreshAutolockStatus();
+            refreshBatteryStatus();
+        }
     }
 
     /**
@@ -275,13 +319,17 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
      */
     private void initView(View view) {
         tv_autolockstatus = (TextView)view.findViewById(R.id.tv_autolockstatus);
+        tv_batteryType = (TextView)view.findViewById(R.id.tv_batteryType);
+        tv_phoneAlarm = (TextView)view.findViewById(R.id.tv_phoneAlarm);
         view.findViewById(R.id.layout_about).setOnClickListener(this);
-        view.findViewById(R.id.layout_help).setOnClickListener(this);
+//        view.findViewById(R.id.layout_help).setOnClickListener(this);
         view.findViewById(R.id.btn_logout).setOnClickListener(this);
         view.findViewById(R.id.layout_person_center).setOnClickListener(this);
         view.findViewById(R.id.rl_1).setOnClickListener(this);
         view.findViewById(R.id.layout_autolock).setOnClickListener(this);
         view.findViewById(R.id.layout_map_offline).setOnClickListener(this);
+        view.findViewById(R.id.layout_battery).setOnClickListener(this);
+        view.findViewById(R.id.layout_phoneAlarm).setOnClickListener(this);
 
         View titleView = view.findViewById(R.id.ll_button) ;
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
@@ -290,18 +338,55 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         btn_back.setVisibility(View.INVISIBLE);
 
         refreshAutolockStatus();
+        refreshBatteryStatus();
+        refreshPhoneAlarm();
     }
 
     public void refreshAutolockStatus(){
         //设置自动落锁的开关状态
-        if(setManager.getAutoLockStatus()){
-            int period = setManager.getAutoLockTime();
-            String s = period+"分钟状态开启";
-            tv_autolockstatus.setText(s);
+        if (null != tv_autolockstatus) {
+            if (setManager.getAutoLockStatus()) {
+                int period = setManager.getAutoLockTime();
+                String s = period + "分钟状态开启";
+                tv_autolockstatus.setText(s);
+            } else {
+                tv_autolockstatus.setText("状态关闭");
+            }
         }
+    }
+    public void refreshBatteryStatus(){
+        if (null != tv_batteryType) {
+            if (setManager.getBatteryType() != 0) {
+                tv_batteryType.setText(setManager.getBatteryType() + "V");
+            } else {
+                tv_batteryType.setText("未设置");
+            }
+        }
+    }
 
-        else{
-             tv_autolockstatus.setText("状态关闭");
+    public void refreshPhoneAlarm(){
+        if (null != tv_phoneAlarm) {
+            if (setManager.getPhoneIsAlarm()){
+                tv_phoneAlarm.setText("已开通");
+            }else {
+                tv_phoneAlarm.setText("未开通");
+            }
+        }
+    }
+
+    @Subscribe(priority = 0)
+    public void onBatteryTypeEvent(BatteryTypeEvent event){
+        refreshBatteryStatus();
+    }
+    @Subscribe
+    public void onPhoneAlarmEvent(PhoneAlarmEvent event){
+        refreshPhoneAlarm();
+    }
+    @Subscribe
+    public void onSetManagerEvent(SetManagerEvent event){
+        if (event.eventBusType == EventbusConstants.eventBusType.EventType_AutoPeriodSet ||
+                event.eventBusType == EventbusConstants.eventBusType.EventType_AutoLockSet){
+            refreshAutolockStatus();
         }
     }
 }

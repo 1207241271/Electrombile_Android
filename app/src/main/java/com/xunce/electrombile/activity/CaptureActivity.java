@@ -71,11 +71,12 @@ public class CaptureActivity extends Activity implements Callback {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture);
-        //ViewUtil.addTopView(getApplicationContext(), this, R.string.scan_card);
+
         CameraManager.init(getApplication());
+
         viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
-//        cancelScanButton = (Button) this.findViewById(R.id.btn_cancel_scan);
         hasSurface = false;
+
         inactivityTimer = new InactivityTimer(this);
 
         //解析是从哪个activity跳转过来的
@@ -99,6 +100,22 @@ public class CaptureActivity extends Activity implements Callback {
                 startActivity(intent);
             }
         });
+
+        Button btn_Cancel = (Button)findViewById(R.id.btn_cancel_scan);
+        btn_Cancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CaptureActivity.this.finish();
+            }
+        });
+    }
+
+    @Override
+    public void onBackPressed(){
+//        Intent intent = new Intent();
+//        setResult(RESULT_OK, intent);
+//        finish();
+        super.onBackPressed();
     }
 
     @Override
@@ -123,24 +140,24 @@ public class CaptureActivity extends Activity implements Callback {
         initBeepSound();
         vibrate = true;
 
-        //quit the scan view
-//        cancelScanButton.setOnClickListener(new OnClickListener() {
-//
-//            @Override
-//            public void onClick(View v) {
-//                CaptureActivity.this.finish();
-//            }
-//        });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (handler != null) {
-            handler.quitSynchronously();
-            handler = null;
-        }
-        CameraManager.get().closeDriver();
+        //TODO:Do to much things in OnPause(),try to put it into Background
+//        new Thread(
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+                        CameraManager.get().closeDriver();
+                        if (handler != null) {
+                            handler.quitSynchronously();
+                            handler = null;
+                        }
+//                    }
+//                }
+//        );
     }
 
     @Override
@@ -158,7 +175,11 @@ public class CaptureActivity extends Activity implements Callback {
         inactivityTimer.onActivity();
         playBeepSoundAndVibrate();
         String resultString = result.getText();
-
+        if (resultString.charAt(8) != '"'){
+            StringBuilder sb = new StringBuilder(resultString);
+            sb.insert(8,'"');
+            resultString = sb.toString();
+        }
         String IMEI;
         if (resultString.contains("IMEI")) {
             try {
@@ -212,6 +233,7 @@ public class CaptureActivity extends Activity implements Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+        CameraManager.get().closeDriver();
         hasSurface = false;
 
     }

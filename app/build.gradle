@@ -106,7 +106,7 @@ android {
         //refer to https://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client
         useLibrary 'org.apache.http.legacy'
         minSdkVersion 14
-        targetSdkVersion 24
+        targetSdkVersion 23
     }
 
     signingConfigs {
@@ -212,5 +212,6 @@ dependencies {
     }
 
 
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }
 

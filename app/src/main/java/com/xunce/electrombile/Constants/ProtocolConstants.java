@@ -79,6 +79,8 @@ public class ProtocolConstants {
 
     public final static int APP_CMD_STATUS_GET = 13;
 
+    public final static int APP_CMD_SET_BATTERY_TYPE = 14;
+
     //围栏打开状态
     public final static int ON = 1;
     //围栏关闭状态

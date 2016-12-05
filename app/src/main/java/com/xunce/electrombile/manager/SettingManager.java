@@ -22,7 +22,11 @@ import android.content.SharedPreferences;
 
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.SetManagerEvent;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -65,13 +69,31 @@ public class SettingManager {
     private final String Lat = "lat";
     private final String Longitude = "longitude";
 
-    private final String Server = "Server";
+    private final String MQTTHost = "MQTTHost";
+
+    public final String releaseMQTTHost = "mqtt.xiaoan110.com";
+    public final String testMQTTHost = "test.xiaoan110.com";
+
+    private final String MQTTPort = "MQTTPort";
+    public final String releaseMQTTPort = "1883";
+    public final String testMQTTPort    = "1883";
+
 
     private final String UpdateTime = "UpdateTime";
+
+    private final String HttpHost = "HttpHost";
+
+    public final String releaseHttpHost = "http://api.xiaoan110.com:";
+    public final String testHttpHost = "http://test.xiaoan110.com:";
+
+    private final String HttpPort = "HttpPort";
+    public final String releaseHttpPort = "80";
+    public final String testHttpPort = "8081";
 
     /**
      * The spf.
      */
+
     SharedPreferences spf;
 
     private final static SettingManager INSTANCE = new SettingManager();
@@ -85,6 +107,7 @@ public class SettingManager {
     private SettingManager() {
         Context cc = App.getInstance();
         spf = cc.getSharedPreferences(SHARE_PREFERENCES, Context.MODE_PRIVATE);
+        EventBus.getDefault().register(this);
     }
 
     /**
@@ -264,7 +287,9 @@ public class SettingManager {
         return spf.getInt("miles",0);
     }
 
+    public void setBatteryType(int type){ spf.edit().putInt("batteryType",type).apply();}
 
+    public int getBatteryType(){return spf.getInt("batteryType",0);}
 
     public String getFlagCarSwitched(){
         return spf.getString(FLAGCARSWITCHED, "没有切换");
@@ -286,15 +311,32 @@ public class SettingManager {
         spf.edit().putString(IMEI, did).apply();
     }
 
-    public String getServer() {
-        return spf.getString(Server, ServiceConstants.MQTT_HOST);
+
+
+    /**
+     *
+     * @return 获取MQTT Service
+     */
+    public String getMQTTHost() {
+        return spf.getString(MQTTHost, releaseMQTTHost);
     }
 
-    public void setServer(String server) {
-        spf.edit().putString(Server, server).apply();
+    /**
+     *
+     * @param mqttHost MQTT服务
+     */
+    public void setMQTTHost(String mqttHost) {
+        spf.edit().putString(MQTTHost, mqttHost).apply();
     }
 
 
+    public void setMQTTPort(String mqttPort){
+        spf.edit().putString(MQTTPort,releaseMQTTPort).apply();
+    }
+
+    public String getMQTTPort(){
+        return spf.getString(MQTTPort,releaseMQTTPort);
+    }
     /********************************个人中心相关****************************************/
 
     /**
@@ -420,5 +462,61 @@ public class SettingManager {
 
     public long getUpdateDatabaseTime(){
         return spf.getLong("UPDATEDATABASETIME",0);
+    }
+
+    /**
+     *
+     * @param httpHost http服务
+     */
+    public void setHttpHost(String httpHost){
+        spf.edit().putString(HttpHost,httpHost).apply();
+    }
+
+    /**
+     *
+     *@return HttpHost
+     */
+    public String getHttpHost(){
+        return spf.getString(HttpHost,releaseHttpHost);
+    }
+
+    public void setHttpPort(String httpPort){
+        spf.edit().putString(HttpPort,httpPort).apply();
+    }
+
+    public String getHttpPort(){
+        return spf.getString(HttpPort,releaseHttpPort);
+    }
+
+    public void setHasContracter(Boolean isHave){
+        spf.edit().putBoolean("contract",true).apply();
+    }
+
+    public boolean getHasContracter(){
+       return spf.getBoolean("contract",false);
+    }
+
+    public void setPhoneIsAgree(Boolean isAgree){
+        spf.edit().putBoolean("phoneAlarm",isAgree).apply();
+    }
+
+    public boolean getPhoneIsAlarm(){
+        return spf.getBoolean("phoneAlarm",false);
+    }
+
+    @Subscribe
+    public void onSetManagerEvent(SetManagerEvent event){
+        switch (event.getEventBusType()){
+            case EventType_FenceGet:
+            case EventType_FenceSet:
+                boolean alarmFlag = Boolean.parseBoolean(event.getValue().toString());
+                this.setAlarmFlag(alarmFlag);
+                break;
+            case EventType_AutoLockGet:
+            case EventType_AutoLockSet:
+                boolean autoLockFlag = Boolean.parseBoolean(event.getValue().toString());
+                this.setAutoLockStatus(autoLockFlag);
+                break;
+        }
     }
 }

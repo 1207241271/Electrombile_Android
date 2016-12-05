@@ -17,6 +17,7 @@ import com.xunce.electrombile.utils.device.VibratorUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import cn.jpush.android.api.JPushInterface;
@@ -42,7 +43,19 @@ public class JPushReceiver extends BroadcastReceiver {
             Log.i(TAG,bundle.toString());
 
         } else if (JPushInterface.ACTION_NOTIFICATION_RECEIVED.equals(intent.getAction())) {
-            Log.d(TAG,bundle.getString(JPushInterface.EXTRA_ALERT));
+            try {
+                JSONObject jsonObject = new JSONObject(bundle.getString(JPushInterface.EXTRA_EXTRA));
+                long timestamp = jsonObject.getLong("timestamp");
+                Date date = new Date();
+                long dateTimestamp = date.getTime()/1000;
+                if (dateTimestamp - timestamp > 120){
+                    JPushInterface.clearNotificationById(context,bundle.getInt(JPushInterface.EXTRA_NOTIFICATION_ID));
+                    return;
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            Log.d(TAG,bundle.toString());
             if (bundle.getString(JPushInterface.EXTRA_ALERT).equals("您的爱车正在被非法移动")){
                 DeviceUtils.wakeUpAndUnlock(context);
                 Intent intentMy = new Intent(context, AlarmActivity.class);
@@ -54,10 +67,10 @@ public class JPushReceiver extends BroadcastReceiver {
             Log.d(TAG, "[MyReceiver] 用户点击打开了通知");
 
             //打开自定义的Activity
-            Intent i = new Intent(context, AlarmActivity.class);
-            i.putExtras(bundle);
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP );
-            context.startActivity(i);
+            Intent intentAlert = new Intent(context, AlarmActivity.class);
+            intentAlert.putExtras(bundle);
+            intentAlert.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP );
+            context.startActivity(intentAlert);
 
         } else if (JPushInterface.ACTION_RICHPUSH_CALLBACK.equals(intent.getAction())) {
             Log.d(TAG, "[MyReceiver] 用户收到到RICH PUSH CALLBACK: " + bundle.getString(JPushInterface.EXTRA_EXTRA));

@@ -65,13 +65,13 @@
             android:textSize="12sp"/>
     </LinearLayout>
 
-    <com.xunce.electrombile.view.TextViewDrawableSize
-        style="@style/clickableLayout_settingFragment2"
-        android:id="@+id/layout_help"
-        android:drawableLeft="@drawable/help"
-        app:compoundDrawableHeight="35dp"
-        app:compoundDrawableWidth="35dp"
-        android:text="使用帮助"/>
+    <!--<com.xunce.electrombile.view.TextViewDrawableSize-->
+        <!--style="@style/clickableLayout_settingFragment2"-->
+        <!--android:id="@+id/layout_help"-->
+        <!--android:drawableLeft="@drawable/help"-->
+        <!--app:compoundDrawableHeight="35dp"-->
+        <!--app:compoundDrawableWidth="35dp"-->
+        <!--android:text="使用帮助"/>-->
 
     <com.xunce.electrombile.view.TextViewDrawableSize
         style="@style/clickableLayout_settingFragment2"
@@ -80,6 +80,61 @@
         app:compoundDrawableHeight="35dp"
         app:compoundDrawableWidth="35dp"
         android:text="联系我们"/>
+
+
+    <LinearLayout
+        android:id="@+id/layout_battery"
+        style="@style/clickableLayout_settingFragment2"
+        android:layout_marginTop="6.67dp">
+        <com.xunce.electrombile.view.TextViewDrawableSize
+            android:id="@+id/battery"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:drawableLeft="@drawable/baterry"
+            app:compoundDrawableHeight="35dp"
+            app:compoundDrawableWidth="35dp"
+            android:drawablePadding="20dp"
+            android:gravity="center_vertical"
+            android:text="电池类型"/>
+
+        <TextView
+            android:id="@+id/tv_batteryType"
+            android:layout_marginLeft="72dp"
+            android:layout_width="96.67dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:text = "未设置"
+            android:textColor="#000000"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:id="@+id/layout_phoneAlarm"
+        style="@style/clickableLayout_settingFragment2"
+        android:layout_marginTop="6.67dp">
+        <com.xunce.electrombile.view.TextViewDrawableSize
+            android:id="@+id/phoneAlarm"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:drawableLeft="@drawable/setting_alarm"
+            app:compoundDrawableHeight="35dp"
+            app:compoundDrawableWidth="35dp"
+            android:drawablePadding="20dp"
+            android:gravity="center_vertical"
+            android:text="电话报警"/>
+
+        <TextView
+            android:id="@+id/tv_phoneAlarm"
+            android:layout_marginLeft="72dp"
+            android:layout_width="96.67dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:text = "未开启"
+            android:textColor="#000000"
+            android:textSize="12sp"/>
+    </LinearLayout>
 
     <Button
         android:id="@+id/btn_logout"

@@ -5,7 +5,7 @@
     android:background="@color/app_style"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context=".SplashActivity">
+    tools:context="com.xunce.electrombile.activity.SplashActivity">
 
     <ImageView
         android:layout_width="162dp"

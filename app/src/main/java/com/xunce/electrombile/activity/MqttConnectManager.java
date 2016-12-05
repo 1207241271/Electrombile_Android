@@ -80,14 +80,14 @@ public class MqttConnectManager {
     public void initMqtt() {
         Connections connections = Connections.getInstance(mcontext);
 
-        String uri = "tcp://" + ServiceConstants.MQTT_HOST + ":" + ServiceConstants.PORT;
+        String uri = "tcp://"+SettingManager.getInstance().getMQTTHost()+":"+SettingManager.getInstance().getMQTTPort();
         final String handle = uri + ServiceConstants.clientId;
         connection = connections.getConnection(handle);
         if (connection == null) {
             Log.d("initMqtt","connection = null  新建connection");
             connection = Connection.createConnection(ServiceConstants.clientId,
-                    ServiceConstants.MQTT_HOST,
-                    ServiceConstants.PORT,
+                   SettingManager.getInstance().getMQTTHost(),
+                    Integer.parseInt(SettingManager.getInstance().getMQTTPort()),
                     mcontext,
                     false);
             mcp = new MqttConnectOptions();
@@ -103,6 +103,7 @@ public class MqttConnectManager {
             Log.d("initMqtt","connection != null");
             connection.getConnectionOptions().setCleanSession(true);
         }
+
         ServiceConstants.handler = connection.handle();
         mac = connection.getClient();
         //设置监听函数
@@ -159,8 +160,9 @@ public class MqttConnectManager {
                         public void onSuccess(IMqttToken asyncActionToken) {
                             ServiceConstants.connection_status = "connected";
                             connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTED);
-                            callback.MqttConnectSuccess();
-
+                            if (callback!= null) {
+                                callback.MqttConnectSuccess();
+                            }
                             subscribe(SettingManager.getInstance().getIMEI(), new Callback() {
                                 @Override
                                 public void onSuccess() {
@@ -304,7 +306,7 @@ public class MqttConnectManager {
     public void sendMessage(final byte[] message, final String IMEI) {
         if(NetworkUtils.isNetworkConnected(App.getInstance())){
             Connection c = Connections.getInstance(App.getInstance()).getConnection(ServiceConstants.handler);
-            if (c.getClient() == null||!c.getClient().isConnected()) {
+            if (c == null || c.getClient() == null||!c.getClient().isConnected()) {
                 ToastUtils.showShort(App.getInstance(), "请先连接设备");
                 return;
             }

@@ -47,13 +47,14 @@
                 android:id="@+id/img_test"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/switch_background" />
+                android:background="#1dcf96"/>
 
             <com.xunce.electrombile.activity.CircleImageView
                 android:id="@+id/img_headImage"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_centerInParent="true"
+                android:layout_marginTop="40dp"
+                android:layout_centerHorizontal="true"
                 app:civ_border_width="2dp"
                 app:civ_border_color="@color/dark"
                 android:src="@drawable/default_carimage"/>
@@ -190,7 +191,7 @@
 
                 <TextView
                     android:id="@+id/tv_battery"
-                    android:layout_marginTop="23dp"
+                    android:layout_centerVertical="true"
                     android:layout_toRightOf="@id/img_battery"
                     android:layout_marginLeft="10dp"
                     android:layout_width="wrap_content"
@@ -198,15 +199,7 @@
                     android:textColor="#009f53"
                     android:text = "正在获取电量"
                     android:textSize="17.33sp"/>
-
-                <TextView
-                    android:layout_below="@id/tv_battery"
-                    android:layout_alignLeft="@id/tv_battery"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12.67sp"
-                    android:textColor="#595959"
-                    android:text="预计可行驶---公里"/>
+                />
             </RelativeLayout>
 
             <RelativeLayout

@@ -101,7 +101,7 @@ public class CmdCenter {
     }
 
     public byte[] cmdAutolockTimeSet(int period){
-        return getCmdString(ProtocolConstants.APP_CMD_AUTO_PERIOD_SET,period).getBytes();
+        return getCmdString(ProtocolConstants.APP_CMD_AUTO_PERIOD_SET,period,"period").getBytes();
     }
 
     public byte[] cmdAutolockTimeGet(){
@@ -110,6 +110,10 @@ public class CmdCenter {
 
     public byte[] APP_CMD_AUTOLOCK_GET(){
         return getCmdString(ProtocolConstants.APP_CMD_AUTOLOCK_GET).getBytes();
+    }
+
+    public byte[] cmdBatteryTypeSet(int type){
+        return getCmdString(ProtocolConstants.APP_CMD_SET_BATTERY_TYPE,type,"type").getBytes();
     }
 
     private String getCmdString(int cmd) {
@@ -122,11 +126,11 @@ public class CmdCenter {
         return obj.toString();
     }
 
-    private String getCmdString(int cmd,int period) {
+    private String getCmdString(int cmd,int value,String key) {
         JSONObject obj = new JSONObject();
         try {
             obj.put(ProtocolConstants.CMD, cmd);
-            obj.put("period",period);
+            obj.put(key,value);
         } catch (JSONException e) {
             e.printStackTrace();
         }

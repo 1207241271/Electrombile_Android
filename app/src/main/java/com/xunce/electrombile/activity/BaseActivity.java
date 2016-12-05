@@ -7,10 +7,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+import com.xunce.electrombile.eventbus.EmptyEvent;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.applicatoin.Historys;
 import com.xunce.electrombile.utils.system.ToastUtils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 /**
  * 所有activity的基类。
@@ -48,6 +52,18 @@ public class BaseActivity extends Activity {
         initEvents();
 	}
 
+	@Override
+	protected void onStart(){
+		EventBus.getDefault().register(this);//反注册EventBus
+		super.onStart();
+	}
+
+	@Override
+	protected void onStop(){
+		EventBus.getDefault().unregister(this);//反注册EventBus
+		super.onStop();
+	}
+
     public void initViews(){}
     public void initEvents(){}
 
@@ -67,4 +83,10 @@ public class BaseActivity extends Activity {
 			Historys.exit();
 		}
 	}
+
+	@Subscribe
+	public void onEmptyEvent(EmptyEvent event){
+
+	}
+
 }

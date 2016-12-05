@@ -37,7 +37,6 @@ import com.xunce.electrombile.manager.TracksManager;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 public class SpecificHistoryTrackActivity extends Activity {
     private static final int DELAY1 = 1000;
     private static final int DELAY2 = 800;
@@ -307,7 +306,7 @@ public class SpecificHistoryTrackActivity extends Activity {
                 .width(15)
                 .color(0xAAFF0000);
         //在地图上添加多边形Option，用于显示
-       mBaiduMap.addOverlay(polylineOption);
+        mBaiduMap.addOverlay(polylineOption);
     }
 
     /**

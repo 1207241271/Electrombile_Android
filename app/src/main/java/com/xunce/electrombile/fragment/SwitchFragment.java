@@ -1,14 +1,20 @@
 package com.xunce.electrombile.fragment;
 
+import android.Manifest;
 import android.app.Activity;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -18,13 +24,17 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.content.BroadcastReceiver;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -40,6 +50,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
@@ -66,16 +77,26 @@ import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest;
+import com.xunce.electrombile.BuildConfig;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CropActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.activity.TestddActivity;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
+import com.xunce.electrombile.eventbus.BatteryInfoEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
+import com.xunce.electrombile.eventbus.FenceEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
+import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
+import com.xunce.electrombile.eventbus.QueryItineraryEvent;
+import com.xunce.electrombile.manager.SettingManager;
+import com.xunce.electrombile.services.Downloadservice;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -86,6 +107,7 @@ import com.xunce.electrombile.utils.useful.StringUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -102,7 +124,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener {
+public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener, ServiceConnection {
     private static final int DELAYTIME = 1000;
     private static final String TAG = "SwitchFragment";
     public LocationClient mLocationClient = null;
@@ -134,6 +156,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private ImageView img_angle4;
     private ImageView img_angle5;
     private TextView tv_status;
+    private HttpService httpService;
+    private HttpService.Binder httpBinder = null;
+
 
     public static final int TAKE_PHOTE=1;
     public static final int CROP_PHOTO=2;
@@ -149,6 +174,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 1:
                     refreshBatteryInfo();
                     break;
+                case 3:
+                    askIsDownLoad(msg.getData().getString("tip"),msg.getData().getInt("packageSize"));
             }
         }
     };
@@ -188,8 +215,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
-        //----------  EventBus Register
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -219,6 +244,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Override
     public void onStart(){
         com.orhanobut.logger.Logger.i("SwitchFragment", "onStart");
+        Intent intent = new Intent(m_context, HttpService.class);
+        m_context.bindService(intent, this, Context.BIND_AUTO_CREATE);
+        m_context.startService(intent);
         super.onStart();
     }
 
@@ -241,6 +269,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Override
     public void onStop(){
         super.onStop();
+
     }
 
     @Override
@@ -262,7 +291,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
 
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -322,35 +350,36 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             @Override
             public void onClick(View v) {
                 //查询总的公里数
-                AVQuery<AVObject> query = new AVQuery<>("DID");
-                query.whereEqualTo("IMEI", setManager.getIMEI());
-                query.findInBackground(new FindCallback<AVObject>() {
-                    @Override
-                    public void done(List<AVObject> list, AVException e) {
-                        if (e == null) {
-                            if (!list.isEmpty()) {
-                                if (list.size() != 1) {
-                                    ToastUtils.showShort(m_context, "DID表中  该IMEI对应多条记录");
-                                    return;
-                                }
-                                AVObject avObject = list.get(0);
-
-                                try {
-                                    int itinerary = (int)avObject.get("itinerary");
-                                    Map<String,Double> eventMap = new HashMap();
-                                    eventMap.put(EventbusConstants.FetchItineraryEvent,itinerary/1000.0);
-                                    EventBus.getDefault().post(new ObjectEvent(eventMap));
-//                                    refreshItineraryInfo(itinerary/1000.0);
-                                    ToastUtils.showShort(m_context,"获取累计公里数成功");
-                                } catch (Exception ee) {
-                                    ee.printStackTrace();
-                                }
-                            }
-                        } else {
-                            ToastUtils.showShort(m_context, "在DID表中查询该IMEI 查询失败");
-                        }
-                    }
-                });
+                fetchTotalItinerary();
+//                String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/itinerary/";
+//                String url = baseURL + SettingManager.getInstance().getIMEI();
+//                httpService.dealWithHttpResponse(url,0,"totalItinerary",null);
+////                AVQuery<AVObject> query = new AVQuery<>("DID");
+////                query.whereEqualTo("IMEI", setManager.getIMEI());
+////                query.findInBackground(new FindCallback<AVObject>() {
+////                    @Override
+////                    public void done(List<AVObject> list, AVException e) {
+////                        if (e == null) {
+////                            if (!list.isEmpty()) {
+////                                if (list.size() != 1) {
+////                                    ToastUtils.showShort(m_context, "DID表中  该IMEI对应多条记录");
+////                                    return;
+////                                }
+////                                AVObject avObject = list.get(0);
+////
+////                                try {
+////                                    int itinerary = (int)avObject.get("itinerary");
+////                                    EventBus.getDefault().post(new QueryItineraryEvent(itinerary/1000.0));
+////                                    ToastUtils.showShort(m_context,"获取累计公里数成功");
+////                                } catch (Exception ee) {
+////                                    ee.printStackTrace();
+////                                }
+////                            }
+////                        } else {
+////                            ToastUtils.showShort(m_context, "在DID表中查询该IMEI 查询失败");
+////                        }
+////                    }
+////                });
             }
         });
 
@@ -379,30 +408,34 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
 
+    public void fetchTotalItinerary(){
+        String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/itinerary/";
+        String url = baseURL + SettingManager.getInstance().getIMEI();
+        if (httpService != null) {
+            httpService.dealWithHttpResponse(url, 0, "totalItinerary", null);
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(Activity.RESULT_OK != resultCode){
+            return;
+        }
         switch (requestCode){
             case TAKE_PHOTE:
-                if(resultCode == Activity.RESULT_OK) {
-                    Intent intent = new Intent(m_context,CropActivity.class);
-                    intent.setData(imageUri);
-                    intent.putExtra("IMEI", setManager.getIMEI());
-                    startActivityForResult(intent, CROP_PHOTO);
-                }
+                    Intent intentTake = new Intent(m_context,CropActivity.class);
+                    intentTake.setData(imageUri);
+                    intentTake.putExtra("IMEI", setManager.getIMEI());
+                    startActivityForResult(intentTake, CROP_PHOTO);
                 break;
-
             case CHOOSE_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     imageUri = data.getData();
                     Intent intent = new Intent(m_context,CropActivity.class);
                     intent.setData(imageUri);
                     intent.putExtra("IMEI",setManager.getIMEI());
                     startActivityForResult(intent, CROP_PHOTO);
-                }
                 break;
-
             case CROP_PHOTO:
-                if(resultCode == Activity.RESULT_OK) {
                     headImage.setImageBitmap(null);
                     bitmapRelease();
                     bitmap = BitmapUtils.compressImageFromFile(setManager.getIMEI());
@@ -410,7 +443,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                         headImage.setImageBitmap(bitmap);
                         m_context.setLeftMenuCarImage(bitmap);
                     }
-                }
                 break;
             default:
                 break;
@@ -493,6 +525,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 //        final String cityName = city;
         Log.e(TAG, "city" + city);
         HttpUtils http = new HttpUtils();
+        Log.e(TAG,"http://wthrcdn.etouch.cn/weather_mini?city=" + city);
         http.send(HttpRequest.HttpMethod.GET,
                 "http://wthrcdn.etouch.cn/weather_mini?city=" + city,
                 new RequestCallBack<String>() {
@@ -533,18 +566,18 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     }
 
                     private void setWeather(String cityName,String temperature,String type) {
-                        tv_temperature.setText(temperature+"摄氏度");
-                        tv_weatherCondition.setText(type);
-                        tv_location.setText(cityName);
+                        if (tv_temperature != null) {
+                            tv_temperature.setText(temperature + "摄氏度");
+                            tv_weatherCondition.setText(type);
+                            tv_location.setText(cityName);
 
-                        if(type.contains("雨")){
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.rain)));
-                        }
-                        else if(type.contains("雪")){
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.snow)));
-                        }
-                        else{
-                            img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.sunny)));
+                            if (type.contains("雨")) {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.rain)));
+                            } else if (type.contains("雪")) {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.snow)));
+                            } else {
+                                img_weather.setImageDrawable(m_context.getResources().getDrawable((R.drawable.sunny)));
+                            }
                         }
                     }
 
@@ -573,15 +606,15 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
      * 判断是不是在WIFI环境下，如果是就自动下载离线地图
      */
     private void offlineMapAutoDownload() {
-        if (WIFIUtil.isWIFI(getActivity())) {
+        if (WIFIUtil.isWIFI(m_context)) {
             com.orhanobut.logger.Logger.d("没错，就是在WIFI环境下，我要开始下载离线地图了");
-            downloadOfflinemap();
+            downloadOfflinemap(m_context);
         } else {
             com.orhanobut.logger.Logger.d("没连WIFI，不敢下……");
         }
     }
 
-    private static void downloadOfflinemap() {
+    private static void downloadOfflinemap(Context context) {
         if (localcity != null) {
             com.orhanobut.logger.Logger.d("我获取到了城市的名字%s", localcity);
             MKOLUpdateElement element = LocalCityelement();
@@ -590,6 +623,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 if (element.status != MKOLUpdateElement.FINISHED) {
                     com.orhanobut.logger.Logger.d("没下完，我接着下");
                     mkOfflineMap.start(element.cityID);
+                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
+
                 }
             } else {
                 com.orhanobut.logger.Logger.d("以前没下过");
@@ -597,6 +632,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 for (MKOLSearchRecord record : records) {
                     com.orhanobut.logger.Logger.d("下载:%d", record.cityID);
                     mkOfflineMap.start(record.cityID);
+                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
                 }
             }
         }
@@ -773,7 +809,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             NetworkInfo wifiInfo = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if (wifiInfo != null && wifiInfo.isConnected()) {
                 com.orhanobut.logger.Logger.d("没错，就是在WIFI环境下，我要看看获取到城市名字了没");
-                downloadOfflinemap();
+                downloadOfflinemap(context);
             } else {
                 com.orhanobut.logger.Logger.d("没连WIFI");
             }
@@ -890,22 +926,34 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 break;
 
             case R.id.tv_pop_camera:
-                File outputImage1 = new File(Environment.getExternalStorageDirectory(),"output_image.jpg");
-                try{
-                    if(outputImage1.exists()){
-                        outputImage1.delete();
-                    }
-                    outputImage1.createNewFile();
-                }catch(IOException e){
-                    e.printStackTrace();
-                }
-                imageUri = Uri.fromFile(outputImage1);
-                Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
-                intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(intent1,TAKE_PHOTE);
-                mpopupWindow.dismiss();
-                break;
 
+
+                int permisson = PermissionChecker.checkSelfPermission(m_context, Manifest.permission.CAMERA);
+
+                if (PackageManager.PERMISSION_GRANTED == permisson){
+                    File outputImage1 = new File(Environment.getExternalStorageDirectory(),"output_image.jpg");
+                    try{
+                        if(outputImage1.exists()){
+                            outputImage1.delete();
+                        }
+                        outputImage1.createNewFile();
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
+                    imageUri = Uri.fromFile(outputImage1);
+                    Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
+                    intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent1,TAKE_PHOTE);
+                    mpopupWindow.dismiss();
+                    break;
+                }else {
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(m_context,Manifest.permission.CAMERA)){
+                        Log.i("debug", "we should explain why we need this permission!");
+                    }else {
+                        ActivityCompat.requestPermissions(m_context,new String[]{Manifest.permission.CAMERA},1003);
+                    }
+                    break;
+                }
             case R.id.tv_pop_cancel:
                 mpopupWindow.dismiss();
                 break;
@@ -913,6 +961,26 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode){
+            case 1003:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    Intent intent1 = new Intent("android.media.action.IMAGE_CAPTURE");
+                    intent1.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent1,TAKE_PHOTE);
+                    mpopupWindow.dismiss();
+                }else {
+                    Toast.makeText(m_context, "很遗憾你把相机权限禁用了。请务必开启相机权限享受我们提供的服务吧。", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+        }
+
     }
 
     class BitmapWorkerTask extends AsyncTask<Void, Void, Bitmap> {
@@ -960,7 +1028,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void refreshItineraryInfo(double itinerary){
-        tv_distance.setText(String.format(Locale.CHINA,"%.2f%s",itinerary,"公里"));
+        String  itineraryStr    =   String.format(Locale.CHINA,"%.2f公里",itinerary);
+        if (tv_distance != null){
+            tv_distance.setText(itineraryStr);
+        }
 
         //星
         if(itinerary<500){
@@ -1207,26 +1278,114 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.show();
     }
 
-
-    @Subscribe
-    public void onMessageEvent(MessageEvent event){
-        if(event.getMsg().equals(EventbusConstants.FromcaseFence)){
-            m_context.cancelWaitTimeOut();
-            msgSuccessArrived();
-        }else if(event.getMsg().equals(EventbusConstants.FromcaseFenceGet)){
-            if (setManager.getAlarmFlag()) {
-                openStateAlarmBtn();
-                showNotification("小安宝防盗系统已启动",FragmentActivity.NOTIFICATION_ALARMSTATUS);
-            } else {
-                closeStateAlarmBtn();
-            }
+    public void checkUpdate(){
+        String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/version";
+        if (httpService != null) {
+            httpService.dealWithHttpResponse(baseURL, 0, "version", null);
         }
     }
+
+    public void askIsDownLoad(String tip, final int packageSize){
+        tip.replace(' ','\n');
+        new AlertDialog.Builder(m_context).setTitle("发现新版本").setMessage(tip).setPositiveButton("后台下载", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(m_context, Downloadservice.class);
+                String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/package";
+                intent.putExtra("apk_url",baseURL);
+                intent.putExtra("packageSize",packageSize);
+                m_context.startService(intent);
+            }
+        }).setNegativeButton("下次再说", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).show();
+
+    }
+
+
     @Subscribe
-    public  void  onObjectEvent(ObjectEvent event){
-        Map eventMap = event.getEventMap();
-        if (eventMap.get(EventbusConstants.FetchItineraryEvent)!=null){
-                refreshItineraryInfo(Float.parseFloat(eventMap.get(EventbusConstants.FetchItineraryEvent).toString()));
+    public void onFenceEvent(FenceEvent event){
+        if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceSet)){
+            if (event.isAlarmFlag()) {
+                openStateAlarmBtn();
+                showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
+            }else{
+                closeStateAlarmBtn();
+            }
+        }else {
+            msgSuccessArrived();
         }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public  void  onQueryItineraryEvent(QueryItineraryEvent event){
+        Toast.makeText(m_context,"里程查询成功",Toast.LENGTH_SHORT).show();
+        this.refreshItineraryInfo(event.getItinerary());
+    }
+    @Subscribe
+    public void onBatteryInfoEvent(BatteryInfoEvent event){
+        this.refreshBatteryInfo();
+    }
+    @Subscribe
+    public void onNotifiyArriviedEvent(NotifiyArriviedEvent event){
+        this.openStateAlarmBtn();
+        this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
+    }
+
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+
+    }
+
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder){
+        httpBinder = (HttpService.Binder) iBinder;
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onGetResponse(String data,String type){
+                if (type.equals("totalItinerary")){
+                    try{
+                        JSONObject jsonObject = new JSONObject(data);
+                        JSONArray array = jsonObject.getJSONArray("itinerary");
+                        JSONObject itinerary = array.getJSONObject(0);
+                        int miles = itinerary.getInt("miles");
+                        EventBus.getDefault().post(new QueryItineraryEvent(miles/1000.0));
+
+//                        ToastUtils.showShort(m_context,"获取累计公里数成功");
+                    }catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }else  if(type.equals("version")){
+                    try{
+                        JSONObject jsonObject = new JSONObject(data);
+                        int versionCode = jsonObject.getInt("versionCode");
+                        int localVersionCode = BuildConfig.VERSION_CODE;
+                        if (versionCode > localVersionCode){
+                            Message message = new Message();
+                            message.what = 3;
+                            Bundle bundle = new Bundle();
+                            bundle.putString("tip",jsonObject.getString("changelog"));
+                            bundle.putInt("packageSize",jsonObject.getInt("packageSize"));
+                            message.setData(bundle);
+                            mhandler.sendMessage(message);
+                        }
+                    }catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void dealError(short errorCode) {
+                if (errorCode == HttpService.URLNULLError){
+                    waitDialog.cancel();
+                }
+            }
+        });
+        httpService = httpBinder.getHttpService();
+        checkUpdate();
     }
 }

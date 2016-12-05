@@ -154,7 +154,9 @@ public class FindCarActivity extends Activity {
         btn_continueGetSignal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intensityList.clear();
+                if (intensityList != null) {
+                    intensityList.clear();
+                }
 
                 if (count == 1) {
                     getSignalUserguideDialog();

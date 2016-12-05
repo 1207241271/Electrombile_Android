@@ -38,6 +38,7 @@ public class App extends Application {
 
         JPushInterface.setDebugMode(true);
         JPushInterface.init(this);
+        JPushInterface.setLatestNotificationNumber(this, 1);
 
         AVAnalytics.enableCrashReport(this, true);
         AVAnalytics.setAnalyticsEnabled(true);
