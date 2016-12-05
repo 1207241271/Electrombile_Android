@@ -111,6 +111,4 @@ public class HttpService extends Service {
         }
         callback.onGetResponse(result,type);
     }
-
-
 }

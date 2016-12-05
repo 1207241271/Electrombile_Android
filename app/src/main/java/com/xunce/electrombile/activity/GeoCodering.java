@@ -62,11 +62,8 @@ public class GeoCodering implements OnGetGeoCoderResultListener {
 //                    .show();
             return;
         }
-        ReverseGeoCodeResult = result.getAddress();
-        if(ReverseGeoCodeResult.contains("市")){
-            String[] strings = ReverseGeoCodeResult.split("市");
-            ReverseGeoCodeResult = strings[1];
-        }
+        com.baidu.mapapi.search.geocode.ReverseGeoCodeResult.AddressComponent component = result.getAddressDetail();
+        ReverseGeoCodeResult = component.district+component.street+component.streetNumber;
 
         //是由testddactivity调用的
         activity.RefreshMessageList(TrackPosition, Start_End_Type, ReverseGeoCodeResult);

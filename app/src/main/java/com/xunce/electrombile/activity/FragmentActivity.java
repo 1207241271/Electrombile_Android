@@ -180,26 +180,27 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
 
     //查询总的公里数
     public void updateTotalItinerary(){
-        AVQuery<AVObject> query = new AVQuery<>("DID");
-        query.whereEqualTo("IMEI", setManager.getIMEI());
-        query.findInBackground(new FindCallback<AVObject>() {
-            @Override
-            public void done(List<AVObject> list, AVException e) {
-                if (e == null) {
-                    if (!list.isEmpty()) {
-                        if (list.size() != 1) {
-                            ToastUtils.showShort(FragmentActivity.this, "DID表中  该IMEI对应多条记录");
-                            return;
-                        }
-                        AVObject avObject = list.get(0);
-                        int itinerary = (int) avObject.get("itinerary");
-                        EventBus.getDefault().post(new QueryItineraryEvent(itinerary / 1000.0));
-                    }
-                } else {
-                    ToastUtils.showShort(FragmentActivity.this, "在DID表中查询该IMEI 查询失败");
-                }
-            }
-        });
+        switchFragment.fetchTotalItinerary();
+//        AVQuery<AVObject> query = new AVQuery<>("DID");
+//        query.whereEqualTo("IMEI", setManager.getIMEI());
+//        query.findInBackground(new FindCallback<AVObject>() {
+//            @Override
+//            public void done(List<AVObject> list, AVException e) {
+//                if (e == null) {
+//                    if (!list.isEmpty()) {
+//                        if (list.size() != 1) {
+//                            ToastUtils.showShort(FragmentActivity.this, "DID表中  该IMEI对应多条记录");
+//                            return;
+//                        }
+//                        AVObject avObject = list.get(0);
+//                        int itinerary = (int) avObject.get("itinerary");
+//                        EventBus.getDefault().post(new QueryItineraryEvent(itinerary / 1000.0));
+//                    }
+//                } else {
+//                    ToastUtils.showShort(FragmentActivity.this, "在DID表中查询该IMEI 查询失败");
+//                }
+//            }
+//        });
     }
 
     @Override
@@ -760,7 +761,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                                     intent.putExtra("KIND", "SWITCHDEVICE");
                                     intent.putExtra("POSITION", position);
                                     sendBroadcast(intent);//发送广播事件
-
+                                    switchFragment.fetchTotalItinerary();
                                     dismissWaitDialog();
                                 }
 

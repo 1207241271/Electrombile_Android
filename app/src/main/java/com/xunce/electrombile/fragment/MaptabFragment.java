@@ -138,17 +138,19 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 0:
                     if (msg.obj != null) {
                         TrackPoint trackPoint = (TrackPoint) msg.obj;
-                        mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
-                        tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
-                        if (LostCarSituation) {
-                            if (dialog_tv_LastLocateTime!=null) {
-                                dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                        if (trackPoint.point != null) {
+                            mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
+                            tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
+                            if (LostCarSituation) {
+                                if (dialog_tv_LastLocateTime != null) {
+                                    dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                                }
                             }
+                            mBaiduMap.showInfoWindow(mInfoWindow);
+                            //设置车辆位置  填到textview中
+                            mSearch.reverseGeoCode(new ReverseGeoCodeOption()
+                                    .location(trackPoint.point));
                         }
-                        mBaiduMap.showInfoWindow(mInfoWindow);
-                        //设置车辆位置  填到textview中
-                        mSearch.reverseGeoCode(new ReverseGeoCodeOption()
-                                .location(trackPoint.point));
                     }
                     break;
                 //设备在室内

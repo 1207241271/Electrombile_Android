@@ -3,13 +3,17 @@ package com.xunce.electrombile.fragment;
 import android.Manifest;
 import android.app.Activity;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,6 +24,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.content.BroadcastReceiver;
 import android.net.ConnectivityManager;
@@ -72,11 +77,13 @@ import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest;
+import com.xunce.electrombile.BuildConfig;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CropActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.activity.TestddActivity;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.bean.WeatherBean;
 import com.xunce.electrombile.eventbus.BatteryInfoEvent;
@@ -87,6 +94,9 @@ import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.eventbus.QueryItineraryEvent;
+import com.xunce.electrombile.manager.SettingManager;
+import com.xunce.electrombile.services.Downloadservice;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
@@ -114,7 +124,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener {
+public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener, ServiceConnection {
     private static final int DELAYTIME = 1000;
     private static final String TAG = "SwitchFragment";
     public LocationClient mLocationClient = null;
@@ -146,6 +156,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     private ImageView img_angle4;
     private ImageView img_angle5;
     private TextView tv_status;
+    private HttpService httpService;
+    private HttpService.Binder httpBinder = null;
+
 
     public static final int TAKE_PHOTE=1;
     public static final int CROP_PHOTO=2;
@@ -161,7 +174,8 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 1:
                     refreshBatteryInfo();
                     break;
-
+                case 3:
+                    askIsDownLoad(msg.getData().getString("tip"),msg.getData().getInt("packageSize"));
             }
         }
     };
@@ -201,7 +215,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.app.bc.test");
         m_context.registerReceiver(MyBroadcastReceiver, filter);
-        //----------  EventBus Register
     }
 
     @Override
@@ -231,6 +244,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     @Override
     public void onStart(){
         com.orhanobut.logger.Logger.i("SwitchFragment", "onStart");
+        Intent intent = new Intent(m_context, HttpService.class);
+        m_context.bindService(intent, this, Context.BIND_AUTO_CREATE);
+        m_context.startService(intent);
         super.onStart();
     }
 
@@ -334,32 +350,36 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             @Override
             public void onClick(View v) {
                 //查询总的公里数
-                AVQuery<AVObject> query = new AVQuery<>("DID");
-                query.whereEqualTo("IMEI", setManager.getIMEI());
-                query.findInBackground(new FindCallback<AVObject>() {
-                    @Override
-                    public void done(List<AVObject> list, AVException e) {
-                        if (e == null) {
-                            if (!list.isEmpty()) {
-                                if (list.size() != 1) {
-                                    ToastUtils.showShort(m_context, "DID表中  该IMEI对应多条记录");
-                                    return;
-                                }
-                                AVObject avObject = list.get(0);
-
-                                try {
-                                    int itinerary = (int)avObject.get("itinerary");
-                                    EventBus.getDefault().post(new QueryItineraryEvent(itinerary/1000.0));
-                                    ToastUtils.showShort(m_context,"获取累计公里数成功");
-                                } catch (Exception ee) {
-                                    ee.printStackTrace();
-                                }
-                            }
-                        } else {
-                            ToastUtils.showShort(m_context, "在DID表中查询该IMEI 查询失败");
-                        }
-                    }
-                });
+                fetchTotalItinerary();
+//                String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/itinerary/";
+//                String url = baseURL + SettingManager.getInstance().getIMEI();
+//                httpService.dealWithHttpResponse(url,0,"totalItinerary",null);
+////                AVQuery<AVObject> query = new AVQuery<>("DID");
+////                query.whereEqualTo("IMEI", setManager.getIMEI());
+////                query.findInBackground(new FindCallback<AVObject>() {
+////                    @Override
+////                    public void done(List<AVObject> list, AVException e) {
+////                        if (e == null) {
+////                            if (!list.isEmpty()) {
+////                                if (list.size() != 1) {
+////                                    ToastUtils.showShort(m_context, "DID表中  该IMEI对应多条记录");
+////                                    return;
+////                                }
+////                                AVObject avObject = list.get(0);
+////
+////                                try {
+////                                    int itinerary = (int)avObject.get("itinerary");
+////                                    EventBus.getDefault().post(new QueryItineraryEvent(itinerary/1000.0));
+////                                    ToastUtils.showShort(m_context,"获取累计公里数成功");
+////                                } catch (Exception ee) {
+////                                    ee.printStackTrace();
+////                                }
+////                            }
+////                        } else {
+////                            ToastUtils.showShort(m_context, "在DID表中查询该IMEI 查询失败");
+////                        }
+////                    }
+////                });
             }
         });
 
@@ -387,6 +407,14 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     }
 
+
+    public void fetchTotalItinerary(){
+        String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/itinerary/";
+        String url = baseURL + SettingManager.getInstance().getIMEI();
+        if (httpService != null) {
+            httpService.dealWithHttpResponse(url, 0, "totalItinerary", null);
+        }
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -578,7 +606,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
      * 判断是不是在WIFI环境下，如果是就自动下载离线地图
      */
     private void offlineMapAutoDownload() {
-        if (WIFIUtil.isWIFI(getActivity())) {
+        if (WIFIUtil.isWIFI(m_context)) {
             com.orhanobut.logger.Logger.d("没错，就是在WIFI环境下，我要开始下载离线地图了");
             downloadOfflinemap(m_context);
         } else {
@@ -1250,21 +1278,50 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         dialog.show();
     }
 
+    public void checkUpdate(){
+        String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/version";
+        if (httpService != null) {
+            httpService.dealWithHttpResponse(baseURL, 0, "version", null);
+        }
+    }
+
+    public void askIsDownLoad(String tip, final int packageSize){
+        tip.replace(' ','\n');
+        new AlertDialog.Builder(m_context).setTitle("发现新版本").setMessage(tip).setPositiveButton("后台下载", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(m_context, Downloadservice.class);
+                String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/package";
+                intent.putExtra("apk_url",baseURL);
+                intent.putExtra("packageSize",packageSize);
+                m_context.startService(intent);
+            }
+        }).setNegativeButton("下次再说", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).show();
+
+    }
+
+
     @Subscribe
     public void onFenceEvent(FenceEvent event){
         if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceSet)){
             if (event.isAlarmFlag()) {
                 openStateAlarmBtn();
                 showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
-            }else {
+            }else{
                 closeStateAlarmBtn();
             }
         }else {
             msgSuccessArrived();
         }
     }
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public  void  onQueryItineraryEvent(QueryItineraryEvent event){
+        Toast.makeText(m_context,"里程查询成功",Toast.LENGTH_SHORT).show();
         this.refreshItineraryInfo(event.getItinerary());
     }
     @Subscribe
@@ -1277,4 +1334,58 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
     }
 
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+
+    }
+
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder){
+        httpBinder = (HttpService.Binder) iBinder;
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onGetResponse(String data,String type){
+                if (type.equals("totalItinerary")){
+                    try{
+                        JSONObject jsonObject = new JSONObject(data);
+                        JSONArray array = jsonObject.getJSONArray("itinerary");
+                        JSONObject itinerary = array.getJSONObject(0);
+                        int miles = itinerary.getInt("miles");
+                        EventBus.getDefault().post(new QueryItineraryEvent(miles/1000.0));
+
+//                        ToastUtils.showShort(m_context,"获取累计公里数成功");
+                    }catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }else  if(type.equals("version")){
+                    try{
+                        JSONObject jsonObject = new JSONObject(data);
+                        int versionCode = jsonObject.getInt("versionCode");
+                        int localVersionCode = BuildConfig.VERSION_CODE;
+                        if (versionCode > localVersionCode){
+                            Message message = new Message();
+                            message.what = 3;
+                            Bundle bundle = new Bundle();
+                            bundle.putString("tip",jsonObject.getString("changelog"));
+                            bundle.putInt("packageSize",jsonObject.getInt("packageSize"));
+                            message.setData(bundle);
+                            mhandler.sendMessage(message);
+                        }
+                    }catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+            @Override
+            public void dealError(short errorCode) {
+                if (errorCode == HttpService.URLNULLError){
+                    waitDialog.cancel();
+                }
+            }
+        });
+        httpService = httpBinder.getHttpService();
+        checkUpdate();
+    }
 }

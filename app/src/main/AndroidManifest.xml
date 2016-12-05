@@ -235,6 +235,11 @@
                 <action android:name="com.xunce.electrombile.alarmservice" />
             </intent-filter>
         </service>
+        <service android:name=".services.Downloadservice"
+            android:enabled="true"
+            android:exported="true">
+        </service>
+
 
         <service android:name=".services.HttpService"/>
 
