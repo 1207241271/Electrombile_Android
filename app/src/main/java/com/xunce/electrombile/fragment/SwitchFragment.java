@@ -174,6 +174,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 1:
                     refreshBatteryInfo();
                     break;
+                case 2:
+                    //TODO: http 错误
+                    break;
                 case 3:
                     askIsDownLoad(msg.getData().getString("tip"),msg.getData().getInt("packageSize"));
             }
@@ -629,6 +632,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             } else {
                 com.orhanobut.logger.Logger.d("以前没下过");
                 ArrayList<MKOLSearchRecord> records = mkOfflineMap.searchCity(localcity);
+                if (records == null || records.size() == 0){
+                    return;
+                }
                 for (MKOLSearchRecord record : records) {
                     com.orhanobut.logger.Logger.d("下载:%d", record.cityID);
                     mkOfflineMap.start(record.cityID);
@@ -1287,6 +1293,9 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
     public void askIsDownLoad(String tip, final int packageSize){
         tip.replace(' ','\n');
+        if (tip.isEmpty()){
+            tip = "软件更新";
+        }
         new AlertDialog.Builder(m_context).setTitle("发现新版本").setMessage(tip).setPositiveButton("后台下载", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -1381,7 +1390,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             @Override
             public void dealError(short errorCode) {
                 if (errorCode == HttpService.URLNULLError){
-                    waitDialog.cancel();
+                    mhandler.sendEmptyMessage(2);
                 }
             }
         });
