@@ -517,6 +517,10 @@ public class SettingManager {
                 boolean autoLockFlag = Boolean.parseBoolean(event.getValue().toString());
                 this.setAutoLockStatus(autoLockFlag);
                 break;
+            case EventType_AutoPeriodGet:
+            case EventType_AutoPeriodSet:
+                int autoLockPeriod = Integer.parseInt(event.getValue().toString());
+                this.setAutoLockTime(autoLockPeriod);
         }
     }
 }
