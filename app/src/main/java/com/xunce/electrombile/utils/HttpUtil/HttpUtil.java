@@ -3,15 +3,19 @@ package com.xunce.electrombile.utils.HttpUtil;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import java.io.Closeable;
+import java.util.List;
 
 /**
  * Created by yangxu on 2016/10/22.
@@ -39,10 +43,13 @@ public class HttpUtil {
         return result;
     }
 
-    public static String sendPost(String url,String charset){
+    public static String sendPost(String url,HttpParams charset){
         String result = "";
         HttpPost httpPost= new HttpPost(url);
         try {
+            if (null != charset){
+                httpPost.setParams(charset);
+            }
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpPost);
 
             int statusCode = httpResponse.getStatusLine().getStatusCode();
@@ -59,10 +66,13 @@ public class HttpUtil {
         return result;
     }
 
-    public static String sendDelete(String url,String charset){
+    public static String sendDelete(String url,HttpParams charset){
         String result = "";
         HttpDelete httpDelete = new HttpDelete(url);
         try {
+            if (null != charset){
+                httpDelete.setParams(charset);
+            }
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpDelete);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode == 200){

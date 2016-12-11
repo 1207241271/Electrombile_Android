@@ -3,12 +3,15 @@ package com.xunce.electrombile.activity;
 import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -62,6 +65,7 @@ import com.xunce.electrombile.manager.TracksManager;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
 import com.xunce.electrombile.receiver.MyReceiver;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.JPushUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
@@ -89,7 +93,7 @@ import cn.jpush.android.api.JPushInterface;
  */
 
 public class FragmentActivity extends android.support.v4.app.FragmentActivity
-        implements SwitchFragment.GPSDataChangeListener{
+        implements SwitchFragment.GPSDataChangeListener,ServiceConnection {
     public static final int NOTIFICATION_ALARMSTATUS = 0;
     public static final int NOTIFICATION_AUTOLOCKSTATUS = 1;
     private static final String TAG = "FragmentActivity:";
@@ -132,6 +136,10 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
     public static final String KEY_TITLE = "title";
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_EXTRAS = "extras";
+
+    public HttpService.Binder httpBinder;
+    public HttpService         httpService;
+
 
     private Dialog waitDialog;
     public Handler timeHandler = new Handler() {
@@ -242,6 +250,8 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             mac = mqttConnectManager.getMac();
         }
         EventBus.getDefault().register(this);
+
+
     }
 
     @Override
@@ -285,6 +295,9 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                 }
             }
         }
+        Intent intent = new Intent(FragmentActivity.this, HttpService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
     }
 
     @Override
@@ -301,6 +314,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             myThread.interrupt();
         }
         EventBus.getDefault().unregister(this);
+        unbindService(this);
         super.onStop();
     }
 
@@ -313,7 +327,6 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         }
         if (TracksManager.getTracks() != null) TracksManager.clearTracks();
-
         super.onDestroy();
     }
 
@@ -797,6 +810,29 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             ToastUtils.showShort(this, "mqtt连接失败");
         }
     }
+
+
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        httpBinder = (HttpService.Binder) iBinder;
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onGetResponse(String data,String type){
+            }
+            @Override
+            public void dealError(short errorCode) {
+            }
+
+        });
+        httpService = httpBinder.getHttpService();
+    }
+
 
     public void openDrawable(){
         mDrawerLayout.openDrawer(Gravity.LEFT);

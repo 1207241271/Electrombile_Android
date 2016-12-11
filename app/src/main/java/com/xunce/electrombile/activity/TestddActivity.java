@@ -140,6 +140,11 @@ public class TestddActivity extends Activity implements ServiceConnection{
                 case 111:
                     dealwithRouteInfo(msg.getData().getString("data"));
                     break;
+                case 101:
+                    dialog.setTitle("数据查询异常，请稍后再试");
+                    dialog.show();
+                    watiDialog.cancel();
+                    break;
             }
         }
     };
@@ -553,9 +558,7 @@ public class TestddActivity extends Activity implements ServiceConnection{
             @Override
             public void dealError(short errorCode) {
                 if (errorCode == HttpService.URLNULLError){
-                    dialog.setTitle("数据查询异常，请稍后再试");
-                    dialog.show();
-                    watiDialog.cancel();
+                    mhandler.sendEmptyMessage(101);
                 }
             }
 

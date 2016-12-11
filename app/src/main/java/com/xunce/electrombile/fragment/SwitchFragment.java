@@ -119,10 +119,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultListener,OnClickListener, ServiceConnection {
     private static final int DELAYTIME = 1000;
@@ -629,10 +626,12 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             } else {
                 com.orhanobut.logger.Logger.d("以前没下过");
                 ArrayList<MKOLSearchRecord> records = mkOfflineMap.searchCity(localcity);
-                for (MKOLSearchRecord record : records) {
-                    com.orhanobut.logger.Logger.d("下载:%d", record.cityID);
-                    mkOfflineMap.start(record.cityID);
-                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
+                if (records != null) {
+                    for (MKOLSearchRecord record : records) {
+                        com.orhanobut.logger.Logger.d("下载:%d", record.cityID);
+                        mkOfflineMap.start(record.cityID);
+//                    Toast.makeText(context,"正在离线本市地图",Toast.LENGTH_SHORT);
+                    }
                 }
             }
         }
@@ -1302,7 +1301,6 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
 
             }
         }).show();
-
     }
 
 
@@ -1311,8 +1309,10 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         if (event.getEventBusType().equals(EventbusConstants.eventBusType.EventType_FenceSet)){
             if (event.isAlarmFlag()) {
                 openStateAlarmBtn();
+                setManager.setAlarmFlag(true);
                 showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
             }else{
+                setManager.setAlarmFlag(false);
                 closeStateAlarmBtn();
             }
         }else {
@@ -1381,7 +1381,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             @Override
             public void dealError(short errorCode) {
                 if (errorCode == HttpService.URLNULLError){
-                    waitDialog.cancel();
+//                    waitDialog.cancel();
                 }
             }
         });

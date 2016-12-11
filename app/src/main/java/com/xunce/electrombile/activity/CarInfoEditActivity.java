@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -45,18 +47,22 @@ import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.JPushUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class CarInfoEditActivity extends Activity implements View.OnClickListener{
+public class CarInfoEditActivity extends Activity implements View.OnClickListener,ServiceConnection {
     private PopupWindow mpopupWindow;
 //    private TextView tv_CarIMEI;
 //    private RelativeLayout btn_DeleteDevice;
@@ -83,74 +89,9 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
     public static final int CROP_PHOTO=2;
     public static final int CHOOSE_PHOTO=3;
 
+    private HttpService.Binder httpBinder = null;
+    private HttpService         httpService;
 
-//    private Handler mHandler = new Handler(){
-//        @Override
-//        public void handleMessage(android.os.Message msg){
-//            handler_key key = handler_key.values()[msg.what];
-//            switch(key){
-//                case DELETE_RECORD:
-////                    DeleteInBindingList();
-//                    break;
-//
-//                case DELETE_SUCCESS:
-//                    AfterDeleteSuccess();
-//                    break;
-//            }
-//        }
-//    };
-
-//    public void AfterDeleteSuccess(){
-//        if(LastCar){
-//            //1.解订阅, 2.logout 3.跳转到登录界面  并且把之前的activity清空栈
-//            if(mqttConnectManager.returnMqttStatus()){
-//                if(mqttConnectManager.unSubscribe(IMEI)){
-//
-//                    //关闭小安宝报警的服务
-//                    Intent intent;
-//                    intent = new Intent();
-//                    intent.setAction("com.xunce.electrombile.alarmservice");
-//                    intent.setPackage(CarInfoEditActivity.this.getPackageName());
-//                    CarInfoEditActivity.this.stopService(intent);
-//
-//                    AVUser currentUser = AVUser.getCurrentUser();
-//                    currentUser.logOut();
-//
-//                    //IMEIlist更新
-//                    IMEIlist.remove(0);
-//                    setManager.setIMEIlist(IMEIlist);
-//                    setManager.setFirstLogin(true);
-//
-//                    //删除设备头像    sharepreference中的部分信息:IMEI号码对应的绑定日期和车昵称
-//                    deleteCarInfo();
-//                    setManager.removeKey(IMEI);
-//
-//                    //关闭mqttclient
-//                    mqttConnectManager.MqttDisconnect();
-////                    mqttConnectManager.removeConnectionInDatabase();
-//
-//                    jPushUtils.setJPushAlias("simcom");
-//
-//                    FragmentActivity.cancelAllNotification();
-//                    intent = new Intent(CarInfoEditActivity.this, LoginActivity.class);
-//                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//                    startActivity(intent);
-//                    finish();
-//                }
-//                else{
-//                    ToastUtils.showShort(CarInfoEditActivity.this,"解订阅失败  但是数据库记录已经删除了");
-//                }
-//            }
-//            else{
-//                ToastUtils.showShort(CarInfoEditActivity.this,"mqtt连接失败");
-//            }
-//
-//        }
-//        else{
-//            //回退到车辆管理的界面
-//            DeviceUnbinded();
-//        }
-//    }
 
     private void deleteCarInfo(){
 //        String fileName = Environment.getExternalStorageDirectory() + "/"+IMEI+"crop_result.jpg";
@@ -268,13 +209,13 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         NextCarIMEI = intent.getStringExtra("NextCarIMEI");
         othercarListPosition = intent.getIntExtra("list_position",0);
 
-//        LastCar = false;
         initView();
     }
 
     @Override
     public void onDestroy(){
         super.onDestroy();
+        unbindService(this);
     }
 
     @Override
@@ -364,6 +305,10 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
 
         JudgeMainCarOrNot();
         IMEIlist = setManager.getIMEIlist();
+
+        Intent intent = new Intent(CarInfoEditActivity.this, HttpService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
     }
     
     private void changeCarNickName(){
@@ -478,6 +423,7 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
                                     setManager.setIMEIlist(IMEIlist);
                                     ToastUtils.showShort(CarInfoEditActivity.this, "切换设备成功");
                                     progressDialog.dismiss();
+                                    setManager.setPhoneIsAgree(false);
 
                                     Intent intent = new Intent();
                                     intent.putExtra("string_key", "设备切换");
@@ -747,6 +693,18 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         deleteDatabaseFile();
         //删除头像文件
         deleteCarInfo();
+        //取消电话报警
+
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + IMEI;
+        if(httpService != null && setManager.getPhoneIsAlarm()){
+            try {
+                HttpParams params = new BasicHttpParams();
+                params.setParameter("telephone",AVUser.getCurrentUser().getUsername());
+                httpService.dealWithHttpResponse(url,2,"deletePhoneAlarm",params);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
         setManager.removeKey(IMEI);
 
         Intent intent = new Intent();
@@ -920,5 +878,27 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         mpopupWindow.setContentView(view);
         mpopupWindow.showAtLocation(img_car, Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL, 0, 0);
         mpopupWindow.update();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder){
+        httpBinder = (HttpService.Binder) iBinder;
+        httpBinder.getHttpService().setCallback(new HttpService.Callback(){
+            @Override
+            public void onGetResponse(String data,String type){
+            }
+
+            @Override
+            public void dealError(short errorCode) {
+            }
+
+        });
+        httpService = httpBinder.getHttpService();
+        //连接完成后查询数据
     }
 }
