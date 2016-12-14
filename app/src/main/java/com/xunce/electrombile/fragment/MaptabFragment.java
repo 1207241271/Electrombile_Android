@@ -138,7 +138,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 0:
                     if (msg.obj != null) {
                         TrackPoint trackPoint = (TrackPoint) msg.obj;
-                        if (trackPoint.point != null) {
+                        if (trackPoint.point != null && markerView != null) {
                             mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
                             tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
                             if (LostCarSituation) {

@@ -1,5 +1,6 @@
 package com.xunce.electrombile.activity;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -10,11 +11,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.Settings;
+import android.support.v4.content.PermissionChecker;
+import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -23,6 +29,7 @@ import android.widget.Toast;
 
 import com.avos.avoscloud.AVOSCloud;
 import com.avos.avoscloud.AVUser;
+import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
@@ -35,6 +42,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
 
 /**
@@ -54,8 +62,8 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                 watiDialog.cancel();
                 Toast.makeText(PhoneAlarmActivity.this,"设置成功",Toast.LENGTH_SHORT).show();
                 if (!SettingManager.getInstance().getHasContracter()){
-                    addContract();
-                    SettingManager.getInstance().setHasContracter(true);
+
+                    checkContactPermission();
                 }
                 SettingManager.getInstance().setPhoneIsAgree(true);
                 EventBus.getDefault().post(new PhoneAlarmEvent(true));
@@ -229,4 +237,36 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         values.put("data1", "01053912804");
         resolver.insert(uri, values);
     }
+
+
+    private void checkContactPermission() {
+        int permisson = PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS);
+        if (permisson == PackageManager.PERMISSION_GRANTED) {
+            addContract();
+            SettingManager.getInstance().setHasContracter(true);
+        }else {
+            permissionRequest();
+        }
+    }
+
+    private void permissionRequest(){
+        if (Build.VERSION.SDK_INT>9){
+            new AlertDialog.Builder(this)
+                    .setTitle("小安宝需要添加联系人")
+                    .setMessage("请前往权限管理，打开获取手机信息权限")
+                    .setPositiveButton("设置", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setData(Uri.fromParts("package", getPackageName(), null));
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("取消",null)
+                    .create()
+                    .show();
+        }
+    }
+
 }
