@@ -11,10 +11,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
+
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -144,6 +147,7 @@ public class Autolock extends BaseActivity{
             //自动落锁关闭的情况下   落锁时间的设置就隐藏掉
             relative_locktime.setVisibility(View.INVISIBLE);
         }
+
         else{
             //开启状态
             rb_switchOpen.setChecked(true);
@@ -165,4 +169,14 @@ public class Autolock extends BaseActivity{
             }
         }
     }
+
+    @Subscribe
+    public void onAutoLockEvent(AutoLockEvent event){
+        if (event.isAutoLockFlag()){
+            settingManager.setAutoLockStatus(true);
+        }else {
+            settingManager.setAutoLockStatus(false);
+        }
+    }
+
 }

@@ -138,17 +138,19 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 case 0:
                     if (msg.obj != null) {
                         TrackPoint trackPoint = (TrackPoint) msg.obj;
-                        mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
-                        tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
-                        if (LostCarSituation) {
-                            if (dialog_tv_LastLocateTime!=null) {
-                                dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                        if (trackPoint.point != null && markerView != null) {
+                            mInfoWindow = new InfoWindow(markerView, trackPoint.point, -100);
+                            tvUpdateTime.setText(sdfWithSecond.format(trackPoint.time));
+                            if (LostCarSituation) {
+                                if (dialog_tv_LastLocateTime != null) {
+                                    dialog_tv_LastLocateTime.setText(sdfWithSecond.format(trackPoint.time));
+                                }
                             }
+                            mBaiduMap.showInfoWindow(mInfoWindow);
+                            //设置车辆位置  填到textview中
+                            mSearch.reverseGeoCode(new ReverseGeoCodeOption()
+                                    .location(trackPoint.point));
                         }
-                        mBaiduMap.showInfoWindow(mInfoWindow);
-                        //设置车辆位置  填到textview中
-                        mSearch.reverseGeoCode(new ReverseGeoCodeOption()
-                                .location(trackPoint.point));
                     }
                     break;
                 //设备在室内
@@ -880,28 +882,6 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
     }
 
-//    @Subscribe(priority = 0)
-//    public void onObjectEvent(ObjectEvent event) {
-//        switch (event.eventType){
-//            //----------    CMD_GPS GET
-//            case EventType_CMDGPSGET:
-//                TrackPoint trackPoint=(TrackPoint) event.getEventMap().get(EventbusConstants.VALUE);
-//                if ( event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Online)){
-//                    this.locateMobile(trackPoint);
-//                    this.caseLostCarSituationSuccess();
-//                }else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Waiting)){
-//                    this.locateMobile(trackPoint);
-//                    this.caseLostCarSituationWaiting();
-//                } else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Offline)) {
-//                    if (this.LostCarSituation){
-//                        this.caseLostCarSituationOffline(trackPoint);
-//                    }else {
-//                        this.locateMobile(trackPoint);
-//                    }
-//                }
-//                break;
-//        }
-//    }
     @Subscribe(priority = 0)
     public void onGPSEvent(GPSEvent event) {
         if (event.isFromCMD) {

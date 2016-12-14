@@ -12,6 +12,11 @@ import android.util.Log;
 import com.avos.avoscloud.okhttp.internal.framed.ErrorCode;
 import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.params.HttpParams;
+
+import java.util.List;
+
 public class HttpService extends Service {
     private String data = "服务器正在运行";
     private static final String Tag = "httpService";
@@ -64,11 +69,11 @@ public class HttpService extends Service {
         void dealError(short errorCode);
     }
 
-    public void dealWithHttpResponse(String url,int method,String type,String contentbody){
+    public void dealWithHttpResponse(String url,int method,String type,HttpParams contentbody){
         final String urlFinal = url;
         final int    httpMethod =  method;
         final String typeFinal = type;
-        final String body = contentbody;
+        final HttpParams body = contentbody;
         new Thread() {
             @Override
             public void run() {
@@ -81,7 +86,7 @@ public class HttpService extends Service {
                         dealWithHttpPost(urlFinal,typeFinal,body);
                         break;
                     case 2:
-                        dealWithHttpDelete(urlFinal,typeFinal);
+                        dealWithHttpDelete(urlFinal,typeFinal,body);
                         break;
                 }
             }
@@ -96,7 +101,7 @@ public class HttpService extends Service {
         callback.onGetResponse(result,type);
     }
 
-    private void dealWithHttpPost(String url,String type,String body){
+    private void dealWithHttpPost(String url,String type,HttpParams body){
         String result = HttpUtil.sendPost(url,body);
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
@@ -104,13 +109,11 @@ public class HttpService extends Service {
         callback.onGetResponse(result,type);
     }
 
-    private void dealWithHttpDelete(String url,String type){
-        String result = HttpUtil.sendDelete(url,null);
+    private void dealWithHttpDelete(String url,String type,HttpParams body){
+        String result = HttpUtil.sendDelete(url,body);
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
         callback.onGetResponse(result,type);
     }
-
-
 }

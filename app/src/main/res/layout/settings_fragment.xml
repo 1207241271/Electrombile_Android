@@ -118,7 +118,7 @@
             android:id="@+id/phoneAlarm"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:drawableLeft="@drawable/baterry"
+            android:drawableLeft="@drawable/setting_alarm"
             app:compoundDrawableHeight="35dp"
             app:compoundDrawableWidth="35dp"
             android:drawablePadding="20dp"

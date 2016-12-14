@@ -31,7 +31,9 @@ import com.xunce.electrombile.activity.PhoneAlarmTestActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
 import com.xunce.electrombile.eventbus.BatteryTypeEvent;
+import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
+import com.xunce.electrombile.eventbus.SetManagerEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
@@ -379,5 +381,12 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
     @Subscribe
     public void onPhoneAlarmEvent(PhoneAlarmEvent event){
         refreshPhoneAlarm();
+    }
+    @Subscribe
+    public void onSetManagerEvent(SetManagerEvent event){
+        if (event.eventBusType == EventbusConstants.eventBusType.EventType_AutoPeriodSet ||
+                event.eventBusType == EventbusConstants.eventBusType.EventType_AutoLockSet){
+            refreshAutolockStatus();
+        }
     }
 }

@@ -47,6 +47,7 @@ public class SplashActivity extends InstrumentedActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         setManager = SettingManager.getInstance();
+
     }
 
     @Override
