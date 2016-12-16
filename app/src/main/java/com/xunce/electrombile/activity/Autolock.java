@@ -172,7 +172,11 @@ public class Autolock extends BaseActivity{
 
     @Subscribe
     public void onAutoLockEvent(AutoLockEvent event){
-
+        if (event.isAutoLockFlag()){
+            settingManager.setAutoLockStatus(true);
+        }else {
+            settingManager.setAutoLockStatus(false);
+        }
     }
 
 }

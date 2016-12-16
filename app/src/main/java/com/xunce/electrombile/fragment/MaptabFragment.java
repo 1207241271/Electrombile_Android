@@ -882,28 +882,6 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
     }
 
-//    @Subscribe(priority = 0)
-//    public void onObjectEvent(ObjectEvent event) {
-//        switch (event.eventType){
-//            //----------    CMD_GPS GET
-//            case EventType_CMDGPSGET:
-//                TrackPoint trackPoint=(TrackPoint) event.getEventMap().get(EventbusConstants.VALUE);
-//                if ( event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Online)){
-//                    this.locateMobile(trackPoint);
-//                    this.caseLostCarSituationSuccess();
-//                }else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Waiting)){
-//                    this.locateMobile(trackPoint);
-//                    this.caseLostCarSituationWaiting();
-//                } else if (event.getEventMap().get(EventbusConstants.carSituation).equals(EventbusConstants.carSituationType.carSituation_Offline)) {
-//                    if (this.LostCarSituation){
-//                        this.caseLostCarSituationOffline(trackPoint);
-//                    }else {
-//                        this.locateMobile(trackPoint);
-//                    }
-//                }
-//                break;
-//        }
-//    }
     @Subscribe(priority = 0)
     public void onGPSEvent(GPSEvent event) {
         if (event.isFromCMD) {
