@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -223,12 +224,13 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 //            btn_unreceived.isEnabled();
 //            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.green));
             btn_alarmTest.setEnabled(true);
-            btn_alarmTest.setBackground(this.getDrawable(R.drawable.btn_greenrect));
+
+            btn_alarmTest.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_greenrect));
         }else {
 //            btn_unreceived.isEnabled();
 //            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.gray));
             btn_alarmTest.setEnabled(false);
-            btn_alarmTest.setBackground(this.getDrawable(R.drawable.btn_grayrect));
+            btn_alarmTest.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_grayrect));
         }
     }
 }

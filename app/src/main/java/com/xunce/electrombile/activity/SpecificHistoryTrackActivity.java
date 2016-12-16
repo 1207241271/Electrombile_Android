@@ -1,7 +1,9 @@
 package com.xunce.electrombile.activity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.*;
 import android.os.Message;
@@ -299,6 +301,14 @@ public class SpecificHistoryTrackActivity extends Activity {
         ArrayList<LatLng> points = new ArrayList<>();
         for (TracksManager.TrackPoint tp : trackDataList) {
             points.add(tp.point);
+        }
+        if (points.size() < 2 || points.size() > 1000){
+            new AlertDialog.Builder(this).setTitle("轨迹错误").setMessage("该轨迹点过少或过多").setNegativeButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            }).show();
+            return;
         }
         //构建用户绘制多边形的Option对象
         OverlayOptions polylineOption = new PolylineOptions()
