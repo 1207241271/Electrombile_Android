@@ -40,15 +40,14 @@
                 android:layout_height="wrap_content"
                 android:text="报警授权手机号"
                 android:layout_marginTop="30dp"
-                android:paddingLeft="50dp"
-                android:paddingRight="30dp"
+                android:layout_gravity="center"
                 android:textSize="16sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="请等待报警推送通知......"
                 android:layout_marginTop="10dp"
-                android:paddingLeft="50dp"
+                android:layout_gravity="center"
                 android:textSize="16sp"/>
 
                 <FrameLayout
@@ -83,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:text="·每月5次免费报警\n  不接“报警电话”，不算入报警次数"
                 android:textColor="@color/app_style"
-                android:layout_marginLeft="50dp"/>
+                android:layout_gravity="center"/>
 
 
         <!--<TextView-->
@@ -98,15 +97,35 @@
             <!--android:textSize="60sp"-->
             <!--/>-->
 
-        <Button
-            android:id="@+id/btn_alarmtest"
-            android:layout_marginTop="40dp"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="开始测试"
-            android:textColor="@color/white"
-            android:background="@drawable/btn_greenrect"/>
+            <Button
+                android:id="@+id/btn_alarmtest"
+                android:layout_marginTop="5dp"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="开始测试"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_greenrect"/>
+
+            <Button
+                android:id="@+id/btn_unreceived"
+                android:layout_marginTop="5dp"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="未收到"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_grayrect"/>
+
+            <Button
+                android:id="@+id/btn_received"
+                android:layout_marginTop="5dp"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="已收到"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_greenrect"/>
 
         </LinearLayout>
 

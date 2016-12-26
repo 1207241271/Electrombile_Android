@@ -112,9 +112,6 @@ public class CaptureActivity extends Activity implements Callback {
 
     @Override
     public void onBackPressed(){
-//        Intent intent = new Intent();
-//        setResult(RESULT_OK, intent);
-//        finish();
         super.onBackPressed();
     }
 
@@ -228,14 +225,12 @@ public class CaptureActivity extends Activity implements Callback {
             hasSurface = true;
             initCamera(holder);
         }
-
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         CameraManager.get().closeDriver();
         hasSurface = false;
-
     }
 
     public ViewfinderView getViewfinderView() {

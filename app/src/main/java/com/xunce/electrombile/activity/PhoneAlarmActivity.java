@@ -194,7 +194,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                             handler.sendMessage(message);
                         }
                     }catch (Exception e) {
-
+                        e.printStackTrace();
                     }
                 }
             }

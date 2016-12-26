@@ -10,12 +10,14 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -28,7 +30,10 @@ import com.xunce.electrombile.activity.account.SMSandPasswordActivity;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
+import com.xunce.electrombile.utils.useful.JSONUtils;
 
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
 
@@ -60,9 +65,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
                 secondleft--;
                 if (secondleft <= 0) {
                     timer.cancel();
-//                        btn_ResendSysCode.setEnabled(true);
-//                        btn_ResendSysCode.setTextColor(Color.parseColor("#1dcf94"));
-                    changeButtonState(true);
+
                     txtView_time.setText("60");
                 } else {
                     txtView_time.setText(secondleft + "");
@@ -115,7 +118,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         btn_alarmDelete = (Button)findViewById(R.id.btn_alarmdelete);
         btn_alarmTest.setOnClickListener(new myOnClickListener());
         btn_alarmDelete.setOnClickListener(new myOnClickListener());
-//        btn_unreceived = (Button)findViewById(R.id.btn_havereveived);
+        btn_unreceived = (Button)findViewById(R.id.btn_unreceived);
         txtView_time = (TextView) findViewById(R.id.textView_timer);
         textViewPhone = (TextView) findViewById(R.id.textView_phone);
         textViewPhone.setText("报警授权手机号："+AVUser.getCurrentUser().getUsername());
@@ -162,7 +165,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         if (httpService!=null){
             watiDialog.setMessage("正在设置");
             watiDialog.show();
-            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",null);
+            HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
+            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
+
         }else {
             Toast.makeText(PhoneAlarmTestActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
         }
@@ -221,14 +226,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void changeButtonState(Boolean isTapped){
         if (isTapped){
-//            btn_unreceived.isEnabled();
-//            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.green));
-            btn_alarmTest.setEnabled(true);
-
-            btn_alarmTest.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_greenrect));
+            btn_unreceived.setEnabled(true);
+            btn_unreceived.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_greenrect));
         }else {
-//            btn_unreceived.isEnabled();
-//            btn_unreceived.setBackgroundColor(getResources().getColor(R.color.gray));
             btn_alarmTest.setEnabled(false);
             btn_alarmTest.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_grayrect));
         }

@@ -90,6 +90,8 @@ public class SettingManager {
     public final String releaseHttpPort = "80";
     public final String testHttpPort = "8081";
 
+    private final String savedAlarmIndex = "AlarmNumber";
+
     /**
      * The spf.
      */
@@ -502,6 +504,14 @@ public class SettingManager {
 
     public boolean getPhoneIsAlarm(){
         return spf.getBoolean("phoneAlarm",false);
+    }
+
+    public void setSavedAlarmIndex(int alarmIndex) {
+        spf.edit().putInt(savedAlarmIndex,alarmIndex).apply();
+    }
+
+    public int getSavedAlarmIndex() {
+        return spf.getInt(savedAlarmIndex,0);
     }
 
     @Subscribe

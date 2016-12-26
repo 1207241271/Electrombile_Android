@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="alarmPhone">
+        <item>01053912804</item>
+        <item>051482043270</item>
+        <item>057126883072</item>
+    </string-array>
+</resources>
