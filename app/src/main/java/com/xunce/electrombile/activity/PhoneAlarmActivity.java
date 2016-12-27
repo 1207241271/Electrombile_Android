@@ -27,6 +27,7 @@ import com.xunce.electrombile.R;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
+import com.xunce.electrombile.utils.system.ContractUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
@@ -54,7 +55,8 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                 watiDialog.cancel();
                 Toast.makeText(PhoneAlarmActivity.this,"设置成功",Toast.LENGTH_SHORT).show();
                 if (!SettingManager.getInstance().getHasContracter()){
-                    addContract();
+                    String[] items = getResources().getStringArray(R.array.alarmPhone);
+                    ContractUtils.addContract(items[SettingManager.getInstance().getSavedAlarmIndex()],getBaseContext());
                     SettingManager.getInstance().setHasContracter(true);
                 }
                 SettingManager.getInstance().setPhoneIsAgree(true);
@@ -82,6 +84,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
         titleTextView.setText("电话报警设置");
         RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,6 +100,7 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                 sendGetPhoneAlarmNumber();
             }
         });
+
         super.initViews();
     }
 
@@ -207,26 +211,5 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         httpService = httpBinder.getHttpService();
     }
 
-    private void addContract(){
-        Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
-        ContentResolver resolver = getBaseContext().getContentResolver();
-        ContentValues values = new ContentValues();
-        long contactId = ContentUris.parseId(resolver.insert(uri, values));
 
-        /* 往 data 中添加数据（要根据前面获取的id号） */
-        // 添加姓名
-        uri = Uri.parse("content://com.android.contacts/data");
-        values.put("raw_contact_id", contactId);
-        values.put("mimetype", "vnd.android.cursor.item/name");
-        values.put("data2", "小安宝报警");
-        resolver.insert(uri, values);
-
-        // 添加电话
-        values.clear();
-        values.put("raw_contact_id", contactId);
-        values.put("mimetype", "vnd.android.cursor.item/phone_v2");
-        values.put("data2", "2");
-        values.put("data1", "01053912804");
-        resolver.insert(uri, values);
-    }
 }

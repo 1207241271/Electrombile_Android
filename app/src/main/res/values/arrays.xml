@@ -2,7 +2,15 @@
 <resources>
     <string-array name="alarmPhone">
         <item>01053912804</item>
-        <item>051482043270</item>
         <item>057126883072</item>
+        <item>051482043270</item>
+        <item>01053912805</item>
+        <item>051482043271</item>
+        <item>057126883073</item>
+        <item>051482043272</item>
+        <item>01053912806</item>
+        <item>051482043273</item>
+        <item>057126883074</item>
+        <item>051482043274</item>
     </string-array>
 </resources>
