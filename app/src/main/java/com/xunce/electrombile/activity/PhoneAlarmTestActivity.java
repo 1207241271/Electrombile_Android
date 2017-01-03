@@ -57,6 +57,8 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     private HttpService         httpService;
 
 
+    public static boolean       isStartTest;
+
 
     Handler handler = new Handler() {
         @Override
@@ -64,8 +66,10 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             if (msg.what == 0) {
                 secondleft--;
                 if (secondleft <= 0) {
-                    timer.cancel();
-
+                    if (timer != null) {
+                        timer.cancel();
+                    }
+                    changeButtonState(true);
                     txtView_time.setText("60");
                 } else {
                     txtView_time.setText(secondleft + "");
@@ -98,6 +102,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     protected void onCreate(Bundle savedInstanceState)  {
         setContentView(R.layout.activity_phonealarmtest);
         super.onCreate(savedInstanceState);
+        isStartTest = false;
     }
 
     @Override
@@ -119,6 +124,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         btn_alarmTest.setOnClickListener(new myOnClickListener());
         btn_alarmDelete.setOnClickListener(new myOnClickListener());
         btn_unreceived = (Button)findViewById(R.id.btn_unreceived);
+        btn_unreceived.setOnClickListener(new myOnClickListener());
         txtView_time = (TextView) findViewById(R.id.textView_timer);
         textViewPhone = (TextView) findViewById(R.id.textView_phone);
         textViewPhone.setText("报警授权手机号："+AVUser.getCurrentUser().getUsername());
@@ -141,8 +147,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
                 case R.id.btn_alarmdelete:
                     sendDelete();
                     break;
+                case R.id.btn_unreceived:
+                    gotoResend();
             }
-
         }
     }
     @Override
@@ -151,6 +158,14 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
         bindService(intent, this, Context.BIND_AUTO_CREATE);
         startService(intent);
+        if (isStartTest){
+            changeButtonState(true);
+            isStartTest = false;
+            secondleft = 60;
+            Message message = new Message();
+            message.what = 1;
+            handler.sendMessage(message);
+        }
     }
     @Override
     public void onPause(){
@@ -159,7 +174,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     }
 
     private void sendPostTest(){
-        secondleft = 60;
+        secondleft = 5;
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+AVUser.getCurrentUser().getUsername();
 
         if (httpService!=null){
@@ -191,6 +206,12 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 
         }
 
+    }
+
+    private void gotoResend(){
+        watiDialog.cancel();
+        Intent intent = new Intent(PhoneAlarmTestActivity.this,ChangeAlarmActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -231,6 +252,8 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         }else {
             btn_alarmTest.setEnabled(false);
             btn_alarmTest.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_grayrect));
+            btn_unreceived.setEnabled(false);
+            btn_unreceived.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_grayrect));
         }
     }
 }

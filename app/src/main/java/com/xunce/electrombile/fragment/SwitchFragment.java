@@ -1359,10 +1359,11 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                     try{
                         JSONObject jsonObject = new JSONObject(data);
                         JSONArray array = jsonObject.getJSONArray("itinerary");
-                        JSONObject itinerary = array.getJSONObject(0);
-                        int miles = itinerary.getInt("miles");
-                        EventBus.getDefault().post(new QueryItineraryEvent(miles/1000.0));
-
+                        if (array.length() > 0) {
+                            JSONObject itinerary = array.getJSONObject(0);
+                            int miles = itinerary.getInt("miles");
+                            EventBus.getDefault().post(new QueryItineraryEvent(miles / 1000.0));
+                        }
 //                        ToastUtils.showShort(m_context,"获取累计公里数成功");
                     }catch (JSONException e){
                         e.printStackTrace();
