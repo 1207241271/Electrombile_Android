@@ -278,6 +278,7 @@
         <activity android:name=".activity.GuideActivity" />
         <activity android:name=".activity.FindCarActivity" />
         <activity android:name=".activity.CaptureActivity"/>
+        <activity android:name=".activity.OutageAvtivity"/>
     </application>
 
 </manifest>
