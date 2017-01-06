@@ -83,12 +83,14 @@ public class SettingManager {
 
     private final String HttpHost = "HttpHost";
 
-    public final String releaseHttpHost = "http://api.xiaoan110.com:";
-    public final String testHttpHost = "http://test.xiaoan110.com:";
+    public final String releaseHttpHost = "https://api.xiaoan110.com:";
+    public final String testHttpHost = "https://test.xiaoan110.com:";
 
     private final String HttpPort = "HttpPort";
-    public final String releaseHttpPort = "80";
-    public final String testHttpPort = "8081";
+    public final String releaseHttpPort = "";
+    public final String testHttpPort = "433";
+
+    private final String savedAlarmIndex = "AlarmNumber";
 
     /**
      * The spf.
@@ -477,7 +479,12 @@ public class SettingManager {
      *@return HttpHost
      */
     public String getHttpHost(){
-        return spf.getString(HttpHost,releaseHttpHost);
+        String httpHost = spf.getString(HttpHost,releaseHttpHost);
+        if (!httpHost.equals(releaseHttpHost) && !httpHost.equals(testHttpHost)){
+            setHttpHost(releaseHttpHost);
+            return releaseHttpHost;
+        }
+        return httpHost;
     }
 
     public void setHttpPort(String httpPort){
@@ -485,7 +492,12 @@ public class SettingManager {
     }
 
     public String getHttpPort(){
-        return spf.getString(HttpPort,releaseHttpPort);
+        String httpPort = spf.getString(HttpPort,releaseHttpPort);
+        if (!httpPort.equals(releaseHttpPort) && !httpPort.equals(testHttpPort)){
+            setHttpPort(releaseHttpPort);
+            return releaseHttpPort;
+        }
+        return httpPort;
     }
 
     public void setHasContracter(Boolean isHave){
@@ -502,6 +514,14 @@ public class SettingManager {
 
     public boolean getPhoneIsAlarm(){
         return spf.getBoolean("phoneAlarm",false);
+    }
+
+    public void setSavedAlarmIndex(int alarmIndex) {
+        spf.edit().putInt(savedAlarmIndex,alarmIndex).apply();
+    }
+
+    public int getSavedAlarmIndex() {
+        return spf.getInt(savedAlarmIndex,0);
     }
 
     @Subscribe

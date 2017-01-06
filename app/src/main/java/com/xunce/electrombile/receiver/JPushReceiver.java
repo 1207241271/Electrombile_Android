@@ -11,6 +11,7 @@ import android.util.Log;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.AlarmActivity;
+import com.xunce.electrombile.activity.OutageAvtivity;
 import com.xunce.electrombile.utils.device.DeviceUtils;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 
@@ -59,6 +60,12 @@ public class JPushReceiver extends BroadcastReceiver {
             if (bundle.getString(JPushInterface.EXTRA_ALERT).equals("您的爱车正在被非法移动")){
                 DeviceUtils.wakeUpAndUnlock(context);
                 Intent intentMy = new Intent(context, AlarmActivity.class);
+                intentMy.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intentMy.putExtra(ProtocolConstants.TYPE, 0);
+                context.startActivity(intentMy);
+            }else if (bundle.getString(JPushInterface.EXTRA_ALERT).equals("断电告警：电动车电池已被拔出")){
+                DeviceUtils.wakeUpAndUnlock(context);
+                Intent intentMy = new Intent(context, OutageAvtivity.class);
                 intentMy.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intentMy.putExtra(ProtocolConstants.TYPE, 0);
                 context.startActivity(intentMy);

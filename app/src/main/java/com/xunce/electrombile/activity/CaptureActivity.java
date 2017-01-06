@@ -112,9 +112,6 @@ public class CaptureActivity extends Activity implements Callback {
 
     @Override
     public void onBackPressed(){
-//        Intent intent = new Intent();
-//        setResult(RESULT_OK, intent);
-//        finish();
         super.onBackPressed();
     }
 
@@ -145,20 +142,13 @@ public class CaptureActivity extends Activity implements Callback {
     @Override
     protected void onPause() {
         super.onPause();
-        //TODO:Do to much things in OnPause(),try to put it into Background
-//        new Thread(
-//                new Runnable() {
-//                    @Override
-//                    public void run() {
-                        CameraManager.get().closeDriver();
-                        if (handler != null) {
-                            handler.quitSynchronously();
-                            handler = null;
-                        }
-//                    }
-//                }
-//        );
+        if (handler != null) {
+            handler.quitSynchronously();
+            handler = null;
+        }
+        CameraManager.get().closeDriver();
     }
+
 
     @Override
     protected void onDestroy() {
@@ -228,14 +218,11 @@ public class CaptureActivity extends Activity implements Callback {
             hasSurface = true;
             initCamera(holder);
         }
-
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        CameraManager.get().closeDriver();
         hasSurface = false;
-
     }
 
     public ViewfinderView getViewfinderView() {
