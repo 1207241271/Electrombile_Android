@@ -8,6 +8,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
@@ -81,6 +82,27 @@ public class HttpUtil {
                 Log.w(Tag,string);
             }else {
                 Log.w(Tag,httpResponse.getStatusLine().toString());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static String sendPut(String url,HttpParams charset){
+        String result = "";
+        HttpPut httpPut = new HttpPut(url);
+        try {
+            if (null != charset){
+                httpPut.setParams(charset);
+            }
+
+            HttpResponse httpResponse = new DefaultHttpClient().execute(httpPut);
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode ==200){
+                String string = EntityUtils.toString(httpResponse.getEntity());
+                result = string;
+            }else {
             }
         }catch (Exception e){
             e.printStackTrace();

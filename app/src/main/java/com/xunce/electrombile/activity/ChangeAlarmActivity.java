@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.avos.avoscloud.AVUser;
@@ -71,6 +73,16 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
     @Override
     public void initViews() {
         super.initViews();
+        View titleView = findViewById(R.id.ll_button);
+        TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
+        titleTextView.setText("电话报警测试");
+        RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
         Button button = (Button)findViewById(R.id.btn_resend);
         try {
             button.setOnClickListener(new View.OnClickListener() {
@@ -85,11 +97,11 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
                     }
                     SettingManager.getInstance().setSavedAlarmIndex(index);
                     ContractUtils.addContract(items[index],getBaseContext());
-                    String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
+                    String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI();
 
                     if (httpService!=null){
                         HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-                        httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
+                        httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",httpParams);
 
                     }else {
                         Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
