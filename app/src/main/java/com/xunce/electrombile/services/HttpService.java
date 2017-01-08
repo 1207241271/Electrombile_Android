@@ -69,7 +69,7 @@ public class HttpService extends Service {
         void dealError(short errorCode);
     }
 
-    public void dealWithHttpResponse(String url,int method,String type,HttpParams contentbody){
+    public void dealWithHttpResponse(String url, int method, final String type, HttpParams contentbody){
         final String urlFinal = url;
         final int    httpMethod =  method;
         final String typeFinal = type;
@@ -87,6 +87,9 @@ public class HttpService extends Service {
                         break;
                     case 2:
                         dealWithHttpDelete(urlFinal,typeFinal,body);
+                        break;
+                    case 3:
+                        dealWithHttpPut(urlFinal,typeFinal,body);
                         break;
                 }
             }
@@ -111,6 +114,14 @@ public class HttpService extends Service {
 
     private void dealWithHttpDelete(String url,String type,HttpParams body){
         String result = HttpUtil.sendDelete(url,body);
+        if (result == null || result.equals("error")){
+            callback.dealError(URLNULLError);
+        }
+        callback.onGetResponse(result,type);
+    }
+
+    public void dealWithHttpPut(String url,String type,HttpParams body){
+        String result = HttpUtil.sendPut(url,body);
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
         }
