@@ -1283,7 +1283,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void checkUpdate(){
-        String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/version";
+        String baseURL = "http://api.xiaoan110.com/v1/version";
         if (httpService != null) {
             httpService.dealWithHttpResponse(baseURL, 0, "version", null);
         }
@@ -1298,7 +1298,7 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(m_context, Downloadservice.class);
-                String baseURL = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/package";
+                String baseURL = "http://api.xiaoan110.com/v1/package";
                 intent.putExtra("apk_url",baseURL);
                 intent.putExtra("packageSize",packageSize);
                 m_context.startService(intent);
