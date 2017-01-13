@@ -5,8 +5,19 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.provider.ContactsContract;
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
+import android.widget.ImageView;
+
+import com.xunce.electrombile.R;
+
+import java.io.ByteArrayOutputStream;
 
 /**
  * Created by yangxu on 2016/12/26.
@@ -34,6 +45,15 @@ public class ContractUtils {
         values.put("data2", "2");
         values.put("data1", phoneNumber);
         resolver.insert(uri, values);
+
+        values.clear();
+        values.put(android.provider.ContactsContract.Contacts.Data.RAW_CONTACT_ID,contactId);
+        values.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+        ByteArrayOutputStream array = new ByteArrayOutputStream();
+        Bitmap b = BitmapFactory.decodeResource(context.getResources(),R.drawable.img_findcar);
+        b.compress(Bitmap.CompressFormat.JPEG, 100, array);
+        values.put(ContactsContract.Contacts.Photo.PHOTO, array.toByteArray());
+        resolver.insert(android.provider.ContactsContract.Data.CONTENT_URI, values);
     }
 
     public static void deleteContract(Context context){

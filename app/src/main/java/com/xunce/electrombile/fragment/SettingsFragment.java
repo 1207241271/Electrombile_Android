@@ -28,6 +28,7 @@ import com.xunce.electrombile.activity.MapOfflineActivity;
 import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.activity.PhoneAlarmActivity;
 import com.xunce.electrombile.activity.PhoneAlarmTestActivity;
+import com.xunce.electrombile.activity.WiretapActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
 import com.xunce.electrombile.eventbus.BatteryTypeEvent;
@@ -179,6 +180,8 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             case R.id.layout_phoneAlarm:
                 gotoPhoneAlarm();
                 break;
+            case R.id.layout_wiretap:
+
             default:
                 break;
         }
@@ -241,6 +244,11 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
     private void gotoBattery(){
         Intent intent = new Intent(m_context, BatteryTypeActivity.class);
+        startActivity(intent);
+    }
+
+    private void gotoWiretap(){
+        Intent intent = new Intent(m_context, WiretapActivity.class);
         startActivity(intent);
     }
 
@@ -330,6 +338,7 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         view.findViewById(R.id.layout_map_offline).setOnClickListener(this);
         view.findViewById(R.id.layout_battery).setOnClickListener(this);
         view.findViewById(R.id.layout_phoneAlarm).setOnClickListener(this);
+        view.findViewById(R.id.layout_wiretap).setOnClickListener(this);
 
         View titleView = view.findViewById(R.id.ll_button) ;
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);

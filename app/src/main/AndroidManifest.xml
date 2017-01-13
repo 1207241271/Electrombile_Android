@@ -279,6 +279,7 @@
         <activity android:name=".activity.FindCarActivity" />
         <activity android:name=".activity.CaptureActivity"/>
         <activity android:name=".activity.OutageAvtivity"/>
+        <activity android:name=".activity.WiretapActivity"/>
     </application>
 
 </manifest>
