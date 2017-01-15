@@ -47,7 +47,8 @@
                 android:text="60"
                 android:textSize="50sp"/>
 
-            <View
+            <com.xunce.electrombile.view.Waveform.WaveformView
+                android:id="@+id/wiretap_wv_waveform"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"/>
 

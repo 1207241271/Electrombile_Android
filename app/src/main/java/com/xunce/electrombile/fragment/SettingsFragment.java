@@ -181,7 +181,8 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
                 gotoPhoneAlarm();
                 break;
             case R.id.layout_wiretap:
-
+                gotoWiretap();
+                break;
             default:
                 break;
         }

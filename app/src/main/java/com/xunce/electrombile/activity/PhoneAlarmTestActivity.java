@@ -55,8 +55,6 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     private Timer               timer;
     private TextView            textViewPhone;
     private HttpService         httpService;
-
-
     public static boolean       isStartTest;
 
 
@@ -155,9 +153,6 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     @Override
     public void onResume(){
         super.onResume();
-        Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
-        bindService(intent, this, Context.BIND_AUTO_CREATE);
-        startService(intent);
         if (isStartTest){
             changeButtonState(true);
             isStartTest = false;

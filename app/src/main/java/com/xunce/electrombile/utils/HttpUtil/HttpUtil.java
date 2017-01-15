@@ -52,7 +52,6 @@ public class HttpUtil {
                 httpPost.setParams(charset);
             }
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpPost);
-
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode == 200){
                 String string = EntityUtils.toString(httpResponse.getEntity());
