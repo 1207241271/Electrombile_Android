@@ -100,8 +100,8 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
                     String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI();
 
                     if (httpService!=null){
-                        HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-                        httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",httpParams);
+                        String json = "{\"caller\":\""+SettingManager.getInstance().getSavedAlarmIndex()+ "\"}";
+                        httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",json);
 
                     }else {
                         Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();

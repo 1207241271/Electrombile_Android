@@ -14,7 +14,7 @@ import java.io.Serializable;
  * Created by lybvinci on 2015/9/28.
  */
 public class Protocol implements Serializable {
-    protected String tmp;
+    public String tmp;
 
     public Protocol(String tmp) {
         this.tmp = tmp;

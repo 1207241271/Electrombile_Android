@@ -117,11 +117,13 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                 changeButtonState(btnStop,true);
                 titleLabel.setText("正录音");
                 btnPlay.setText("正录音");
+                recordStatus = RecordStatus.RecordStatus_Record;
             }else if (msg.what == 9){
+                timer.cancel();
                 btnPlay.setText("播放");
                 titleLabel.setText("已结束");
                 changeButtonState(btnStop,false);
-                progressDialog.setMessage("录音失败");
+                progressDialog.setMessage("正在下载");
                 progressDialog.show();
             }else  if (msg.what == 11){
                 try {
@@ -129,10 +131,14 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                     Bundle bundle = msg.getData();
                     String filePath = bundle.getString("filePath");
                     startVisualiser();
+                    cutDownLabel.setVisibility(View.INVISIBLE);
+                    changeButtonState(btnStop,true);
+                    changeButtonState(btnPlay,true);
                     mediaPlayer.reset();
                     mediaPlayer.setDataSource(filePath);
                     mediaPlayer.prepare();
                     mediaPlayer.start();
+                    recordStatus = RecordStatus.RecordStatus_Play;
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -188,20 +194,25 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                     if (httpService != null){
                         String url = SettingManager.getInstance().getHttpHost() +":"+ SettingManager.getInstance().getHttpPort() + "/v1/device";
                         try {
-                            HttpParams cmd = new BasicHttpParams();
-                            cmd.setIntParameter("c", 8);
-                            HttpParams param = new BasicHttpParams();
-                            param.setParameter("imei",SettingManager.getInstance().getIMEI());
-                            param.setParameter("cmd",cmd);
-                            Log.d("D",param.toString());
-                            httpService.dealWithHttpResponse(url,1,"recordOn",param);
+                            JSONObject cmd = new JSONObject();
+                            cmd.put("c",8);
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("imei",SettingManager.getInstance().getIMEI());
+                            jsonObject.put("cmd",cmd);
+                            httpService.dealWithHttpResponse(url,1,"recordOn",jsonObject.toString());
 
                         }catch (Exception e){
                             e.printStackTrace();
                         }
                     }
                 }else if (recordStatus == RecordStatus.RecordStatus_Play){
-                    mediaPlayer.start();
+                    try {
+                        mediaPlayer.prepare();
+                        mediaPlayer.start();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }
             }
         });
@@ -222,17 +233,19 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
         RendererFactory rendererFactory = new RendererFactory();
         mWvWaveform = (WaveformView)findViewById(R.id.wiretap_wv_waveform);
         mWvWaveform.setRenderer(rendererFactory.createSimpleWaveformRender(ContextCompat.getColor(this, R.color.red), Color.WHITE));
+
+        initAPKDir();
     }
 
     public void stopWiretap(){
         String url = SettingManager.getInstance().getHttpHost()+":"+SettingManager.getInstance().getHttpPort()+"/v1/device";
         try {
-            HttpParams cmd = new BasicHttpParams();
-            cmd.setIntParameter("c", 9);
-            HttpParams param = new BasicHttpParams();
-            param.setParameter("imei",SettingManager.getInstance().getIMEI());
-            param.setParameter("cmd",cmd);
-            httpService.dealWithHttpResponse(url,1,"recordOff",param);
+            JSONObject cmd = new JSONObject();
+            cmd.put("c",9);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("imei",SettingManager.getInstance().getIMEI());
+            jsonObject.put("cmd",cmd);
+            httpService.dealWithHttpResponse(url,1,"recordOff",jsonObject.toString());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -240,19 +253,20 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
 
     public void downLoadFile(final String fileName){
         String file = fileName.split("\\.")[0];
-        String url = SettingManager.getInstance()+":"+SettingManager.getInstance().getHttpPort()+"/v1/record?name=" +file;
+        String url = SettingManager.getInstance().getHttpHost()+":"+SettingManager.getInstance().getHttpPort()+"/v1/record?name=" +file;
         HttpHandler<File> httpHandler = new HttpUtils().download(HttpRequest.HttpMethod.GET,url, APK_dir + fileName, null, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
                 bundle.putString("filePath",APK_dir+fileName);
+                message.setData(bundle);
                 message.what = 11;
                 mHander.sendMessage(message);
             }
             @Override
             public void onFailure(HttpException error, String msg) {
-
+                Log.d("Failure",msg);
             }
         });
 
@@ -318,9 +332,8 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             @Override
             public void onGetResponse(String data, String type) {
                 try {
-                    JSONObject jsonObject = new JSONObject(data);
-                    int code = jsonObject.getInt("code");
-                    if (code == 0){
+                    //返回的数据不是json，如此判断是否正确
+                    if (!data.contains("1")){
                         if (type.equals("recordOn")){
                             mHander.sendEmptyMessage(8);
                         }else if (type.equals("recordOff")){

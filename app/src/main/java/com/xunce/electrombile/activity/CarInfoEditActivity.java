@@ -698,9 +698,8 @@ public class CarInfoEditActivity extends Activity implements View.OnClickListene
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + IMEI;
         if(httpService != null && setManager.getPhoneIsAlarm()){
             try {
-                HttpParams params = new BasicHttpParams();
-                params.setParameter("telephone",AVUser.getCurrentUser().getUsername());
-                httpService.dealWithHttpResponse(url,2,"deletePhoneAlarm",params);
+                String json = "{\"telephone\":\""+AVUser.getCurrentUser().getUsername()+ "\"}";
+                httpService.dealWithHttpResponse(url,2,"deletePhoneAlarm",json);
             }catch (Exception e){
                 e.printStackTrace();
             }
