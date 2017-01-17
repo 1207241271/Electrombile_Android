@@ -174,7 +174,7 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
     }
 
     private void sendPostTest(){
-        secondleft = 5;
+        secondleft = 60;
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+AVUser.getCurrentUser().getUsername();
 
         if (httpService!=null){

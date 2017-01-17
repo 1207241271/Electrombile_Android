@@ -43,7 +43,7 @@ public class ContractUtils {
         ContentResolver resolver = context.getContentResolver();
         try {
             Cursor cursor = resolver.query(uri, new String[]{ContactsContract.Contacts._ID}, "display_name=?", new String[]{deleteName}, null);
-            if (cursor.moveToFirst()) {
+            if (!cursor.isFirst()) {
                 int id = cursor.getInt(0);
                 resolver.delete(uri, "display_name=?", new String[]{deleteName});
                 uri = Uri.parse("content://com.android.contacts/data");
