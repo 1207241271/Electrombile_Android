@@ -1,14 +1,18 @@
 package com.xunce.electrombile.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -19,6 +23,7 @@ import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.ContractUtils;
+import com.xunce.electrombile.utils.useful.PermissionChecker;
 
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
@@ -34,6 +39,13 @@ import java.util.TimerTask;
 public class ChangeAlarmActivity extends BaseActivity implements ServiceConnection{
     private HttpService.Binder httpBinder;
     private HttpService         httpService;
+    private static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CONTACTS
+    };
+    public static final int PERMISSION_REQUEST_CODE = 0;
+
+
     Handler handler = new Handler() {
         @Override
         public void handleMessage(android.os.Message msg) {
@@ -76,24 +88,31 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ContractUtils.deleteContract(getBaseContext());
-                    String[] items = getResources().getStringArray(R.array.alarmPhone);
-                    int index = SettingManager.getInstance().getSavedAlarmIndex();
-                    index = index + 1;
-                    if (index >= items.length){
-                        index = 0;
-                    }
-                    SettingManager.getInstance().setSavedAlarmIndex(index);
-                    ContractUtils.addContract(items[index],getBaseContext());
-                    String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
+                    PermissionChecker checker=new PermissionChecker(ChangeAlarmActivity.this);
+                    boolean islake = checker.lakesPermissions(PERMISSIONS);
+                    if (!islake){
+                        ContractUtils.deleteContract(getBaseContext());
+                        String[] items = getResources().getStringArray(R.array.alarmPhone);
+                        int index = SettingManager.getInstance().getSavedAlarmIndex();
+                        index = index + 1;
+                        if (index >= items.length){
+                            index = 0;
+                        }
+                        SettingManager.getInstance().setSavedAlarmIndex(index);
+                        ContractUtils.addContract(items[index],getBaseContext());
+                        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
 
-                    if (httpService!=null){
-                        HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-                        httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
+                        if (httpService!=null){
+                            HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
+                            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
 
+                        }else {
+                            Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+                        }
                     }else {
-                        Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+                        ActivityCompat.requestPermissions(ChangeAlarmActivity.this,PERMISSIONS,PERMISSION_REQUEST_CODE);
                     }
+
                 }
             });
         }catch (Exception e){
@@ -127,4 +146,39 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
         httpService = httpBinder.getHttpService();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE && hasAllPermissionsGranted(grantResults)) {
+            ContractUtils.deleteContract(getBaseContext());
+            String[] items = getResources().getStringArray(R.array.alarmPhone);
+            int index = SettingManager.getInstance().getSavedAlarmIndex();
+            index = index + 1;
+            if (index >= items.length){
+                index = 0;
+            }
+            SettingManager.getInstance().setSavedAlarmIndex(index);
+            ContractUtils.addContract(items[index],getBaseContext());
+            String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
+
+            if (httpService!=null){
+                HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
+                httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
+
+            }else {
+                Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+            }
+        } else {
+        }
+
+    }
+
+    // 判断是否拥有所有权限
+    private boolean hasAllPermissionsGranted(@NonNull int[] grantResults) {
+        for (int grantResult : grantResults) {
+            if (grantResult == PackageManager.PERMISSION_DENIED) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
