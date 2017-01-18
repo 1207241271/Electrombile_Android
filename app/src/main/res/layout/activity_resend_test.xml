@@ -1,11 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btn_resend"
-        android:text="重新发送"/>
+    <include
+        android:id="@+id/ll_button"
+        layout="@layout/my_layout_title" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_help1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="10dp"
+                    android:paddingLeft="30dp"
+                    android:paddingRight="30dp"
+                    android:text="1.检查您的手机信号是否正常 "
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tv_help2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_centerHorizontal="true"
+                    android:paddingLeft="30dp"
+                    android:paddingRight="30dp"
+                    android:text="2.检查您的手机号码是否处于正常服务状态,没有欠费停机等情况 "
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tv_help4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_centerHorizontal="true"
+                    android:paddingLeft="30dp"
+                    android:paddingRight="30dp"
+                    android:text="3.检查您是否使用第三方App或者系统内置功能自动拦截未知来电 "
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_help3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_centerHorizontal="true"
+                    android:paddingLeft="30dp"
+                    android:paddingRight="30dp"
+                    android:text="4.多次尝试仍然无法收到通知建议您重新开通电话报警服务"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+
+            </LinearLayout>
+            <Button
+                android:background="@drawable/btn_greenrect"
+                android:id="@+id/btn_resend"
+                android:layout_marginBottom="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="250dp"
+                android:layout_height="35dp"
+                android:textColor="@color/white"
+                android:text="重新测试"/>
+        </LinearLayout>
+
+
+    </RelativeLayout>
+
+
 </LinearLayout>
