@@ -118,6 +118,14 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             }
         });
 
+        Button btn_received = (Button)findViewById(R.id.btn_received);
+        btn_received.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         watiDialog = new ProgressDialog(this);
         btn_alarmTest = (Button)findViewById(R.id.btn_alarmtest);
         btn_alarmDelete = (Button)findViewById(R.id.btn_alarmdelete);
