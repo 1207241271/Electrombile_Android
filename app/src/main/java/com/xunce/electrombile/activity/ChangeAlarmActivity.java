@@ -30,6 +30,7 @@ import com.xunce.electrombile.utils.useful.PermissionChecker;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -113,12 +114,17 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
                         }
                         SettingManager.getInstance().setSavedAlarmIndex(index);
                         ContractUtils.addContract(items[index],getBaseContext());
-                        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
+                        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/"+ SettingManager.getInstance().getIMEI();
 
                         if (httpService!=null){
-                            HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-                            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
 
+                            try {
+                                JSONObject caller = new JSONObject();
+                                caller.put("caller",index);
+                                httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
                         }else {
                             Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
                         }
@@ -171,16 +177,22 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
             }
             SettingManager.getInstance().setSavedAlarmIndex(index);
             ContractUtils.addContract(items[index],getBaseContext());
-            String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+ AVUser.getCurrentUser().getUsername();
+            String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/"+ SettingManager.getInstance().getIMEI();
 
             if (httpService!=null){
-                HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-                httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
+                try {
+                    JSONObject caller = new JSONObject();
+                    caller.put("caller",index);
+                    httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
             }else {
                 Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
             }
         } else {
+
         }
 
     }

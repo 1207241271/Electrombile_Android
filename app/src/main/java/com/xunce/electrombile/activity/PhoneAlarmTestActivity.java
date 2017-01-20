@@ -183,14 +183,20 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
 
     private void sendPostTest(){
         secondleft = 60;
-        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/test/"+AVUser.getCurrentUser().getUsername();
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/"+SettingManager.getInstance().getIMEI();
 
         if (httpService!=null){
             watiDialog.setMessage("正在设置");
             watiDialog.show();
-            HttpParams httpParams = new BasicHttpParams().setParameter("caller",SettingManager.getInstance().getSavedAlarmIndex());
-            httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",httpParams);
 
+            try {
+                JSONObject caller = new JSONObject();
+                int index = SettingManager.getInstance().getSavedAlarmIndex();
+                caller.put("caller",index);
+                httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }else {
             Toast.makeText(PhoneAlarmTestActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
         }

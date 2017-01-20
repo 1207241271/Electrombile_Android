@@ -69,11 +69,11 @@ public class HttpService extends Service {
         void dealError(short errorCode);
     }
 
-    public void dealWithHttpResponse(String url,int method,String type,HttpParams contentbody){
+    public void dealWithHttpResponse(String url,int method,String type,String contentbody){
         final String urlFinal = url;
         final int    httpMethod =  method;
         final String typeFinal = type;
-        final HttpParams body = contentbody;
+        final String body = contentbody;
         new Thread() {
             @Override
             public void run() {
@@ -86,8 +86,10 @@ public class HttpService extends Service {
                         dealWithHttpPost(urlFinal,typeFinal,body);
                         break;
                     case 2:
-                        dealWithHttpDelete(urlFinal,typeFinal,body);
+                        dealWithHttpDelete(urlFinal,typeFinal,null);
                         break;
+                    case 3:
+                        dealWithPut(urlFinal,typeFinal,body);
                 }
             }
         }.start();
@@ -101,7 +103,7 @@ public class HttpService extends Service {
         callback.onGetResponse(result,type);
     }
 
-    private void dealWithHttpPost(String url,String type,HttpParams body){
+    private void dealWithHttpPost(String url,String type,String body){
         String result = HttpUtil.sendPost(url,body);
         if (result == null || result.equals("error")){
             callback.dealError(URLNULLError);
@@ -112,6 +114,14 @@ public class HttpService extends Service {
     private void dealWithHttpDelete(String url,String type,HttpParams body){
         String result = HttpUtil.sendDelete(url,body);
         if (result == null || result.equals("error")){
+            callback.dealError(URLNULLError);
+        }
+        callback.onGetResponse(result,type);
+    }
+
+    private void dealWithPut(String url,String type,String body){
+        String result = HttpUtil.sendPut(url,body);
+        if (result == null|| result.equals("error")){
             callback.dealError(URLNULLError);
         }
         callback.onGetResponse(result,type);
