@@ -126,8 +126,15 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     }
 
     private void sendPost() {
+        String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
         if (httpService !=null) {
-            String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
+            try {
+                JSONObject telephone = new JSONObject();
+                telephone.put("telephone",AVUser.getCurrentUser().getUsername());
+                httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",telephone.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             watiDialog.setMessage("正在设置");
             watiDialog.show();
             httpService.dealWithHttpResponse(url,1,"setPhoneAlarm",null);
