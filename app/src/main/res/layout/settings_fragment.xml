@@ -134,7 +134,7 @@
     <com.xunce.electrombile.view.TextViewDrawableSize
         style="@style/clickableLayout_settingFragment2"
         android:id="@+id/layout_wiretap"
-        android:drawableLeft="@drawable/setting_normal"
+        android:drawableLeft="@drawable/img_wiretap_wire"
         app:compoundDrawableHeight="35dp"
         app:compoundDrawableWidth="35dp"
         android:text="远程窃听"/>

