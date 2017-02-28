@@ -87,7 +87,7 @@ public class HttpService extends Service {
                         dealWithHttpDelete(urlFinal,typeFinal,null);
                         break;
                     case 3:
-                        dealWithPut(urlFinal,typeFinal,body);
+                        dealWithHttpPut(urlFinal,typeFinal,body);
                 }
             }
         }.start();

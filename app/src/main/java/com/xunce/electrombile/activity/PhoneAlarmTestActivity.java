@@ -169,6 +169,9 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             message.what = 1;
             handler.sendMessage(message);
         }
+        Intent intent = new Intent(PhoneAlarmTestActivity.this, HttpService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        startService(intent);
     }
     @Override
     public void onPause(){
