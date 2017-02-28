@@ -1,7 +1,7 @@
 package com.xunce.electrombile.utils.HttpUtil;
 
 import android.util.Log;
-
+import com.alibaba.fastjson.util.UTF8Decoder;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -11,15 +11,18 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,9 +59,9 @@ public class HttpUtil {
                 HttpEntity entity = prepareHttpEntity(charset);
                 httpPost.setEntity(entity);
                 Header header = new BasicHeader("content-Type","application/json");
-                httpPost.setHeader(header);              }
+                httpPost.setHeader(header);
+            }
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpPost);
-
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode == 200){
                 String string = EntityUtils.toString(httpResponse.getEntity());
@@ -73,12 +76,13 @@ public class HttpUtil {
         return result;
     }
 
-    public static String sendDelete(String url,HttpParams charset){
+    public static String sendDelete(String url,String charset){
         String result = "";
         HttpDelete httpDelete = new HttpDelete(url);
         try {
             if (null != charset){
-                httpDelete.setParams(charset);
+                Header header = new BasicHeader("content-Type","application/json");
+                httpDelete.setHeader(header);
             }
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpDelete);
             int statusCode = httpResponse.getStatusLine().getStatusCode();

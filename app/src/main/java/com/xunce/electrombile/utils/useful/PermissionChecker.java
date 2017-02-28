@@ -2,16 +2,15 @@ package com.xunce.electrombile.utils.useful;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
+
 import android.support.v4.content.ContextCompat;
 
 /**
- * Created by yangxu on 2017/1/17.
+ * Created by yangxu on 2017/1/15.
  */
 
 public class PermissionChecker {
     private final Context mContext;
-    private static final int PERMISSION_REQUEST_CODE = 0;
 
 
     public PermissionChecker(Context context) {
@@ -28,7 +27,6 @@ public class PermissionChecker {
     }
 
     private boolean lakesPermission(String permission) {
-        return ContextCompat.checkSelfPermission(mContext, permission) != PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(mContext, permission) == PackageManager.PERMISSION_DENIED;
     }
-
 }

@@ -92,6 +92,8 @@ public class SettingManager {
   
     private final String savedAlarmIndex = "AlarmNumber";
 
+    private boolean isTest = true;
+
     /**
      * The spf.
      */
@@ -480,7 +482,7 @@ public class SettingManager {
      */
     public String getHttpHost(){
         String httpHost = spf.getString(HttpHost,releaseHttpHost);
-        if (!httpHost.equals(releaseHttpHost) && !httpHost.equals(testHttpHost)){
+        if (!isTest && !httpHost.equals(releaseHttpHost) && !httpHost.equals(testHttpHost)){
             setHttpHost(releaseHttpHost);
             return releaseHttpHost;
         }
@@ -493,7 +495,7 @@ public class SettingManager {
 
     public String getHttpPort(){
         String httpPort = spf.getString(HttpPort,releaseHttpPort);
-        if (!httpPort.equals(releaseHttpPort) && !httpPort.equals(testHttpPort)){
+        if (!isTest && !httpPort.equals(releaseHttpPort) && !httpPort.equals(testHttpPort)){
             setHttpPort(releaseHttpPort);
             return releaseHttpPort;
         }

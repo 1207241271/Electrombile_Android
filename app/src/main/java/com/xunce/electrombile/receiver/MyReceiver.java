@@ -42,6 +42,7 @@ import com.xunce.electrombile.protocol._433Factory;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -172,10 +173,20 @@ public class MyReceiver extends BroadcastReceiver {
 //                    ((FragmentActivity) mContext).setManager.setAlarmFlag(true);
 //                    ((FragmentActivity) mContext).switchFragment.openStateAlarmBtn();
 //                    ((FragmentActivity) mContext).switchFragment.showNotification(date_str+"自动落锁成功",
-//                            FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
+//                            FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS)
+//
                 }
                 break;
+            case 4:
+                try{
+                    String jsonStr = protocol.tmp;
+                    JSONObject jsonObject = new JSONObject(jsonStr);
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    String fileName= data.getString("fileName");
+                    EventBus.getDefault().post(new NotifiyArriviedEvent(fileName));
+                }catch (Exception e){
 
+                }
             default:
                 break;
         }
