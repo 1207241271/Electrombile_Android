@@ -8,13 +8,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-
 import com.avos.avoscloud.okhttp.internal.framed.ErrorCode;
 import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.params.HttpParams;
-
 import java.util.List;
 
 public class HttpService extends Service {

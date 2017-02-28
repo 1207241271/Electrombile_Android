@@ -90,7 +90,6 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
         titleTextView.setText("电话报警设置");
         RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
-
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

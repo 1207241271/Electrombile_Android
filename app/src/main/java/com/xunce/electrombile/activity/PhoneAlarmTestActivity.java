@@ -188,7 +188,6 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         if (httpService!=null){
             watiDialog.setMessage("正在设置");
             watiDialog.show();
-
             try {
                 JSONObject caller = new JSONObject();
                 int index = SettingManager.getInstance().getSavedAlarmIndex();

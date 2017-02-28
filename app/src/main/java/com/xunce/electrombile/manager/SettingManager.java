@@ -89,7 +89,7 @@ public class SettingManager {
     private final String HttpPort = "HttpPort";
     public final String releaseHttpPort = "80";
     public final String testHttpPort = "8081";
-
+  
     private final String savedAlarmIndex = "AlarmNumber";
 
     /**
