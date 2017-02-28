@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.alibaba.fastjson.asm.Label;
 import com.lidroid.xutils.HttpUtils;
@@ -36,6 +37,7 @@ import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
+import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.PermissionChecker;
 import com.xunce.electrombile.view.Waveform.RendererFactory;
 import com.xunce.electrombile.view.Waveform.WaveformView;
@@ -144,6 +146,14 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
 
                     e.printStackTrace();
                 }
+            }else  if (msg.what == 110){
+                progressDialog.dismiss();
+                Toast.makeText(WiretapActivity.this,"下载失败", Toast.LENGTH_SHORT).show();
+                recordStatus = RecordStatus.RecordStatus_Start;
+                changeButtonState(btnPlay,true);
+                btnPlay.setText("开始录音");
+                changeButtonState(btnStop,false);
+                btnPlay.setText("结束");
             }
         }
     };
@@ -278,6 +288,7 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             }
             @Override
             public void onFailure(HttpException error, String msg) {
+                mHander.sendEmptyMessage(110);
                 Log.d("Failure",msg);
             }
         });
