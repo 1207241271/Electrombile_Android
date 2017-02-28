@@ -116,6 +116,14 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
             }
         });
 
+        Button btn_received = (Button)findViewById(R.id.btn_received);
+        btn_received.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         watiDialog = new ProgressDialog(this);
         btn_alarmTest = (Button)findViewById(R.id.btn_alarmtest);
         btn_alarmDelete = (Button)findViewById(R.id.btn_alarmdelete);
@@ -175,10 +183,14 @@ public class PhoneAlarmTestActivity extends BaseActivity implements ServiceConne
         if (httpService!=null){
             watiDialog.setMessage("正在设置");
             watiDialog.show();
-
-            String json = "{\"caller\":\""+SettingManager.getInstance().getSavedAlarmIndex()+ "\"}";
-            httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",json);
-
+            try {
+                JSONObject caller = new JSONObject();
+                int index = SettingManager.getInstance().getSavedAlarmIndex();
+                caller.put("caller",index);
+                httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }else {
             Toast.makeText(PhoneAlarmTestActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
         }

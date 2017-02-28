@@ -8,13 +8,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-
 import com.avos.avoscloud.okhttp.internal.framed.ErrorCode;
 import com.xunce.electrombile.utils.HttpUtil.HttpUtil;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.params.HttpParams;
-
 import java.util.List;
 
 public class HttpService extends Service {
@@ -69,6 +66,7 @@ public class HttpService extends Service {
         void dealError(short errorCode);
     }
 
+
     public void dealWithHttpResponse(String url, int method, final String type, String contentbody){
         final String urlFinal = url;
         final int    httpMethod =  method;
@@ -86,11 +84,10 @@ public class HttpService extends Service {
                         dealWithHttpPost(urlFinal,typeFinal,body);
                         break;
                     case 2:
-                        dealWithHttpDelete(urlFinal,typeFinal,body);
+                        dealWithHttpDelete(urlFinal,typeFinal,null);
                         break;
                     case 3:
-                        dealWithHttpPut(urlFinal,typeFinal,body);
-                        break;
+                        dealWithPut(urlFinal,typeFinal,body);
                 }
             }
         }.start();
@@ -122,7 +119,7 @@ public class HttpService extends Service {
 
     public void dealWithHttpPut(String url,String type,String body){
         String result = HttpUtil.sendPut(url,body);
-        if (result == null || result.equals("error")){
+        if (result == null|| result.equals("error")){
             callback.dealError(URLNULLError);
         }
         callback.onGetResponse(result,type);

@@ -1,14 +1,18 @@
 package com.xunce.electrombile.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -21,10 +25,12 @@ import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.ContractUtils;
+import com.xunce.electrombile.utils.useful.PermissionChecker;
 
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,6 +42,13 @@ import java.util.TimerTask;
 public class ChangeAlarmActivity extends BaseActivity implements ServiceConnection{
     private HttpService.Binder httpBinder;
     private HttpService         httpService;
+    private static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CONTACTS
+    };
+    public static final int PERMISSION_REQUEST_CODE = 0;
+
+
     Handler handler = new Handler() {
         @Override
         public void handleMessage(android.os.Message msg) {
@@ -75,7 +88,7 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
         super.initViews();
         View titleView = findViewById(R.id.ll_button);
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);
-        titleTextView.setText("电话报警测试");
+        titleTextView.setText("电话报警设置");
         RelativeLayout btn_back = (RelativeLayout)titleView.findViewById(R.id.btn_back);
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -88,24 +101,36 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ContractUtils.deleteContract(getBaseContext());
-                    String[] items = getResources().getStringArray(R.array.alarmPhone);
-                    int index = SettingManager.getInstance().getSavedAlarmIndex();
-                    index = index + 1;
-                    if (index >= items.length){
-                        index = 0;
-                    }
-                    SettingManager.getInstance().setSavedAlarmIndex(index);
-                    ContractUtils.addContract(items[index],getBaseContext());
-                    String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI();
+                    PermissionChecker checker=new PermissionChecker(ChangeAlarmActivity.this);
+                    boolean islake = checker.lakesPermissions(PERMISSIONS);
+                    if (!islake){
+                        ContractUtils.deleteContract(getBaseContext());
+                        String[] items = getResources().getStringArray(R.array.alarmPhone);
+                        int index = SettingManager.getInstance().getSavedAlarmIndex();
+                        index = index + 1;
+                        if (index >= items.length){
+                            index = 0;
+                        }
+                        SettingManager.getInstance().setSavedAlarmIndex(index);
+                        ContractUtils.addContract(items[index],getBaseContext());
+                        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/"+ SettingManager.getInstance().getIMEI();
 
-                    if (httpService!=null){
-                        String json = "{\"caller\":\""+SettingManager.getInstance().getSavedAlarmIndex()+ "\"}";
-                        httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",json);
+                        if (httpService!=null){
 
+                            try {
+                                JSONObject caller = new JSONObject();
+                                caller.put("caller",index);
+                                httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }else {
+                            Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+                        }
                     }else {
-                        Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+                        ActivityCompat.requestPermissions(ChangeAlarmActivity.this,PERMISSIONS,PERMISSION_REQUEST_CODE);
                     }
+
                 }
             });
         }catch (Exception e){
@@ -139,4 +164,45 @@ public class ChangeAlarmActivity extends BaseActivity implements ServiceConnecti
         httpService = httpBinder.getHttpService();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE && hasAllPermissionsGranted(grantResults)) {
+            ContractUtils.deleteContract(getBaseContext());
+            String[] items = getResources().getStringArray(R.array.alarmPhone);
+            int index = SettingManager.getInstance().getSavedAlarmIndex();
+            index = index + 1;
+            if (index >= items.length){
+                index = 0;
+            }
+            SettingManager.getInstance().setSavedAlarmIndex(index);
+            ContractUtils.addContract(items[index],getBaseContext());
+            String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/"+ SettingManager.getInstance().getIMEI();
+
+            if (httpService!=null){
+                try {
+                    JSONObject caller = new JSONObject();
+                    caller.put("caller",index);
+                    httpService.dealWithHttpResponse(url,3,"phoneAlarmTest",caller.toString());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }else {
+                Toast.makeText(ChangeAlarmActivity.this,"连接服务开启失败",Toast.LENGTH_SHORT).show();
+            }
+        } else {
+
+        }
+
+    }
+
+    // 判断是否拥有所有权限
+    private boolean hasAllPermissionsGranted(@NonNull int[] grantResults) {
+        for (int grantResult : grantResults) {
+            if (grantResult == PackageManager.PERMISSION_DENIED) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

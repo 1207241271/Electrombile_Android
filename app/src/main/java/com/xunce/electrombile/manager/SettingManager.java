@@ -83,13 +83,13 @@ public class SettingManager {
 
     private final String HttpHost = "HttpHost";
 
-    public final String releaseHttpHost = "http://api.xiaoan110.com";
-    public final String testHttpHost = "http://test.xiaoan110.com";
+    public final String releaseHttpHost = "http://api.xiaoan110.com:";
+    public final String testHttpHost = "http://test.xiaoan110.com:";
 
     private final String HttpPort = "HttpPort";
-    public final String releaseHttpPort = "";
-    public final String testHttpPort = ":8083";
-
+    public final String releaseHttpPort = "80";
+    public final String testHttpPort = "8081";
+  
     private final String savedAlarmIndex = "AlarmNumber";
 
     private boolean isTest = true;

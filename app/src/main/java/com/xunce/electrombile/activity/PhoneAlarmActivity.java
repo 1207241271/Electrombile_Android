@@ -1,20 +1,21 @@
 package com.xunce.electrombile.activity;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -28,6 +29,7 @@ import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.ContractUtils;
+import com.xunce.electrombile.utils.useful.PermissionChecker;
 
 import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
@@ -47,6 +49,11 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     private ProgressDialog watiDialog;
     private HttpService.Binder httpBinder;
     private HttpService httpService;
+    private static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CONTACTS
+    };
+    public static final int PERMISSION_REQUEST_CODE = 0;
 
     Handler handler = new Handler() {
         @Override
@@ -55,9 +62,14 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
                 watiDialog.cancel();
                 Toast.makeText(PhoneAlarmActivity.this,"设置成功",Toast.LENGTH_SHORT).show();
                 if (!SettingManager.getInstance().getHasContracter()){
-                    String[] items = getResources().getStringArray(R.array.alarmPhone);
-                    ContractUtils.addContract(items[SettingManager.getInstance().getSavedAlarmIndex()],getBaseContext());
-                    SettingManager.getInstance().setHasContracter(true);
+                    PermissionChecker checker=new PermissionChecker(PhoneAlarmActivity.this);
+                    if (!checker.lakesPermissions(PERMISSIONS)) {
+                        String[] items = getResources().getStringArray(R.array.alarmPhone);
+                        ContractUtils.addContract(items[SettingManager.getInstance().getSavedAlarmIndex()], getBaseContext());
+                        SettingManager.getInstance().setHasContracter(true);
+                    }else {
+                        ActivityCompat.requestPermissions(PhoneAlarmActivity.this,PERMISSIONS,PERMISSION_REQUEST_CODE);
+                    }
                 }
                 SettingManager.getInstance().setPhoneIsAgree(true);
                 EventBus.getDefault().post(new PhoneAlarmEvent(true));
@@ -114,8 +126,15 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
     }
 
     private void sendPost() {
+        String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
         if (httpService !=null) {
-            String url = SettingManager.getInstance().getHttpHost() + SettingManager.getInstance().getHttpPort() + "/v1/telephone/" + SettingManager.getInstance().getIMEI() + "?telephone=" + AVUser.getCurrentUser().getUsername();
+            try {
+                JSONObject telephone = new JSONObject();
+                telephone.put("telephone",AVUser.getCurrentUser().getUsername());
+                httpService.dealWithHttpResponse(url,1,"phoneAlarmTest",telephone.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             watiDialog.setMessage("正在设置");
             watiDialog.show();
             httpService.dealWithHttpResponse(url,1,"setPhoneAlarm",null);
@@ -211,5 +230,27 @@ public class PhoneAlarmActivity extends BaseActivity implements ServiceConnectio
         httpService = httpBinder.getHttpService();
     }
 
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE && hasAllPermissionsGranted(grantResults)) {
+            String[] items = getResources().getStringArray(R.array.alarmPhone);
+            ContractUtils.addContract(items[SettingManager.getInstance().getSavedAlarmIndex()], getBaseContext());
+            SettingManager.getInstance().setHasContracter(true);
+        } else {
+        }
+
+    }
+
+    // 判断是否拥有所有权限
+    private boolean hasAllPermissionsGranted(@NonNull int[] grantResults) {
+        for (int grantResult : grantResults) {
+            if (grantResult == PackageManager.PERMISSION_DENIED) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

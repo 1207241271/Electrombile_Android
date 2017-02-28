@@ -1,9 +1,7 @@
 package com.xunce.electrombile.utils.HttpUtil;
 
 import android.util.Log;
-
 import com.alibaba.fastjson.util.UTF8Decoder;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -59,7 +57,6 @@ public class HttpUtil {
         try {
             if (null != charset){
                 HttpEntity entity = prepareHttpEntity(charset);
-
                 httpPost.setEntity(entity);
                 Header header = new BasicHeader("content-Type","application/json");
                 httpPost.setHeader(header);
@@ -108,26 +105,24 @@ public class HttpUtil {
         try {
             if (null != charset){
                 HttpEntity entity = prepareHttpEntity(charset);
-
                 httpPut.setEntity(entity);
                 Header header = new BasicHeader("content-Type","application/json");
                 httpPut.setHeader(header);
             }
-
             HttpResponse httpResponse = new DefaultHttpClient().execute(httpPut);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (statusCode ==200){
+            if (statusCode == 200){
                 String string = EntityUtils.toString(httpResponse.getEntity());
                 result = string;
+                Log.w(Tag,string);
             }else {
+                Log.w(Tag,httpResponse.getStatusLine().toString());
             }
         }catch (Exception e){
             e.printStackTrace();
         }
         return result;
     }
-
-
     private static HttpEntity prepareHttpEntity(String postData) {
 
         HttpEntity requestHttpEntity = null;

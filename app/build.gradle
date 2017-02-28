@@ -143,16 +143,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
             debuggable false
-
-            applicationVariants.all { variant ->
-                variant.outputs.each { output ->
-                    def outputFile = output.outputFile
-                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                        def fileName = "SafeGuard_v${defaultConfig.versionName}_${variant.productFlavors[0].name}.apk"
-                        output.outputFile = new File(outputFile.parent, fileName)
-                    }
-                }
-            }
         }
         debug {
             buildConfigField "boolean", "LOG_DEBUG", "true"
@@ -167,9 +157,6 @@ android {
     }
 
     productFlavors {
-        _360 {}
-        baidu {}
-        xiaomi {}
         tencent {}
         FIR {
             targetSdkVersion 22
@@ -178,6 +165,17 @@ android {
 
     productFlavors.all { flavor ->
         flavor.manifestPlaceholders = [CHANNEL_VALUE: name]
+    }
+
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                def fileName = "SafeGuard_v${defaultConfig.versionName}_${variant.productFlavors[0].name}.apk"
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
     }
 
     //fix third library duplicate META-INF problem
