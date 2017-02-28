@@ -53,3 +53,17 @@ gdb.setup
 
 # Eclipse NDK
 .cproject
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# Intellij
+*.iml
+.idea/workspace.xml
+.idea/libraries
+
+# Keystore files
+*.jks
