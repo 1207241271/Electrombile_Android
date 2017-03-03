@@ -301,8 +301,13 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
                     @Override
                     public void onFail(Exception e) {
-                        ToastUtils.showShort(m_context,"退出登录失败，解订阅失败"+e.getMessage());
-
+                        ToastUtils.showShort(m_context,"解除订阅失败"+e.getMessage());
+                        FragmentActivity.cancelAllNotification();
+                        Intent intent = new Intent(m_context, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        AVUser.logOut();
+                        getActivity().finish();
                     }
                 });
 

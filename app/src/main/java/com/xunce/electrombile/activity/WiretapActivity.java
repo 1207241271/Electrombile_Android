@@ -149,11 +149,10 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             }else  if (msg.what == 110){
                 progressDialog.dismiss();
                 Toast.makeText(WiretapActivity.this,"下载失败", Toast.LENGTH_SHORT).show();
-                recordStatus = RecordStatus.RecordStatus_Start;
-                changeButtonState(btnPlay,true);
-                btnPlay.setText("开始录音");
-                changeButtonState(btnStop,false);
-                btnPlay.setText("结束");
+                resetAll();
+            }else if (msg.what == 101){
+                Bundle bundle = msg.getData();
+                dealWithErrorCode(bundle.getInt("code"));
             }
         }
     };
@@ -355,15 +354,21 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             @Override
             public void onGetResponse(String data, String type) {
                 try {
-                    //返回的数据不是json，如此判断是否正确
-                    if (!data.contains("1")){
+                    JSONObject object = new JSONObject(data);
+                    int code = object.getInt("code");
+                    if (code == 0){
                         if (type.equals("recordOn")){
                             mHander.sendEmptyMessage(8);
                         }else if (type.equals("recordOff")){
                             mHander.sendEmptyMessage(9);
                         }
                     }else {
-                        mHander.sendEmptyMessage(110);
+                        Message message = new Message();
+                        message.what = 101;
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("code",code);
+                        message.setData(bundle);
+                        mHander.sendMessage(message);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -398,5 +403,55 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
         if (fileName != null){
             downLoadFile(fileName);
         }
+    }
+
+    public void resetAll(){
+        recordStatus = RecordStatus.RecordStatus_Start;
+        changeButtonState(btnPlay,true);
+        btnPlay.setText("开始录音");
+        changeButtonState(btnStop,false);
+        btnPlay.setText("结束");
+    }
+
+    public void dealWithErrorCode(int code){
+        String errStr = "";
+        switch (code) {
+            case 100:
+                errStr = "服务器内部错误";
+                break;
+            case 101:
+                errStr = "请求设备号错误";
+                break;
+            case 102:
+                errStr = "无请求内容";
+                break;
+            case 103:
+                errStr = "请求内容错误";
+                break;
+            case 104:
+                errStr = "请求 URL 错误";
+                break;
+            case 105:
+                errStr = "请求范围过大";
+                break;
+            case 106:
+                errStr = "服务器无响应";
+                break;
+            case 107:
+                errStr = "服务器不在线";
+                break;
+            case 108:
+                errStr = "设备无响应";
+                break;
+            case 109:
+                errStr = "设备不在线";
+                break;
+            case 110:
+                errStr = "设备不在线";
+                break;
+            default:
+                break;
+        }
+        Toast.makeText(WiretapActivity.this,errStr, Toast.LENGTH_SHORT).show();
     }
 }

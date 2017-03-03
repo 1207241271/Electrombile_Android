@@ -168,13 +168,13 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                     mqttConnectManager.subscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
-                            ToastUtils.showShort(FragmentActivity.this,"重新订阅topic成功");
+                            ToastUtils.showShort(FragmentActivity.this,"重新连接服务器成功");
                             afterSubscribe();
                         }
 
                         @Override
                         public void onFail(Exception e) {
-                            ToastUtils.showShort(FragmentActivity.this,"重新订阅topic失败");
+                            ToastUtils.showShort(FragmentActivity.this,"重新连接服务器失败");
                             handler.sendEmptyMessageDelayed(2,60000);
                         }
                     });
@@ -400,13 +400,12 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
                     mqttConnectManager.subscribe(setManager.getIMEI(), new MqttConnectManager.Callback() {
                         @Override
                         public void onSuccess() {
-                            ToastUtils.showShort(FragmentActivity.this, "订阅topic成功，60s后重试");
                             afterSubscribe();
                         }
 
                         @Override
                         public void onFail(Exception e) {
-                            ToastUtils.showShort(FragmentActivity.this, "订阅topic失败，60s后重试");
+                            ToastUtils.showShort(FragmentActivity.this, "连接服务器失败，请稍后再试");
                             handler.sendEmptyMessageDelayed(2,60000);
 
                         }
@@ -417,7 +416,7 @@ public class FragmentActivity extends android.support.v4.app.FragmentActivity
             @Override
             public void MqttConnectFail() {
 //                MqttConnectManager.status = MqttConnectManager.CONNECTING_FAIL;
-                ToastUtils.showShort(FragmentActivity.this, "连接服务器失败");
+                ToastUtils.showShort(FragmentActivity.this, "服务器连接断开");
             }
         });
         mqttConnectManager.getMqttConnection();
