@@ -47,6 +47,7 @@ import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 
+import com.xunce.electrombile.Constants.HttpConstant;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CaptureActivity;
@@ -58,6 +59,10 @@ import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
+import com.xunce.electrombile.eventbus.http.HttpGetEvent;
+import com.xunce.electrombile.eventbus.http.HttpPostEvent;
+import com.xunce.electrombile.manager.HttpManager;
+import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager.TrackPoint;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
@@ -65,10 +70,15 @@ import com.xunce.electrombile.utils.useful.NetworkUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultListener {
@@ -675,25 +685,28 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE * 5 / 2);
         }
 
-        MqttConnectManager.sendMessage(mCenter.cmdWhere(), setManager.getIMEI(), new MqttConnectManager.Callback() {
-            @Override
-            public void onSuccess() {
-                LogUtil.log.i("publish success");
-            }
+        String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/device";
+        HttpManager.postHttpResult(url, HttpManager.postType.POST_TYPE_DEVICE, HttpConstant.HttpCmd.HTTP_CMD_GET_GPS,getPostBody(1));
 
-            @Override
-            public void onFail(Exception e) {
-                m_context.cancelWaitTimeOut();
-                LogUtil.log.i("publish fail");
-                if (dialog) {
-                    if (e.getMessage().equals("无网络连接")) {
-                        ToastUtils.showShort(m_context, "无网络连接");
-                    } else {
-                        ToastUtils.showShort(m_context, "下发指令失败");
-                    }
-                }
-            }
-        });
+//        MqttConnectManager.sendMessage(mCenter.cmdWhere(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+//            @Override
+//            public void onSuccess() {
+//                LogUtil.log.i("publish success");
+//            }
+//
+//            @Override
+//            public void onFail(Exception e) {
+//                m_context.cancelWaitTimeOut();
+//                LogUtil.log.i("publish fail");
+//                if (dialog) {
+//                    if (e.getMessage().equals("无网络连接")) {
+//                        ToastUtils.showShort(m_context, "无网络连接");
+//                    } else {
+//                        ToastUtils.showShort(m_context, "下发指令失败");
+//                    }
+//                }
+//            }
+//        });
     }
 
     //把电动车的位置放在地图中间
@@ -808,9 +821,10 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
     }
 
     public void caseLostCarSituationOffline(TrackPoint trackPoint) {
-        dialog_tv_status.setText("设备不在线");
-        btn_LostCarnextstep.setVisibility(View.INVISIBLE);
-
+        if (dialog_tv_status != null) {
+            dialog_tv_status.setText("设备不在线");
+            btn_LostCarnextstep.setVisibility(View.INVISIBLE);
+        }
         if (trackPoint != null) {
             Date date = trackPoint.time;
             String time = sdfWithSecond.format(date);
@@ -903,6 +917,133 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                     }
             }
         }
+    }
+
+
+    public TrackPoint getCurrentTrackPoint(JSONObject jsonObject){
+        TrackPoint trackPoint = null;
+        try {
+            Date date = new Date(jsonObject.getLong("timestamp")*1000);
+            double lon ;
+            if (jsonObject.has("lon")){
+                lon = jsonObject.getDouble("lon");
+            }else {
+                lon = jsonObject.getDouble("lng");
+            }
+            trackPoint =  new TrackPoint(date,jsonObject.getDouble("lat"),lon,jsonObject.getInt("speed"));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return trackPoint;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHttpPostEvent(HttpPostEvent event){
+        if (event.getRequestType() == HttpManager.postType.POST_TYPE_DEVICE && event.getCmdType() == HttpConstant.HttpCmd.HTTP_CMD_GET_GPS){
+            try {
+                JSONObject jsonObject = new JSONObject(event.getResult());
+                if (jsonObject.has("code")) {
+                    int code = jsonObject.getInt("code");
+                    if (code == 0){
+                        JSONObject result = jsonObject.getJSONObject("result");
+                        if (result.has("gps")){
+                            JSONObject gps = result.getJSONObject("gps");
+                            double lat = gps.getDouble("lat");
+                            if (lat == 0){
+                                getLatestGPS();
+                            }else {
+                                this.locateMobile(getCurrentTrackPoint(gps));
+                                this.caseLostCarSituationSuccess();
+                            }
+                        }else {
+                            getLatestGPS();
+                        }
+                    }else {
+                        getLatestGPS();
+                        dealWithErrorCode(code);
+                    }
+                }
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHttpGetEvent(HttpGetEvent event){
+        if (event.getRequestType() == HttpManager.getType.GET_TYPE_GPS_POINTS){
+            try{
+                JSONObject jsonObject = new JSONObject(event.getResult());
+                JSONArray array = jsonObject.getJSONArray("gps");
+                if (array.length() > 0){
+                    JSONObject gps = array.getJSONObject(0);
+                    this.locateMobile(getCurrentTrackPoint(gps));
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public String getPostBody(int code){
+        try {
+            JSONObject cmd = new JSONObject();
+            cmd.put("c",code);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("imei", SettingManager.getInstance().getIMEI());
+            jsonObject.put("cmd",cmd);
+            return jsonObject.toString();
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public void getLatestGPS(){
+        String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/history/"+SettingManager.getInstance().getIMEI();
+        HttpManager.getHttpResult(url, HttpManager.getType.GET_TYPE_GPS_POINTS);
+    }
+
+    public void dealWithErrorCode(int code){
+        String errStr = "";
+        switch (code) {
+            case 100:
+                errStr = "服务器内部错误";
+                break;
+            case 101:
+                errStr = "请求设备号错误";
+                break;
+            case 102:
+                errStr = "无请求内容";
+                break;
+            case 103:
+                errStr = "请求内容错误";
+                break;
+            case 104:
+                errStr = "请求URL错误";
+                break;
+            case 105:
+                errStr = "请求范围过大";
+                break;
+            case 106:
+                errStr = "服务器无响应";
+                break;
+            case 107:
+                errStr = "服务器不在线";
+                break;
+            case 108:
+                errStr = "设备无响应";
+                break;
+            case 109:
+                errStr = "设备不在线";
+                break;
+            case 110:
+                errStr = "设备不在线";
+                break;
+            default:
+                break;
+        }
+        ToastUtils.showShort(m_context,errStr);
     }
 }
 

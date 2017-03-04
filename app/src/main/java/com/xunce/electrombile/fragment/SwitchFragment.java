@@ -78,6 +78,7 @@ import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest;
 import com.xunce.electrombile.BuildConfig;
+import com.xunce.electrombile.Constants.HttpConstant;
 import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CropActivity;
@@ -94,6 +95,9 @@ import com.xunce.electrombile.eventbus.NotifiyArriviedEvent;
 import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.PhoneAlarmEvent;
 import com.xunce.electrombile.eventbus.QueryItineraryEvent;
+import com.xunce.electrombile.eventbus.http.HttpGetEvent;
+import com.xunce.electrombile.eventbus.http.HttpPostEvent;
+import com.xunce.electrombile.manager.HttpManager;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.Downloadservice;
 import com.xunce.electrombile.services.HttpService;
@@ -686,44 +690,49 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
             m_context.timeHandler.sendEmptyMessageDelayed(ProtocolConstants.TIME_OUT, ProtocolConstants.TIME_OUT_VALUE*5/2);
             if(alarmState){
                 cancelNotification();
-                MqttConnectManager.sendMessage(mCenter.cmdFenceOff(), setManager.getIMEI(), new MqttConnectManager.Callback() {
-                    @Override
-                    public void onSuccess() {
-                        LogUtil.log.i("publish success");
-                    }
+                String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/device";
+                HttpManager.postHttpResult(url, HttpManager.postType.POST_TYPE_DEVICE, HttpConstant.HttpCmd.HTTP_CMD_SET_FENCE,getPostBody(0));
 
-                    @Override
-                    public void onFail(Exception e) {
-                        m_context.cancelWaitTimeOut();
-                        LogUtil.log.i("publish fail");
-                        if(e.getMessage().equals("无网络连接")){
-                            ToastUtils.showShort(m_context,"无网络连接");
-                        }else{
-                            ToastUtils.showShort(m_context,"下发指令失败");
-                        }
-                    }
-                });
+//                MqttConnectManager.sendMessage(mCenter.cmdFenceOff(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+//                    @Override
+//                    public void onSuccess() {
+//                        LogUtil.log.i("publish success");
+//                    }
+//
+//                    @Override
+//                    public void onFail(Exception e) {
+//                        m_context.cancelWaitTimeOut();
+//                        LogUtil.log.i("publish fail");
+//                        if(e.getMessage().equals("无网络连接")){
+//                            ToastUtils.showShort(m_context,"无网络连接");
+//                        }else{
+//                            ToastUtils.showShort(m_context,"下发指令失败");
+//                        }
+//                    }
+//                });
             }else{
                 //等状态设置成功之后再改变按钮的显示状态，并且再更改标志位等的保存。
                 VibratorUtil.Vibrate(m_context, 700);
                 cancelNotification();
-                MqttConnectManager.sendMessage(mCenter.cmdFenceOn(), setManager.getIMEI(), new MqttConnectManager.Callback() {
-                    @Override
-                    public void onSuccess() {
-                        LogUtil.log.i("publish success");
-                    }
-
-                    @Override
-                    public void onFail(Exception e) {
-                        m_context.cancelWaitTimeOut();
-                        LogUtil.log.i("publish fail");
-                        if (e.getMessage().equals("无网络连接")) {
-                            ToastUtils.showShort(m_context, "无网络连接");
-                        } else {
-                            ToastUtils.showShort(m_context, "下发指令失败");
-                        }
-                    }
-                });
+                String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/device";
+                HttpManager.postHttpResult(url, HttpManager.postType.POST_TYPE_DEVICE, HttpConstant.HttpCmd.HTTP_CMD_SET_FENCE,getPostBody(1));
+//                MqttConnectManager.sendMessage(mCenter.cmdFenceOn(), setManager.getIMEI(), new MqttConnectManager.Callback() {
+//                    @Override
+//                    public void onSuccess() {
+//                        LogUtil.log.i("publish success");
+//                    }
+//
+//                    @Override
+//                    public void onFail(Exception e) {
+//                        m_context.cancelWaitTimeOut();
+//                        LogUtil.log.i("publish fail");
+//                        if (e.getMessage().equals("无网络连接")) {
+//                            ToastUtils.showShort(m_context, "无网络连接");
+//                        } else {
+//                            ToastUtils.showShort(m_context, "下发指令失败");
+//                        }
+//                    }
+//                });
             }
 
         }else{
@@ -731,6 +740,23 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         }
     }
 
+
+    public String getPostBody(int code){
+        try {
+            JSONObject cmd = new JSONObject();
+            cmd.put("c",4);
+            JSONObject param = new JSONObject();
+            param.put("defend",code);
+            cmd.put("param",param);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("imei", SettingManager.getInstance().getIMEI());
+            jsonObject.put("cmd",cmd);
+            return jsonObject.toString();
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return "";
+    }
     //取消显示常驻通知栏
     public void cancelNotification() {
         NotificationManager notificationManager = (NotificationManager) (m_context).getSystemService(m_context
@@ -1341,7 +1367,31 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
         this.openStateAlarmBtn();
         this.showNotification(event.getDate_str(),FragmentActivity.NOTIFICATION_AUTOLOCKSTATUS);
     }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHttpPostEvent(HttpPostEvent event){
+        if (event.getRequestType() == HttpManager.postType.POST_TYPE_DEVICE && event.getCmdType()== HttpConstant.HttpCmd.HTTP_CMD_SET_FENCE){
+            try {
+                JSONObject jsonObject = new JSONObject(event.getResult());
+                int code = jsonObject.getInt("code");
+                if (code == 0){
+                    if (alarmState){
+                        setManager.setAlarmFlag(false);
+                        closeStateAlarmBtn();
+                    }else {
+                        openStateAlarmBtn();
+                        setManager.setAlarmFlag(true);
+                        showNotification("小安宝防盗系统已启动", FragmentActivity.NOTIFICATION_ALARMSTATUS);
+                    }
+                }else {
+                    m_context.cancelWaitTimeOut();
+                    ToastUtils.showShort(m_context,"服务器错误");
+                }
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
 
+        }
+    }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
