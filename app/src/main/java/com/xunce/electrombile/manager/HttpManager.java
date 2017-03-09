@@ -38,6 +38,7 @@ public class HttpManager {
                     connection = (HttpURLConnection) getURL.openConnection();
                     connection.setRequestMethod("GET");
                     connection.setConnectTimeout(5000);
+                    connection.setRequestProperty("Content-Type","application/json");
                     String result = StreamToStringUtil.StreamToString(connection.getInputStream());
                     EventBus.getDefault().post(new HttpGetEvent(type, StringUtil.decodeUnicode(result),true));
                 }catch (Exception e){

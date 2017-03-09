@@ -767,13 +767,18 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     //点击打开报警按钮时按钮样式的响应操作
     public void openStateAlarmBtn() {
         alarmState = true;
+        ToastUtils.showShort(m_context,"设置成功");
         btnAlarmState1.setBackgroundResource(R.drawable.img_open);
+        m_context.cancelWaitTimeOut();
+
     }
 
     //点击关闭报警按钮时按钮样式的响应操作
     public void closeStateAlarmBtn() {
         alarmState = false;
+        ToastUtils.showShort(m_context,"设置成功");
         btnAlarmState1.setBackgroundResource(R.drawable.img_close);
+        m_context.cancelWaitTimeOut();
     }
 
     public void msgSuccessArrived() {
@@ -1371,12 +1376,16 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
     public void onHttpPostEvent(HttpPostEvent event){
         if (event.getRequestType() == HttpManager.postType.POST_TYPE_DEVICE && event.getCmdType()== HttpConstant.HttpCmd.HTTP_CMD_SET_FENCE){
             try {
+                Log.d(TAG,event.getResult());
                 JSONObject jsonObject = new JSONObject(event.getResult());
                 int code = jsonObject.getInt("code");
-                if (code == 0){
+
+                if (0 == code){
                     if (alarmState){
                         setManager.setAlarmFlag(false);
                         closeStateAlarmBtn();
+
+                        showNotification("小安宝防盗系统已关闭", FragmentActivity.NOTIFICATION_ALARMSTATUS);
                     }else {
                         openStateAlarmBtn();
                         setManager.setAlarmFlag(true);

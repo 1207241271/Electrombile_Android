@@ -962,6 +962,20 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                         getLatestGPS();
                         dealWithErrorCode(code);
                     }
+                }else if (jsonObject.has("result")){
+                    JSONObject result = jsonObject.getJSONObject("result");
+                    if (result.has("gps")){
+                        JSONObject gps = result.getJSONObject("gps");
+                        double lat = gps.getDouble("lat");
+                        if (lat == 0){
+                            getLatestGPS();
+                        }else {
+                            this.locateMobile(getCurrentTrackPoint(gps));
+                            this.caseLostCarSituationSuccess();
+                        }
+                    }else {
+                        getLatestGPS();
+                    }
                 }
             }catch (JSONException e){
                 e.printStackTrace();
