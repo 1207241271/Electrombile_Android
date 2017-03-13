@@ -25,7 +25,7 @@ public class HttpManager {
     }
 
     public enum postType{
-        POST_TYPE_DEVICE
+        POST_TYPE_DEVICE,
     }
 
     public static void getHttpResult(final String url, final getType type){

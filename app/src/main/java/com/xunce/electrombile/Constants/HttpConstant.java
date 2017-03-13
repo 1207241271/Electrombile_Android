@@ -19,6 +19,10 @@ public class HttpConstant {
         HTTP_CMD_SET_BATTERY_TYPE,
         HTTP_CMD_START_RECORD,
         HTTP_CMD_STOP_RECORD,
+        HTTP_CMD_SET_REMOTE_LOCK,
+        HTTP_CMD_GET_REMOTE_LOCK,
+        HTTP_CMD_SET_RELEVANCE,
+        HTTP_CMD_GET_RELEVANCE,
         HTTP_CMD_DEFAULT
     }
 }
