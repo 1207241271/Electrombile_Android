@@ -23,11 +23,12 @@ import com.xunce.electrombile.activity.Autolock;
 import com.xunce.electrombile.activity.BatteryTypeActivity;
 import com.xunce.electrombile.activity.CarManageActivity;
 import com.xunce.electrombile.activity.FragmentActivity;
-import com.xunce.electrombile.activity.HelpActivity;
 import com.xunce.electrombile.activity.MapOfflineActivity;
-import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.activity.PhoneAlarmActivity;
 import com.xunce.electrombile.activity.PhoneAlarmTestActivity;
+import com.xunce.electrombile.activity.RelevanceActivity;
+import com.xunce.electrombile.activity.RemoteLockActivity;
 import com.xunce.electrombile.activity.WiretapActivity;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.activity.account.PersonalCenterActivity;
@@ -39,7 +40,6 @@ import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 
@@ -183,6 +183,12 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
             case R.id.layout_wiretap:
                 gotoWiretap();
                 break;
+            case R.id.layout_remote:
+                gotoRemote();
+                break;
+            case R.id.layout_relevance:
+                gotoRelevance();
+                break;
             default:
                 break;
         }
@@ -250,6 +256,16 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
 
     private void gotoWiretap(){
         Intent intent = new Intent(m_context, WiretapActivity.class);
+        startActivity(intent);
+    }
+
+    private void gotoRemote(){
+        Intent intent = new Intent(m_context, RemoteLockActivity.class);
+        startActivity(intent);
+    }
+
+    private void gotoRelevance(){
+        Intent intent = new Intent(m_context, RelevanceActivity.class);
         startActivity(intent);
     }
 
@@ -345,6 +361,8 @@ public class SettingsFragment extends BaseFragment implements View.OnClickListen
         view.findViewById(R.id.layout_battery).setOnClickListener(this);
         view.findViewById(R.id.layout_phoneAlarm).setOnClickListener(this);
         view.findViewById(R.id.layout_wiretap).setOnClickListener(this);
+        view.findViewById(R.id.layout_remote).setOnClickListener(this);
+        view.findViewById(R.id.layout_relevance).setOnClickListener(this);
 
         View titleView = view.findViewById(R.id.ll_button) ;
         TextView titleTextView = (TextView)titleView.findViewById(R.id.tv_title);

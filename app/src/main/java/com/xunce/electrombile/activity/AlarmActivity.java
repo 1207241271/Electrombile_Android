@@ -1,6 +1,5 @@
 package com.xunce.electrombile.activity;
 
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,15 +9,10 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
-import com.baidu.mapapi.map.InfoWindow;
-import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
-import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
-import com.xunce.electrombile.manager.TracksManager;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.view.SlidingButton;
-
-import java.text.SimpleDateFormat;
 
 
 /**

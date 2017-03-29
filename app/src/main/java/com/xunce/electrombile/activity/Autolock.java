@@ -3,7 +3,6 @@ package com.xunce.electrombile.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -12,8 +11,8 @@ import android.widget.Toast;
 
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.eventbus.AutoLockEvent;
-import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.manager.CmdCenter;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
 

@@ -281,6 +281,8 @@
         <activity android:name=".activity.CaptureActivity"/>
         <activity android:name=".activity.OutageAvtivity"/>
         <activity android:name=".activity.WiretapActivity"/>
+        <activity android:name=".activity.RemoteLockActivity"/>
+        <activity android:name=".activity.RelevanceActivity"/>
     </application>
 
 </manifest>

@@ -54,13 +54,4 @@
         </LinearLayout>
     </FrameLayout>
 
-    <!--<ToggleButton-->
-    <!--android:id="@+id/btn_warning_confirm"-->
-    <!--android:layout_width="@dimen/btn_width_warning"-->
-    <!--android:layout_height="@dimen/btn_height_warning"-->
-    <!--android:layout_gravity="center_horizontal"-->
-    <!--android:layout_marginTop="30dp"-->
-    <!--android:background="@drawable/alarm_btn"-->
-    <!--android:textOff=""-->
-    <!--android:textOn="" />-->
 </LinearLayout>

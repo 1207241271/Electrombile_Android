@@ -37,7 +37,8 @@ import java.util.Random;
 
 import cn.jpush.android.api.InstrumentedActivity;
 
-public class SplashActivity extends InstrumentedActivity {
+public class
+SplashActivity extends InstrumentedActivity {
 
 
     private SettingManager setManager;

@@ -7,11 +7,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.xunce.electrombile.Constants.ServiceConstants;
-import com.xunce.electrombile.activity.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
-import com.xunce.electrombile.mqtt.Connection;
-import com.xunce.electrombile.mqtt.Connections;
 import com.xunce.electrombile.receiver.AlarmReceiver;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;

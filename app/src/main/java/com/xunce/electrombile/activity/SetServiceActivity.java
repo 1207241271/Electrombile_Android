@@ -7,12 +7,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
-import com.xunce.electrombile.mqtt.Connection;
 
 /**
  * Created by yangxu on 2016/11/15.

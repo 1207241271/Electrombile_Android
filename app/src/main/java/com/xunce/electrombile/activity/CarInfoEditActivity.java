@@ -14,9 +14,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.*;
-import android.os.Message;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -31,7 +29,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
@@ -46,6 +43,7 @@ import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.account.LoginActivity;
 import com.xunce.electrombile.applicatoin.App;
 import com.xunce.electrombile.manager.CmdCenter;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.BitmapUtils;
@@ -53,9 +51,6 @@ import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.JPushUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.greenrobot.eventbus.EventBus;
 import org.json.JSONObject;
 
 import java.io.File;

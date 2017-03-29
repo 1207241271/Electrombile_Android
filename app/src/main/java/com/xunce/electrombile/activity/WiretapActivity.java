@@ -20,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,6 +52,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -123,7 +125,7 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                 recordStatus = RecordStatus.RecordStatus_Record;
             }else if (msg.what == 9){
                 timer.cancel();
-                btnPlay.setText("播放");
+                btnPlay.setText("暂停");
                 titleLabel.setText("已结束");
                 changeButtonState(btnStop,false);
                 progressDialog.setMessage("正在下载");
@@ -228,8 +230,14 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
                     }
                 }else if (recordStatus == RecordStatus.RecordStatus_Play){
                     try {
-                        mediaPlayer.prepare();
-                        mediaPlayer.start();
+                        if (mediaPlayer.isPlaying()){
+                            mediaPlayer.pause();
+                            btnPlay.setText("播放");
+                        }else {
+                            mediaPlayer.start();
+                            btnPlay.setText("暂停");
+                        }
+
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -251,6 +259,12 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
         });
         progressDialog = new ProgressDialog(this);
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                btnPlay.setText("播放");
+            }
+        });
         RendererFactory rendererFactory = new RendererFactory();
         mWvWaveform = (WaveformView)findViewById(R.id.wiretap_wv_waveform);
         mWvWaveform.setRenderer(rendererFactory.createSimpleWaveformRender(ContextCompat.getColor(this, R.color.red), ContextCompat.getColor(this,R.color.appgray)));
@@ -275,12 +289,13 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
     public void downLoadFile(final String fileName){
         String file = fileName.split("\\.")[0];
         String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/record?name=" +file;
-        HttpHandler<File> httpHandler = new HttpUtils().download(HttpRequest.HttpMethod.GET,url, APK_dir + fileName, null, new RequestCallBack<File>() {
+        final String localFileName = SettingManager.getInstance().getIMEI() + "_" + (new Date()).getTime()/1000 +".amr";
+        HttpHandler<File> httpHandler = new HttpUtils().download(HttpRequest.HttpMethod.GET,url, APK_dir + localFileName, null, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
-                bundle.putString("filePath",APK_dir+fileName);
+                bundle.putString("filePath",APK_dir+localFileName);
                 message.setData(bundle);
                 message.what = 11;
                 mHander.sendMessage(message);
@@ -449,7 +464,11 @@ public class WiretapActivity extends BaseActivity implements ServiceConnection{
             case 110:
                 errStr = "设备不在线";
                 break;
+            case 111:
+                errStr = "您的设备不支持该操作";
+                break;
             default:
+                errStr = "操作不成功";
                 break;
         }
         Toast.makeText(WiretapActivity.this,errStr, Toast.LENGTH_SHORT).show();

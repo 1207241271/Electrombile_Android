@@ -1,4 +1,4 @@
-package com.xunce.electrombile.activity;
+package com.xunce.electrombile.manager;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,13 +7,10 @@ import android.os.Message;
 import android.util.Log;
 
 import com.avos.avoscloud.LogUtil;
-import com.xunce.electrombile.Callback;
 import com.xunce.electrombile.Constants.ServiceConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.applicatoin.App;
-import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.log.MyLog;
-import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.mqtt.ActionListener;
 import com.xunce.electrombile.mqtt.Connection;
 import com.xunce.electrombile.mqtt.Connections;
@@ -28,7 +25,6 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.greenrobot.eventbus.EventBus;
 
 
 //使用单例模式

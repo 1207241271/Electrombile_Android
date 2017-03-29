@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,12 +23,11 @@ import android.widget.TextView;
 
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.manager.CmdCenter;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
-import com.xunce.electrombile.receiver.MyReceiver;
 import com.xunce.electrombile.utils.system.ToastUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 

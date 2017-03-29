@@ -52,13 +52,9 @@ import com.xunce.electrombile.Constants.ProtocolConstants;
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.activity.CaptureActivity;
 import com.xunce.electrombile.activity.FindCarActivity;
-import com.xunce.electrombile.activity.FragmentActivity;
-import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.activity.TestddActivity;
-import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.GPSEvent;
-import com.xunce.electrombile.eventbus.MessageEvent;
-import com.xunce.electrombile.eventbus.ObjectEvent;
 import com.xunce.electrombile.eventbus.http.HttpGetEvent;
 import com.xunce.electrombile.eventbus.http.HttpPostEvent;
 import com.xunce.electrombile.manager.HttpManager;
@@ -67,7 +63,6 @@ import com.xunce.electrombile.manager.TracksManager.TrackPoint;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
@@ -77,8 +72,6 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultListener {
@@ -289,7 +282,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
 // TODO Auto-generated method stub
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser){
-            getCarPosition(true);
+            getLatestGPS();
         }
     }
 
@@ -376,9 +369,7 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                 if (checkBind()) return;
 
                 if (mBaiduMap != null) {
-                    tv_CarPosition.setText("车辆位置:");
                     getCarPosition(true);
-
                 }
             }
         });
@@ -688,25 +679,6 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
         String url = SettingManager.getInstance().getHttpHost()+ SettingManager.getInstance().getHttpPort() + "/v1/device";
         HttpManager.postHttpResult(url, HttpManager.postType.POST_TYPE_DEVICE, HttpConstant.HttpCmd.HTTP_CMD_GET_GPS,getPostBody(1));
 
-//        MqttConnectManager.sendMessage(mCenter.cmdWhere(), setManager.getIMEI(), new MqttConnectManager.Callback() {
-//            @Override
-//            public void onSuccess() {
-//                LogUtil.log.i("publish success");
-//            }
-//
-//            @Override
-//            public void onFail(Exception e) {
-//                m_context.cancelWaitTimeOut();
-//                LogUtil.log.i("publish fail");
-//                if (dialog) {
-//                    if (e.getMessage().equals("无网络连接")) {
-//                        ToastUtils.showShort(m_context, "无网络连接");
-//                    } else {
-//                        ToastUtils.showShort(m_context, "下发指令失败");
-//                    }
-//                }
-//            }
-//        });
     }
 
     //把电动车的位置放在地图中间
@@ -930,7 +902,9 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
             }else {
                 lon = jsonObject.getDouble("lng");
             }
-            trackPoint =  new TrackPoint(date,jsonObject.getDouble("lat"),lon,jsonObject.getInt("speed"));
+            LatLng latLng = new LatLng(jsonObject.getDouble("lat"),lon);
+            LatLng newLatLng =  mCenter.convertPoint(latLng);
+            trackPoint =  new TrackPoint(date,newLatLng);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -949,17 +923,28 @@ public class MaptabFragment extends BaseFragment implements OnGetGeoCoderResultL
                         if (result.has("gps")){
                             JSONObject gps = result.getJSONObject("gps");
                             double lat = gps.getDouble("lat");
-                            if (lat == 0){
-                                getLatestGPS();
+                            double lon;
+                            if (gps.has("lon")){
+                                lon = gps.getDouble("lon");
                             }else {
+                                lon = gps.getDouble("lng");
+                            }
+                            if (lat < 1){
+//                                getLatestGPS();
+                                m_context.cancelWaitTimeOut();
+
+                            }else {
+                                m_context.cancelWaitTimeOut();
                                 this.locateMobile(getCurrentTrackPoint(gps));
                                 this.caseLostCarSituationSuccess();
                             }
                         }else {
-                            getLatestGPS();
+                            m_context.cancelWaitTimeOut();
+//                            getLatestGPS();
                         }
                     }else {
-                        getLatestGPS();
+//                        getLatestGPS();
+                        m_context.cancelWaitTimeOut();
                         dealWithErrorCode(code);
                     }
                 }else if (jsonObject.has("result")){

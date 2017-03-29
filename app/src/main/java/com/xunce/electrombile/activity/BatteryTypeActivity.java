@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.eventbus.BatteryTypeEvent;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
 
 import org.greenrobot.eventbus.Subscribe;

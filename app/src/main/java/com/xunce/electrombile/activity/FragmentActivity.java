@@ -32,9 +32,7 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.alibaba.fastjson.serializer.AfterFilter;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
@@ -52,14 +50,13 @@ import com.xunce.electrombile.eventbus.AutoLockEvent;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.GPSEvent;
 import com.xunce.electrombile.eventbus.MessageEvent;
-import com.xunce.electrombile.eventbus.ObjectEvent;
-import com.xunce.electrombile.eventbus.QueryItineraryEvent;
 import com.xunce.electrombile.eventbus.RefreshThreadEvent;
 import com.xunce.electrombile.fragment.MaptabFragment;
 import com.xunce.electrombile.fragment.SettingsFragment;
 import com.xunce.electrombile.fragment.SwitchFragment;
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.manager.CmdCenter;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.manager.TracksManager;
 import com.xunce.electrombile.mqtt.Connection;
@@ -75,15 +72,10 @@ import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import cn.jpush.android.api.JPushInterface;
 

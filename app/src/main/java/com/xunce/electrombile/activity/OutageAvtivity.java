@@ -10,6 +10,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.xunce.electrombile.R;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.utils.device.VibratorUtil;
 import com.xunce.electrombile.view.SlidingButton;
 

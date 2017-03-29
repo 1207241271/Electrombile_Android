@@ -1,7 +1,7 @@
 package com.xunce.electrombile.mqtt;
 
 import android.content.Context;
-import com.xunce.electrombile.activity.MqttConnectManager;
+import com.xunce.electrombile.manager.MqttConnectManager;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;

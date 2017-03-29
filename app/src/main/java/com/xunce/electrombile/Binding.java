@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.ListView;
 
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
@@ -14,9 +13,7 @@ import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.SaveCallback;
 import com.xunce.electrombile.activity.FragmentActivity;
-import com.xunce.electrombile.activity.MqttConnectManager;
-import com.xunce.electrombile.activity.WelcomeActivity;
-import com.xunce.electrombile.applicatoin.App;
+import com.xunce.electrombile.manager.MqttConnectManager;
 import com.xunce.electrombile.manager.CmdCenter;
 import com.xunce.electrombile.manager.SettingManager;
 import com.xunce.electrombile.utils.system.ToastUtils;
