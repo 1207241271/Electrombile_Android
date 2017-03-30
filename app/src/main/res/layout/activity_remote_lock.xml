@@ -12,7 +12,7 @@
 
     <TextView
 
-        android:text="电门关联已开启"
+        android:text="远程锁车已关闭"
         android:layout_marginLeft="20dp"
         android:layout_marginTop="40dp"
         android:textSize="25sp"
