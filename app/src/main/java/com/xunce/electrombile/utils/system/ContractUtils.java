@@ -17,6 +17,8 @@ import android.widget.ImageView;
 
 import com.xunce.electrombile.R;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -26,34 +28,39 @@ import java.io.ByteArrayOutputStream;
 public class ContractUtils {
 
     public static void addContract(String phoneNumber , Context context){
-        Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
-        ContentResolver resolver = context.getContentResolver();
-        ContentValues values = new ContentValues();
-        long contactId = ContentUris.parseId(resolver.insert(uri, values));
+        try {
+            Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
+            ContentResolver resolver = context.getContentResolver();
+            ContentValues values = new ContentValues();
+            long contactId = ContentUris.parseId(resolver.insert(uri, values));
 
-        // 添加姓名
-        uri = Uri.parse("content://com.android.contacts/data");
-        values.put("raw_contact_id", contactId);
-        values.put("mimetype", "vnd.android.cursor.item/name");
-        values.put("data2", "小安宝报警");
-        resolver.insert(uri, values);
+            // 添加姓名
+            uri = Uri.parse("content://com.android.contacts/data");
+            values.put("raw_contact_id", contactId);
+            values.put("mimetype", "vnd.android.cursor.item/name");
+            values.put("data2", "小安宝报警");
+            resolver.insert(uri, values);
 
-        // 添加电话
-        values.clear();
-        values.put("raw_contact_id", contactId);
-        values.put("mimetype", "vnd.android.cursor.item/phone_v2");
-        values.put("data2", "2");
-        values.put("data1", phoneNumber);
-        resolver.insert(uri, values);
+            // 添加电话
+            values.clear();
+            values.put("raw_contact_id", contactId);
+            values.put("mimetype", "vnd.android.cursor.item/phone_v2");
+            values.put("data2", "2");
+            values.put("data1", phoneNumber);
+            resolver.insert(uri, values);
 
-        values.clear();
-        values.put(android.provider.ContactsContract.Contacts.Data.RAW_CONTACT_ID,contactId);
-        values.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
-        ByteArrayOutputStream array = new ByteArrayOutputStream();
-        Bitmap b = BitmapFactory.decodeResource(context.getResources(),R.drawable.img_findcar);
-        b.compress(Bitmap.CompressFormat.JPEG, 100, array);
-        values.put(ContactsContract.Contacts.Photo.PHOTO, array.toByteArray());
-        resolver.insert(android.provider.ContactsContract.Data.CONTENT_URI, values);
+            values.clear();
+            values.put(android.provider.ContactsContract.Contacts.Data.RAW_CONTACT_ID,contactId);
+            values.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+            ByteArrayOutputStream array = new ByteArrayOutputStream();
+            Bitmap b = BitmapFactory.decodeResource(context.getResources(),R.drawable.img_findcar);
+            b.compress(Bitmap.CompressFormat.JPEG, 100, array);
+            values.put(ContactsContract.Contacts.Photo.PHOTO, array.toByteArray());
+            resolver.insert(android.provider.ContactsContract.Data.CONTENT_URI, values);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     public static void deleteContract(Context context){
