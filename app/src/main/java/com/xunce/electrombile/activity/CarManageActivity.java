@@ -1,11 +1,15 @@
 package com.xunce.electrombile.activity;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
+import android.os.Message;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -14,10 +18,13 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.xunce.electrombile.R;
 import com.xunce.electrombile.eventbus.EventbusConstants;
 import com.xunce.electrombile.eventbus.MessageEvent;
 import com.xunce.electrombile.manager.SettingManager;
+import com.xunce.electrombile.services.HttpService;
 import com.xunce.electrombile.utils.system.BitmapUtils;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.NetworkUtils;
@@ -33,7 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class CarManageActivity extends Activity {
+public class CarManageActivity extends Activity  implements ServiceConnection {
     private TextView tv_CurrentCar;
     private List<Map<String, Object>> Othercarlist;
     private SettingManager settingManager;
@@ -41,6 +48,11 @@ public class CarManageActivity extends Activity {
     private int OthercarPositon;
     private List<String> IMEIlist;
     private ImageView img_car;
+
+    private HttpService httpService;
+    private HttpService.Binder httpBinder;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +162,8 @@ public class CarManageActivity extends Activity {
                     //将intent里面的数据解析出来
                     String s = data.getStringExtra("string_key");
                     if(s.equals("设备解绑")){
+                        deletePhoneAlarm();
+
                         Boolean Flag_Maincar = data.getBooleanExtra("boolean_key",false);
                         if(Flag_Maincar){
                             CaseManagedCarUnbinded();
@@ -292,4 +306,24 @@ public class CarManageActivity extends Activity {
         super.onDestroy();
         EventBus.getDefault().unregister(this);//反注册EventBus
     }
+
+    private void deletePhoneAlarm(){
+
+        String url = SettingManager.getInstance().getHttpHost()+SettingManager.getInstance().getHttpPort()+"/v1/telephone/" + SettingManager.getInstance().getIMEI();
+        if(httpService != null){
+            httpService.dealWithHttpResponse(url,2,"deletePhoneAlarm",null);
+        }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        httpBinder = (HttpService.Binder) iBinder;
+        httpService = httpBinder.getHttpService();
+    }
+
 }
