@@ -654,6 +654,11 @@ public class SwitchFragment extends BaseFragment implements OnGetGeoCoderResultL
                 Log.e(TAG, "服务端网络定位失败，可以反馈IMEI号和大体定位时间到loc-bugs@baidu.com，会有人追查原因");
             }
         }
+
+        @Override
+        public void onConnectHotSpotMessage(String s, int i) {
+
+        }
     }
 
     private void initLocation() {

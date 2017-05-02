@@ -208,7 +208,7 @@ public class Binding {
                             Log.d("成功", "IMEI查询到" + list.size() + " 条符合条件的数据");
                             //一个设备可以绑定多个用户,但是这个类是唯一的，确保不重复生成相同的对象。
                             if (list.size() > 0) {
-                                ToastUtils.showShort(mContext,"设备已经被绑定");
+                                fail("设备已经被绑定");
                                 return;
                             }
                             ToastUtils.showShort(mContext, "您正在绑定主车辆...");

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
+import android.support.annotation.Nullable;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -22,72 +23,50 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.Result;
+
 import com.xunce.electrombile.Binding;
 import com.xunce.electrombile.BindingCallback;
 import com.xunce.electrombile.R;
-import com.xunce.electrombile.ZXing.camera.CameraManager;
-import com.xunce.electrombile.ZXing.decoding.CaptureActivityHandler;
-import com.xunce.electrombile.ZXing.decoding.InactivityTimer;
-import com.xunce.electrombile.ZXing.view.ViewfinderView;
+
 import com.xunce.electrombile.log.MyLog;
 import com.xunce.electrombile.utils.system.ToastUtils;
 import com.xunce.electrombile.utils.useful.JSONUtils;
 
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import cn.bingoogolapple.qrcode.core.QRCodeView;
+import cn.bingoogolapple.qrcode.zbar.ZBarView;
 
 /**
  * Initial the camera
  * @author Ryan.Tang
  */
-public class CaptureActivity extends Activity implements Callback {
-
-    private CaptureActivityHandler handler;
-    private ViewfinderView viewfinderView;
-    private boolean hasSurface;
-    private Vector<BarcodeFormat> decodeFormats;
-    private String characterSet;
-    private InactivityTimer inactivityTimer;
+public class CaptureActivity extends Activity implements QRCodeView.Delegate {
+    private QRCodeView qrCodeView;
     private MediaPlayer mediaPlayer;
     private boolean playBeep;
     private static final float BEEP_VOLUME = 0.10f;
     private boolean vibrate;
     private Binding binding;
-//    private Button cancelScanButton;
-
     private Handler mHandler = new Handler(){
         @Override
         public void handleMessage(android.os.Message msg){
-            if (handler != null) {
-                handler.restartPreviewAndDecode();
-            }
+            qrCodeView.startSpot();
         }
 
     };
-
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture);
 
-        CameraManager.init(getApplication());
-
-        viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
-        hasSurface = false;
-
-        inactivityTimer = new InactivityTimer(this);
-
-        //解析是从哪个activity跳转过来的
         Intent intent = getIntent();
         final String FromActivity = intent.getStringExtra("From");
-
         binding = new Binding(this, FromActivity, new BindingCallback() {
             @Override
             public void startBindFail() {
-                Message msg = Message.obtain();
-                mHandler.sendMessageDelayed(msg,3000);
+                mHandler.sendEmptyMessage(1);
             }
         });
 
@@ -108,27 +87,60 @@ public class CaptureActivity extends Activity implements Callback {
                 CaptureActivity.this.finish();
             }
         });
+
+        qrCodeView =(ZBarView)findViewById(R.id.zbarview);
+        qrCodeView.setDelegate(this);
+        qrCodeView.startSpot();
     }
 
     @Override
-    public void onBackPressed(){
-        super.onBackPressed();
+    public void onScanQRCodeSuccess(String result) {
+        playBeepSoundAndVibrate();
+        String IMEI;
+        if (result.contains("IMEI")) {
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                IMEI = jsonObject.getString("IMEI");
+            } catch (JSONException e) {
+                ToastUtils.showShort(this, "扫描失败，请重新扫描！" + e.getMessage());
+                MyLog.d("解析二维码", e.getMessage());
+                e.printStackTrace();
+                qrCodeView.startSpot();
+                return;
+            }
+            //判断IMEI号是否是15位
+            if(IMEI == null||IMEI.length()!=15){
+                ToastUtils.showShort(this,"IMEI的长度不对或者为空");
+                qrCodeView.startSpot();
+            } else{
+                ToastUtils.showShort(this, "IMEI为" + IMEI);
+                binding.startBind(IMEI);
+            }
+        }else {
+            ToastUtils.showShort(this, "请扫描小安宝二维码，请重新扫描！");
+            qrCodeView.startSpot();
+        }
     }
+
+    @Override
+    public void onScanQRCodeOpenCameraError() {
+
+    }
+//    private CaptureActivityHandler handler;
+//    private ViewfinderView viewfinderView;
+//    private boolean hasSurface;
+//    private Vector<BarcodeFormat> decodeFormats;
+//    private String characterSet;
+
+////    private Button cancelScanButton;
+
+//    };
+
+
 
     @Override
     protected void onResume() {
         super.onResume();
-        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
-        SurfaceHolder surfaceHolder = surfaceView.getHolder();
-        if (hasSurface) {
-            initCamera(surfaceHolder);
-        } else {
-            surfaceHolder.addCallback(this);
-            surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        }
-        decodeFormats = null;
-        characterSet = null;
-
         playBeep = true;
         AudioManager audioService = (AudioManager) getSystemService(AUDIO_SERVICE);
         if (audioService.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
@@ -136,105 +148,6 @@ public class CaptureActivity extends Activity implements Callback {
         }
         initBeepSound();
         vibrate = true;
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (handler != null) {
-            handler.quitSynchronously();
-            handler = null;
-        }
-        CameraManager.get().closeDriver();
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        inactivityTimer.shutdown();
-        super.onDestroy();
-    }
-
-    /**
-     * Handler scan result
-     * @param result
-     * @param barcode
-     */
-    public void handleDecode(Result result, Bitmap barcode) {
-        inactivityTimer.onActivity();
-        playBeepSoundAndVibrate();
-        String resultString = result.getText();
-        if (resultString.charAt(8) != '"'){
-            StringBuilder sb = new StringBuilder(resultString);
-            sb.insert(8,'"');
-            resultString = sb.toString();
-        }
-        String IMEI;
-        if (resultString.contains("IMEI")) {
-            try {
-                IMEI = JSONUtils.ParseJSON(resultString, "IMEI");
-            } catch (JSONException e) {
-                ToastUtils.showShort(this, "扫描失败，请重新扫描！" + e.getMessage());
-                MyLog.d("解析二维码", e.getMessage());
-                e.printStackTrace();
-                return;
-            }
-            //判断IMEI号是否是15位
-            if(IMEI == null||IMEI.length()!=15){
-                ToastUtils.showShort(this,"IMEI的长度不对或者为空");
-                Message msg = Message.obtain();
-                mHandler.sendMessageDelayed(msg, 3000);
-
-            } else{
-                ToastUtils.showShort(this, "IMEI为" + IMEI);
-                binding.startBind(IMEI);
-            }
-        }
-    }
-
-    private void initCamera(SurfaceHolder surfaceHolder) {
-        try {
-            CameraManager.get().openDriver(surfaceHolder);
-        } catch (IOException ioe) {
-            return;
-        } catch (RuntimeException e) {
-            return;
-        }
-        if (handler == null) {
-            handler = new CaptureActivityHandler(this, decodeFormats, characterSet);
-        }
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                               int height) {
-
-    }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        if (!hasSurface) {
-            hasSurface = true;
-            initCamera(holder);
-        }
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        hasSurface = false;
-    }
-
-    public ViewfinderView getViewfinderView() {
-        return viewfinderView;
-    }
-
-    public Handler getHandler() {
-        return handler;
-    }
-
-    public void drawViewfinder() {
-        viewfinderView.drawViewfinder();
 
     }
 
@@ -261,7 +174,7 @@ public class CaptureActivity extends Activity implements Callback {
             }
         }
     }
-
+//
     private static final long VIBRATE_DURATION = 200L;
 
     private void playBeepSoundAndVibrate() {
